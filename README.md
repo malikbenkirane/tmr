@@ -2,6 +2,16 @@
 
 A new Flutter project.
 
+## Setup
+
+Initialize asset state.db:
+- install [atlas latest release](
+    https://github.com/ariga/atlas/releases/latest
+)
+- `atlas migrate apply --url sqlite://assets/state.db`
+
+Test seed: `assets/seed.sql`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

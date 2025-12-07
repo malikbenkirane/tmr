@@ -1,0 +1,32 @@
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:too_many_tabs/routing/routes.dart';
+import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
+import 'package:too_many_tabs/ui/archives/widgets/archives_screen.dart';
+import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
+
+GoRouter router() => GoRouter(
+  restorationScopeId: 'router',
+  initialLocation: Routes.home,
+  debugLogDiagnostics: true,
+  routes: [
+    GoRoute(
+      path: Routes.home,
+      builder: (context, state) {
+        final viewModel = HomeViewmodel(
+          routinesRepository: context.read(),
+          notificationsPlugin: context.read(),
+        );
+        return HomeScreen(viewModel: viewModel);
+      },
+    ),
+    GoRoute(
+      path: Routes.archives,
+      builder: (context, state) {
+        final viewModel = ArchivesViewmodel(routinesRepository: context.read());
+        return ArchivesScreen(viewModel: viewModel);
+      },
+    ),
+  ],
+);
