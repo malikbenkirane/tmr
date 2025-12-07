@@ -79,9 +79,9 @@ class HomeViewmodel extends ChangeNotifier {
             '_archiveRoutive: failed to get running routine: ${resultRunning.error}',
           );
         case Ok<RoutineSummary?>():
-          if (resultRunning.value != null) {
+          if (resultRunning.value != null && resultRunning.value!.id == id) {
             final resultStop = await _routinesRepository.logStop(
-              id,
+              resultRunning.value!.id,
               DateTime.now(),
             );
             switch (resultStop) {
