@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/config/dependencies.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
+import 'package:too_many_tabs/data/services/database/shared_database_service.dart';
 import 'package:too_many_tabs/routing/router.dart';
 import 'package:too_many_tabs/ui/core/themes/theme.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
@@ -37,7 +38,7 @@ void main() async {
       ].join(' '),
     );
     final client = DatabaseClient(db: db);
-    if (record.level >= Level.WARNING) {
+    if (record.level >= Level.INFO) {
       client.log(
         level: record.level.name,
         time: record.time,
@@ -62,23 +63,10 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // await notificationsPlugin.show(
-  //   0,
-  //   'Routines',
-  //   'Update',
-  //   NotificationDetails(iOS: DarwinNotificationDetails(presentAlert: true)),
-  //   payload: 'item',
-  // );
-
   await _configureLocalTimeZone();
-  //await notificationsPlugin.zonedSchedule(
-  //  0,
-  //  'Routines',
-  //  'Scheduled',
-  //  tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
-  //  NotificationDetails(iOS: DarwinNotificationDetails(presentAlert: true)),
-  //  androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-  //);
+
+  final sds = SharedDatabaseService();
+  await sds.initialize();
 
   runApp(
     MultiProvider(
@@ -103,8 +91,95 @@ Future<void> _configureLocalTimeZone() async {
   log.info('timeZoneInfo: ${tz.local}');
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
+  @override
+  initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkForSharedDatabase();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Check for shared database when app comes to foreground
+      _checkForSharedDatabase();
+    }
+  }
+
+  Future<void> _checkForSharedDatabase() async {
+    final sharedPath = await SharedDatabaseService().checkForSharedDatabase();
+
+    if (sharedPath != null) {
+      _showImportDialog(sharedPath);
+    }
+  }
+
+  void _showImportDialog(String sharedPath) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Import Database'),
+        content: Text(
+          'A shared database file has been detected. Do you want to replace your current database?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _importDatabase(sharedPath);
+            },
+            child: Text('Import'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _importDatabase(String sharedPath) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(child: CircularProgressIndicator()),
+    );
+
+    await SharedDatabaseService().importSharedDatabase(
+      sharedPath: sharedPath,
+      currentDatabasePath:
+          await databasePath(), // Replace with your actual database path
+      onSuccess: () {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Database imported successfully!')),
+        );
+        // Reload your app data here
+      },
+      onError: (error) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -6,10 +6,16 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
-Future<Result<Database>> prepareDatabase() async {
+Future<String> databasePath() async {
   final databasePath = await getDatabasesPath();
   final path = join(databasePath, 'state.db');
+  return path;
+}
+
+Future<Result<Database>> prepareDatabase() async {
   final log = Logger('prepareDatabase');
+
+  final path = await databasePath();
 
   // try {
   //   await deleteDatabase(path);
