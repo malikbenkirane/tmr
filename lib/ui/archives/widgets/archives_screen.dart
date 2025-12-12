@@ -115,7 +115,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                         index: index,
                         key: ValueKey(widget.viewModel.routines[index].id),
                         routine: widget.viewModel.routines[index],
-                        restore: (context) async {
+                        restore: () async {
                           await widget.viewModel.restore.execute(
                             widget.viewModel.routines[index].id,
                           );
@@ -123,7 +123,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                             context.go(Routes.home);
                           }
                         },
-                        trash: (context) async {
+                        trash: () async {
                           await widget.viewModel.bin.execute(
                             widget.viewModel.routines[index].id,
                           );

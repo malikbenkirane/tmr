@@ -100,7 +100,7 @@ class _ArchivesScreenState extends State<BinScreen> {
                         index: index,
                         key: ValueKey(widget.viewModel.routines[index].id),
                         routine: widget.viewModel.routines[index],
-                        restore: (context) async {
+                        restore: () async {
                           await widget.viewModel.restore.execute(
                             widget.viewModel.routines[index].id,
                           );

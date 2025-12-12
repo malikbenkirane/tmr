@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/themes/dimens.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/utils/format_duration.dart';
 
 class SlideUpPanel extends StatelessWidget {
   const SlideUpPanel({
@@ -56,7 +59,7 @@ class Collapsed extends StatelessWidget {
           runningRoutine ==
                   null // running routine
               ? Text(
-                  'Swipe any item to start the routine timer.',
+                  'Tap to pick a routine',
                   style: TextStyle(
                     color: darkMode
                         ? colorScheme.onPrimaryContainer
@@ -67,14 +70,6 @@ class Collapsed extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 6,
                   children: [
-                    Text(
-                      'Good luck with',
-                      style: TextStyle(
-                        fontWeight: darkMode
-                            ? FontWeight.w500
-                            : FontWeight.w300,
-                      ),
-                    ),
                     _RoutineLabel(
                       running: true,
                       name: runningRoutine!.name,
@@ -83,12 +78,15 @@ class Collapsed extends StatelessWidget {
                           : colorScheme.primary,
                       fontWeight: darkMode ? FontWeight.w600 : FontWeight.w300,
                     ),
-                    const Text('!'),
+                    _RoutineETA(
+                      routine: runningRoutine!,
+                      restorationId: 'routine-eta-${runningRoutine!.id}',
+                    ),
                   ],
                 ),
           Expanded(
             child: Text(
-              'Tap any item to update goals.',
+              'Long press to set goals',
               style: TextStyle(
                 color: darkMode ? colorScheme.secondary : colorScheme.onSurface,
                 fontWeight: darkMode ? FontWeight.w500 : FontWeight.w200,
@@ -159,6 +157,7 @@ class _SetGoal extends StatelessWidget {
                   color: darkMode
                       ? colorScheme.onPrimary
                       : colorScheme.onSurface,
+                  fontWeight: FontWeight.w300,
                 ),
               ),
               _RoutineLabel(
@@ -175,6 +174,7 @@ class _SetGoal extends StatelessWidget {
                   color: darkMode
                       ? colorScheme.onPrimary
                       : colorScheme.onSurface,
+                  fontWeight: FontWeight.w300,
                 ),
               ),
             ],
@@ -245,7 +245,7 @@ class _GoalSelectState extends State<_GoalSelect> {
       fontWeight: FontWeight.w500,
       fontSize: fontSize / 4,
     );
-    final itemExtent = fontSize * 7 / 6;
+    final itemExtent = fontSize * 7 / 6 + 2;
     return SizedBox(
       height: 240,
       child: Column(
@@ -427,10 +427,77 @@ class _RoutineLabel extends StatelessWidget {
         padding: EdgeInsets.symmetric(),
         // padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
         child: Text(
-          name,
+          name.trim(),
           style: TextStyle(fontWeight: fontWeight, color: color),
         ),
       ),
+    );
+  }
+}
+
+class _RoutineETA extends StatefulWidget {
+  const _RoutineETA({required this.routine, required this.restorationId});
+
+  final RoutineSummary routine;
+  final String restorationId;
+
+  @override
+  createState() => _RoutineETAState();
+}
+
+class _RoutineETAState extends State<_RoutineETA> with RestorationMixin {
+  late Timer _timer;
+
+  final _leftMinutes = RestorableInt(0);
+
+  @override
+  get restorationId => widget.restorationId;
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_leftMinutes, 'left_minutes_value');
+  }
+
+  @override
+  initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  static const _refreshPeriod = Duration(milliseconds: 50);
+
+  void _startTimer() {
+    _timer = Timer.periodic(_refreshPeriod, (_) {
+      final spent =
+          DateTime.now().difference(widget.routine.lastStarted!) +
+          widget.routine.spent;
+      final left = widget.routine.goal - spent;
+      setState(() {
+        _leftMinutes.value = left.inMinutes;
+      });
+    });
+  }
+
+  @override
+  build(BuildContext context) {
+    const style = TextStyle(fontWeight: FontWeight.w300, fontSize: 12);
+    if (_leftMinutes.value >= 0) {
+      final eta = widget.routine.lastStarted!.add(
+        Duration(minutes: _leftMinutes.value),
+      );
+      final hours = eta.hour.toString();
+      final minutes = (eta.minute + 1).toString().padLeft(2, '0');
+      return Text('(ETA: $hours:$minutes)', style: style);
+    }
+    return Text(
+      '(reached ${formatUntilGoal(widget.routine.goal, Duration())})',
+      style: style,
     );
   }
 }
