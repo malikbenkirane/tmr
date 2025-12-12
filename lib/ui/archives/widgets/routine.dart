@@ -14,7 +14,7 @@ class Routine extends StatelessWidget {
   });
 
   final RoutineSummary routine;
-  final void Function(BuildContext) restore, trash;
+  final void Function() restore, trash;
   final int index;
 
   @override
@@ -28,11 +28,15 @@ class Routine extends StatelessWidget {
         ? colorScheme.onSurface
         : colorScheme.onSurface;
     return Slidable(
+      key: key,
       endActionPane: ActionPane(
+        dismissible: DismissiblePane(onDismissed: restore, closeOnCancel: true),
         motion: BehindMotion(),
         children: [
           RoutineAction(
-            onPressed: restore,
+            onPressed: (_) {
+              restore();
+            },
             icon: Icons.add_task,
             state: RoutineActionState.toReschedule,
             label: 'Schedule',
@@ -40,10 +44,13 @@ class Routine extends StatelessWidget {
         ],
       ),
       startActionPane: ActionPane(
+        dismissible: DismissiblePane(onDismissed: trash, closeOnCancel: true),
         motion: BehindMotion(),
         children: [
           RoutineAction(
-            onPressed: trash,
+            onPressed: (_) {
+              trash();
+            },
             icon: Icons.delete,
             state: RoutineActionState.toTrash,
             label: 'Trash',

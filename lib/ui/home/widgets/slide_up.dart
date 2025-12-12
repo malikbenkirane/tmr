@@ -79,17 +79,17 @@ class _SlideUpState extends State<SlideUp> {
       },
       isDraggable: !(isPanelOpened && widget.tappedRoutine != null),
       maxHeight: 340,
-      panel: SlideUpPanel(
-        viewModel: widget.viewModel,
-        isOpen: isPanelOpened,
-        pc: pc,
-        tappedRoutine: widget.tappedRoutine,
-      ),
       collapsed: ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, _) {
           return Collapsed(runningRoutine: widget.viewModel.pinnedRoutine);
         },
+      ),
+      panel: SlideUpPanel(
+        viewModel: widget.viewModel,
+        isOpen: isPanelOpened,
+        pc: pc,
+        tappedRoutine: widget.tappedRoutine,
       ),
       body: RoutinesList(
         viewModel: widget.viewModel,

@@ -9,15 +9,14 @@ class Routine extends StatelessWidget {
   const Routine({
     super.key,
     required this.routine,
-    required this.onTap,
-    required this.onSwitch,
+    required this.setGoal,
+    required this.startStopSwitch,
     required this.archive,
     required this.bin,
   });
 
   final RoutineSummary routine;
-  final GestureTapCallback onTap;
-  final Function(BuildContext) onSwitch, archive, bin;
+  final Function() setGoal, startStopSwitch, archive, bin;
 
   @override
   Widget build(BuildContext context) {
@@ -26,39 +25,32 @@ class Routine extends StatelessWidget {
 
     return Slidable(
       key: ValueKey(routine.id),
-      endActionPane: ActionPane(
-        motion: BehindMotion(),
-        children: [
-          RoutineAction(
-            icon: routine.running ? Icons.stop : Icons.timer,
-            state: routine.running
-                ? RoutineActionState.toStop
-                : RoutineActionState.toStart,
-            label: routine.running ? 'Stop' : 'Start',
-            onPressed: onSwitch,
-          ),
-        ],
-      ),
       startActionPane: ActionPane(
         motion: ScrollMotion(),
+        dismissible: DismissiblePane(onDismissed: archive, closeOnCancel: true),
         children: [
-          RoutineAction(
-            icon: Icons.delete,
-            state: RoutineActionState.toTrash,
-            label: 'Trash',
-            onPressed: archive,
-          ),
           RoutineAction(
             icon: Icons.archive,
             state: RoutineActionState.toArchive,
             label: 'Backlog',
-            onPressed: archive,
+            onPressed: (_) {
+              archive();
+            },
+          ),
+          RoutineAction(
+            icon: Icons.delete,
+            state: RoutineActionState.toTrash,
+            label: 'Trash',
+            onPressed: (_) {
+              bin();
+            },
           ),
         ],
       ),
       child: InkWell(
         splashColor: colorScheme.primaryContainer,
-        onTap: onTap,
+        onTap: startStopSwitch,
+        onLongPress: setGoal,
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 0),
           child: Row(

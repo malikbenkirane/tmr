@@ -300,6 +300,17 @@ class HomeViewmodel extends ChangeNotifier {
           _log.fine(
             '_updateRoutineGoal: resultGetRoutine: ${resultGetRoutine.value}',
           );
+          final resultRunning = await _routinesRepository.getRunningRoutine();
+          switch (resultRunning) {
+            case Error<RoutineSummary?>():
+              _log.warning(
+                '_updateRoutineGoal: getRunningRoutine: ${resultRunning.error}',
+              );
+              return Result.error(resultRunning.error);
+            case Ok<RoutineSummary?>():
+              _pinnedRoutine = resultRunning.value;
+              _log.fine('_updateRoutineGoal: _pinnedRoutine: $_pinnedRoutine');
+          }
           _routines = _routines.map((routine) {
             if (routine.id == request.routineID) {
               return resultGetRoutine.value;

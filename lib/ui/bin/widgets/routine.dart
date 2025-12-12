@@ -13,7 +13,7 @@ class Routine extends StatelessWidget {
   });
 
   final RoutineSummary routine;
-  final void Function(BuildContext) restore;
+  final void Function() restore;
   final int index;
 
   @override
@@ -27,11 +27,15 @@ class Routine extends StatelessWidget {
         ? colorScheme.onSurface
         : colorScheme.onSurface;
     return Slidable(
+      key: key,
       endActionPane: ActionPane(
+        dismissible: DismissiblePane(onDismissed: restore, closeOnCancel: true),
         motion: BehindMotion(),
         children: [
           RoutineAction(
-            onPressed: restore,
+            onPressed: (_) {
+              restore();
+            },
             icon: Icons.archive,
             state: RoutineActionState.toArchive,
             label: 'Restore',
