@@ -477,14 +477,15 @@ class _RoutineETAState extends State<_RoutineETA> with RestorationMixin {
     super.dispose();
   }
 
-  static const _refreshPeriod = Duration(milliseconds: 50);
+  static const _refreshPeriod = Duration(seconds: 1);
 
   void _startTimer() {
-    _timer = Timer.periodic(_refreshPeriod, (_) {
+    _timer = Timer.periodic(_refreshPeriod, (timer) {
       if (DateTime.now().isAfter(widget.eta)) {
         setState(() {
           _done.value = true;
         });
+        timer.cancel();
       }
     });
   }
