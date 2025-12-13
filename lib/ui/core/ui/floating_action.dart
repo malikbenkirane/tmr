@@ -22,7 +22,7 @@ class FloatingAction extends StatelessWidget {
         ? defaultOffset
         : verticalOffset! + defaultOffset;
     return Padding(
-      padding: EdgeInsets.only(bottom: offset, left: 25, right: 25),
+      padding: EdgeInsets.only(bottom: offset, left: 35, right: 35),
       child: FloatingActionButton(
         heroTag: colorComposition.action.toString(),
         shape: CircleBorder(),

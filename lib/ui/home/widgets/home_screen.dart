@@ -53,7 +53,7 @@ class HomeScreenState extends State<HomeScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 
-    const verticalOffset = 100.0;
+    const verticalOffset = 110.0;
     const slideUpPanelMinHeight = 100.0;
     const slideUpPanelMaxHeight = 340.0;
 
