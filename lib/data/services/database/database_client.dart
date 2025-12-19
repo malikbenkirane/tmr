@@ -265,18 +265,34 @@ class DatabaseClient {
     }
   }
 
-  Future<Result<void>> udpateGoal(int routineID, int goal) async {
+  Future<Result<void>> udpateGoal(int routineID, int newGoal) async {
     try {
+      final t = DateTime.now().toIso8601String();
       await _database.transaction((tx) async {
-        await tx.update(
+        final rows = await tx.query(
           'routines',
-          {'goal_30m': goal},
           where: 'id = ?',
           whereArgs: [routineID],
         );
+        if (rows.isEmpty) {
+          return Result.error(Exception('no such routine: id=$routineID'));
+        }
+        final {'goal_30m': oldGoal as int} = rows[0];
+        await tx.update(
+          'routines',
+          {'goal_30m': newGoal},
+          where: 'id = ?',
+          whereArgs: [routineID],
+        );
+        await tx.insert('goal_logs', {
+          'routine_id': routineID,
+          'old_goal': oldGoal,
+          'new_goal': newGoal,
+          'updated_at': t,
+        });
         await tx.insert('routines_logs', {
           'routine_id': routineID,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': t,
           'state': RoutineState.goalUpdated.code,
         });
       });

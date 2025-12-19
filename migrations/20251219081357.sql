@@ -1,0 +1,7 @@
+CREATE TABLE goal_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  old_goal INTEGER NOT NULL,
+  new_goal INTEGER NOT NULL,
+  updated_at DATETIME NOT NULL,
+  routine_id INTEGER NOT NULL
+);
