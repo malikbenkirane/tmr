@@ -114,9 +114,12 @@ class RoutineGoalLabel extends StatelessWidget {
             ),
           )
         : done
-        ? Icon(
-            Icons.emoji_events,
-            color: colorScheme.primary.withAlpha((.6 * 255).round()),
+        ? Transform.translate(
+            offset: Offset(running ? 4 : 0, 0),
+            child: Icon(
+              Icons.emoji_events,
+              color: colorScheme.primary.withAlpha((.6 * 255).round()),
+            ),
           )
         : Container(
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
