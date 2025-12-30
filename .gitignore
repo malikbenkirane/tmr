@@ -14,6 +14,8 @@
 migrate_working_dir/
 .prepare.yaml
 .prompt
+icons
+android/app/proguard-android.txt
 
 # IntelliJ related
 *.iml
