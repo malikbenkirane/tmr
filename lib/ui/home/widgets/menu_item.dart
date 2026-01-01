@@ -1,5 +1,6 @@
 enum MenuItem {
-  setGoal(0);
+  setGoal(0),
+  addNote(1);
 
   const MenuItem(this.code);
 

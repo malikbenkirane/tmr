@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -324,6 +325,51 @@ class DatabaseClient {
       return Result.ok(
         SettingsSummary(overwriteDatabase: overwriteDatabase == 1),
       );
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<List<NoteSummary>>> getNotes(int routineId) async {
+    try {
+      final rows = await _database.query(
+        'notes',
+        orderBy: 'created_at DESC',
+        where: 'routine_id = ?',
+        whereArgs: [routineId],
+      );
+      final List<NoteSummary> notes = [];
+      for (final {
+            'id': id as int,
+            'created_at': createdAt3339 as String,
+            'note': note as String?,
+          }
+          in rows) {
+        final createdAt = DateTime.parse(createdAt3339);
+        if (note == null) continue;
+        notes.add(
+          NoteSummary(
+            routineId: routineId,
+            createdAt: createdAt,
+            id: id,
+            note: note,
+          ),
+        );
+      }
+      return Result.ok(notes);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> addNote(NoteSummary note) async {
+    try {
+      await _database.insert('notes', {
+        'routine_id': note.routineId,
+        'created_at': note.createdAt.toIso8601String(),
+        'note': note.text,
+      });
+      return Result.ok(null);
     } on Exception catch (e) {
       return Result.error(e);
     }

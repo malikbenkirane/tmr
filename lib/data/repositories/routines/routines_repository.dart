@@ -1,3 +1,4 @@
+import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -16,4 +17,10 @@ abstract class RoutinesRepository {
   Future<Result<void>> scheduleRoutine(int id);
   Future<Result<void>> restoreRoutine(int id);
   Future<Result<void>> binRoutine(int id);
+  Future<Result<List<NoteSummary>>> getNotes(int routineId);
+  Future<Result<void>> addNote({
+    required String note,
+    required DateTime createdAt,
+    required int routineId,
+  });
 }

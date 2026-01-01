@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/widgets/add_note_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/goal_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/menu_item.dart';
+import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 
 class MenuPopup extends StatelessWidget {
   const MenuPopup({
     super.key,
     required this.routine,
-    required this.viewModel,
+    required this.homeModel,
+    required this.notesModel,
     required this.menu,
     required this.close,
   });
 
   final RoutineSummary? routine;
-  final HomeViewmodel viewModel;
+  final HomeViewmodel homeModel;
+  final NotesViewmodel notesModel;
   final MenuItem? menu;
   final void Function() close;
 
@@ -34,9 +38,16 @@ class MenuPopup extends StatelessWidget {
           routineName: routine!.name,
           routineGoal: routine!.goal,
           running: routine!.running,
-          viewModel: viewModel,
+          viewModel: homeModel,
           onCancel: close,
           onGoalSet: close,
+        );
+        break;
+      case MenuItem.addNote:
+        popup = AddNotePopup(
+          onClose: close,
+          routineId: routine!.id,
+          viewModel: notesModel,
         );
         break;
     }

@@ -7,11 +7,18 @@ import 'package:too_many_tabs/ui/home/widgets/menu_item.dart';
 import 'package:too_many_tabs/ui/home/widgets/menu_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_menu.dart';
+import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 
 class RoutinesList extends StatefulWidget {
-  const RoutinesList({super.key, required this.viewModel, required this.onTap});
+  const RoutinesList({
+    super.key,
+    required this.homeModel,
+    required this.notesModel,
+    required this.onTap,
+  });
 
-  final HomeViewmodel viewModel;
+  final HomeViewmodel homeModel;
+  final NotesViewmodel notesModel;
   final void Function(int) onTap;
 
   @override
@@ -31,7 +38,7 @@ class _RoutinesListState extends State<RoutinesList> {
     return SafeArea(
       minimum: EdgeInsets.only(bottom: 100, top: 0),
       child: ListenableBuilder(
-        listenable: widget.viewModel,
+        listenable: widget.homeModel,
         builder: (context, _) {
           return ShaderMask(
             shaderCallback: (Rect bounds) {
@@ -47,12 +54,12 @@ class _RoutinesListState extends State<RoutinesList> {
               children: [
                 ScrollablePositionedList.builder(
                   padding: EdgeInsets.only(bottom: 50),
-                  itemCount: widget.viewModel.routines.length,
+                  itemCount: widget.homeModel.routines.length,
                   itemScrollController: itemScrollController,
                   scrollOffsetController: scrollOffsetController,
                   itemBuilder: (_, index) {
-                    final routineId = widget.viewModel.routines[index].id;
-                    final routine = widget.viewModel.routines[index];
+                    final routineId = widget.homeModel.routines[index].id;
+                    final routine = widget.homeModel.routines[index];
                     if (routine.running) {
                       runningIndex = index;
                     }
@@ -68,23 +75,23 @@ class _RoutinesListState extends State<RoutinesList> {
                                   (tappedRoutine != null &&
                                       tappedRoutine!.id != routineId)) {
                                 tappedRoutine =
-                                    widget.viewModel.routines[index];
+                                    widget.homeModel.routines[index];
                               } else {
                                 tappedRoutine = null;
                               }
                             });
                           },
                           startStopSwitch: () async {
-                            await widget.viewModel.startOrStopRoutine.execute(
+                            await widget.homeModel.startOrStopRoutine.execute(
                               routineId,
                             );
                             return widget
-                                .viewModel
+                                .homeModel
                                 .startOrStopRoutine
                                 .completed;
                           },
                           archive: () async {
-                            await widget.viewModel.archiveOrBinRoutine.execute((
+                            await widget.homeModel.archiveOrBinRoutine.execute((
                               routineId,
                               DestinationBucket.backlog,
                             ));
@@ -113,7 +120,8 @@ class _RoutinesListState extends State<RoutinesList> {
                 ),
                 MenuPopup(
                   routine: tappedRoutine,
-                  viewModel: widget.viewModel,
+                  homeModel: widget.homeModel,
+                  notesModel: widget.notesModel,
                   menu: popup,
                   close: () {
                     setState(() {

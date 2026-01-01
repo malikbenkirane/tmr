@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
+import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -353,5 +354,21 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   @override
   Future<Result<void>> setGoal(int routineID, int goal30) async {
     return _databaseClient.udpateGoal(routineID, goal30);
+  }
+
+  @override
+  Future<Result<List<NoteSummary>>> getNotes(int routineId) async {
+    return _databaseClient.getNotes(routineId);
+  }
+
+  @override
+  Future<Result<void>> addNote({
+    required String note,
+    required DateTime createdAt,
+    required int routineId,
+  }) {
+    return _databaseClient.addNote(
+      NoteSummary(routineId: routineId, createdAt: createdAt, note: note),
+    );
   }
 }

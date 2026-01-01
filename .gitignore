@@ -1,4 +1,5 @@
 # Miscellaneous
+{payload,response}.json
 .commit-stash
 *.class
 *.log
