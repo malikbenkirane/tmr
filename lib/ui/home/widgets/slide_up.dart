@@ -5,11 +5,13 @@ import 'package:too_many_tabs/ui/core/themes/dimens.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/home/widgets/slideup_panel.dart';
+import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 
 class SlideUp extends StatefulWidget {
   const SlideUp({
     super.key,
     required this.viewModel,
+    required this.notesModel,
     required this.onRoutineTapped,
     required this.onPanelClosed,
     required this.tappedRoutine,
@@ -20,6 +22,7 @@ class SlideUp extends StatefulWidget {
   });
 
   final HomeViewmodel viewModel;
+  final NotesViewmodel notesModel;
   final void Function(int) onRoutineTapped;
   final void Function() onPanelClosed;
   final RoutineSummary? tappedRoutine;
@@ -91,7 +94,8 @@ class _SlideUpState extends State<SlideUp> {
         tappedRoutine: widget.tappedRoutine,
       ),
       body: RoutinesList(
-        viewModel: widget.viewModel,
+        notesModel: widget.notesModel,
+        homeModel: widget.viewModel,
         onTap: widget.onRoutineTapped,
       ),
     );

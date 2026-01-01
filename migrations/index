@@ -7,3 +7,4 @@
 20251217071137.sql set default value of overwrite setting to false
 20251219081357.sql create goal_logs table (logging goals changes)
 20251228130208.sql create notes table
+20260101091642.sql add routine_id to notes_table

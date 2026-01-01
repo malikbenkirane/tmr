@@ -16,11 +16,17 @@ import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
+import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.viewModel});
+  const HomeScreen({
+    super.key,
+    required this.homeModel,
+    required this.notesModel,
+  });
 
-  final HomeViewmodel viewModel;
+  final HomeViewmodel homeModel;
+  final NotesViewmodel notesModel;
 
   @override
   createState() => HomeScreenState();
@@ -39,7 +45,7 @@ class HomeScreenState extends State<HomeScreen> {
     super.initState();
     _listener = AppLifecycleListener(
       onResume: () async {
-        await widget.viewModel.load.execute();
+        await widget.homeModel.load.execute();
       },
     );
     _requestPermissions();
@@ -123,7 +129,7 @@ class HomeScreenState extends State<HomeScreen> {
         title: Padding(
           padding: EdgeInsets.all(0),
           child: ListenableBuilder(
-            listenable: widget.viewModel,
+            listenable: widget.homeModel,
             builder: (context, _) {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -133,7 +139,7 @@ class HomeScreenState extends State<HomeScreen> {
                     spacing: 6,
                     children: [
                       Text(
-                        '${widget.viewModel.routines.length}',
+                        '${widget.homeModel.routines.length}',
                         style: TextStyle(
                           color: labelColor(
                             context,
@@ -144,7 +150,7 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Text(
-                        'routine${widget.viewModel.routines.length <= 1 ? '' : 's'} planned today',
+                        'routine${widget.homeModel.routines.length <= 1 ? '' : 's'} planned today',
                         style: TextStyle(
                           color: labelColor(
                             context,
@@ -157,7 +163,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   Row(
-                    children: [HeaderEta(routines: widget.viewModel.routines)],
+                    children: [HeaderEta(routines: widget.homeModel.routines)],
                   ),
                 ],
               );
@@ -176,22 +182,23 @@ class HomeScreenState extends State<HomeScreen> {
         child: Stack(
           children: [
             ListenableBuilder(
-              listenable: widget.viewModel.load,
+              listenable: widget.homeModel.load,
               builder: (context, child) {
-                final running = widget.viewModel.load.running,
-                    error = widget.viewModel.load.error;
+                final running = widget.homeModel.load.running,
+                    error = widget.homeModel.load.error;
                 return Loader(
                   running: running,
                   error: error,
-                  onError: widget.viewModel.load.execute,
+                  onError: widget.homeModel.load.execute,
                   child: child!,
                 );
               },
               child: RoutinesList(
-                viewModel: widget.viewModel,
+                homeModel: widget.homeModel,
+                notesModel: widget.notesModel,
                 onTap: (index) {
                   setState(() {
-                    tappedRoutine = widget.viewModel.routines[index];
+                    tappedRoutine = widget.homeModel.routines[index];
                   });
                 },
               ),
@@ -230,7 +237,7 @@ class HomeScreenState extends State<HomeScreen> {
                       },
                       closeCompleted: (id) {
                         setState(() {
-                          for (final routine in widget.viewModel.routines) {
+                          for (final routine in widget.homeModel.routines) {
                             if (routine.id == id) {
                               tappedRoutine = routine;
                             }
@@ -239,7 +246,7 @@ class HomeScreenState extends State<HomeScreen> {
                         });
                         pc!.open();
                       },
-                      viewModel: widget.viewModel,
+                      viewModel: widget.homeModel,
                     ),
                   )
                 : Container(),
