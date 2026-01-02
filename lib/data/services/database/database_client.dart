@@ -3,6 +3,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class DatabaseClient {
@@ -321,10 +323,45 @@ class DatabaseClient {
       if (rows.isEmpty) {
         return Result.error(Exception('app settings unavailables'));
       }
-      final {'overwrite_database': overwriteDatabase as int} = rows[0];
+      final {
+        'overwrite_database': overwriteDatabase as int,
+        'sit_back_goal': sitBackGoal as int,
+        'stoke_goal': stokeGoal as int,
+        'start_slow_goal': startSlowGoal as int,
+        'slow_down_goal': slowDownGoal as int,
+      } = rows[0];
       return Result.ok(
-        SettingsSummary(overwriteDatabase: overwriteDatabase == 1),
+        SettingsSummary(
+          overwriteDatabase: overwriteDatabase == 1,
+          specialGoals: SpecialGoals(
+            sitBack: Duration(minutes: 30 * sitBackGoal),
+            stoke: Duration(minutes: 30 * stokeGoal),
+            startSlow: Duration(minutes: 30 * startSlowGoal),
+            slowDown: Duration(minutes: 30 * slowDownGoal),
+          ),
+        ),
       );
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> updateSpecialGoalSetting(
+    SpecialGoal setting,
+    Duration goal,
+  ) async {
+    try {
+      await _database.transaction((tx) async {
+        final Map<String, Object?> values = {};
+        final goalFactor = goal.inMinutes ~/ 30;
+        values[setting.column] = goalFactor;
+        await tx.insert('special_goals_log', {
+          'special_goal': setting.code,
+          'goal': goalFactor,
+        });
+        await tx.update('app_settings', values);
+      });
+      return Result.ok(null);
     } on Exception catch (e) {
       return Result.error(e);
     }

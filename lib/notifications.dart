@@ -32,7 +32,7 @@ Future<tz.TZDateTime> scheduleNotification({
 }) async {
   const darwinNotificationDetails = DarwinNotificationDetails(
     interruptionLevel: InterruptionLevel.timeSensitive,
-    sound: 'ding.aif',
+    sound: 'spacial.aif',
   );
   const androidNotificationDetails = AndroidNotificationDetails(
     'ttt_routines',
