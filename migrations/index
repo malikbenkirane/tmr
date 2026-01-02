@@ -8,3 +8,4 @@
 20251219081357.sql create goal_logs table (logging goals changes)
 20251228130208.sql create notes table
 20260101091642.sql add routine_id to notes_table
+20260102204229.sql add settings sit back, stoke, start and slow down goals

@@ -3,12 +3,15 @@ import 'package:go_router/go_router.dart';
 import 'package:path/path.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/routine_action.dart';
+import 'package:too_many_tabs/ui/settings/widgets/goal_popup.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/widgets/overwrite_database_switch.dart';
+import 'package:too_many_tabs/ui/settings/widgets/goal_setting.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -21,6 +24,23 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late AppLifecycleListener _listener;
+
+  Widget? popupWidget;
+
+  Widget? _popup({
+    SpecialGoal? goalSetting,
+    Duration? currentGoal,
+    required void Function() close,
+  }) {
+    if (goalSetting == null || currentGoal == null) return SizedBox.shrink();
+    return GoalPopup(
+      viewModel: widget.viewModel,
+      goalSetting: goalSetting,
+      currentGoal: currentGoal,
+      onCancel: close,
+      onGoalSet: close,
+    );
+  }
 
   @override
   initState() {
@@ -71,95 +91,202 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 25),
-        child: ListenableBuilder(
-          listenable: widget.viewModel.load,
-          builder: (context, child) {
-            final running = widget.viewModel.load.running,
-                error = widget.viewModel.load.error;
-            return Loader(
-              error: error,
-              running: running,
-              onError: widget.viewModel.load.execute,
-              child: child!,
-            );
-          },
-          child: ListenableBuilder(
-            listenable: widget.viewModel,
-            builder: (context, _) {
-              return Stack(
-                children: [
-                  Column(
+      body: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+            child: ListenableBuilder(
+              listenable: widget.viewModel.load,
+              builder: (context, child) {
+                final running = widget.viewModel.load.running,
+                    error = widget.viewModel.load.error;
+                return Loader(
+                  error: error,
+                  running: running,
+                  onError: widget.viewModel.load.execute,
+                  child: child!,
+                );
+              },
+              child: ListenableBuilder(
+                listenable: widget.viewModel,
+                builder: (context, _) {
+                  return Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Column(
+                        spacing: 20,
                         children: [
-                          const Text("Overwrite Database"),
-                          OverwriteDatabaseSwitch(
-                            initialState:
-                                widget.viewModel.settings.overwriteDatabase,
-                            onSwitch: () async {
-                              await widget.viewModel.switchOverwriteDatabase
-                                  .execute();
-                              if (widget
-                                  .viewModel
-                                  .switchOverwriteDatabase
-                                  .error) {
-                                return Result.error(
-                                  Exception('unable to update state'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Overwrite Database"),
+                              OverwriteDatabaseSwitch(
+                                initialState:
+                                    widget.viewModel.settings.overwriteDatabase,
+                                onSwitch: () async {
+                                  await widget.viewModel.switchOverwriteDatabase
+                                      .execute();
+                                  if (widget
+                                      .viewModel
+                                      .switchOverwriteDatabase
+                                      .error) {
+                                    return Result.error(
+                                      Exception('unable to update state'),
+                                    );
+                                  }
+                                  if (context.mounted &&
+                                      widget
+                                          .viewModel
+                                          .settings
+                                          .overwriteDatabase) {
+                                    _backupDialog(context);
+                                  }
+                                  return Result.ok(null);
+                                },
+                              ),
+                            ],
+                          ),
+                          ListenableBuilder(
+                            listenable: widget.viewModel,
+                            builder: (context, _) {
+                              return GoalSetting(
+                                label: 'Sit back goal',
+                                goal: widget
+                                    .viewModel
+                                    .settings
+                                    .specialGoals
+                                    .sitBack,
+                                onTap: () {
+                                  setState(() {
+                                    popupWidget = _popup(
+                                      close: () {
+                                        setState(() {
+                                          popupWidget = null;
+                                        });
+                                      },
+                                      goalSetting: SpecialGoal.sitBack,
+                                      currentGoal: widget
+                                          .viewModel
+                                          .settings
+                                          .specialGoals
+                                          .sitBack,
+                                    );
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                          GoalSetting(
+                            label: 'Start slow goal',
+                            goal: widget
+                                .viewModel
+                                .settings
+                                .specialGoals
+                                .startSlow,
+                            onTap: () {
+                              setState(() {
+                                popupWidget = _popup(
+                                  close: () {
+                                    setState(() {
+                                      popupWidget = null;
+                                    });
+                                  },
+                                  goalSetting: SpecialGoal.startSlow,
+                                  currentGoal: widget
+                                      .viewModel
+                                      .settings
+                                      .specialGoals
+                                      .startSlow,
                                 );
-                              }
-                              if (context.mounted &&
-                                  widget.viewModel.settings.overwriteDatabase) {
-                                _backupDialog(context);
-                              }
-                              return Result.ok(null);
+                              });
+                            },
+                          ),
+                          GoalSetting(
+                            label: 'Slow down goal',
+                            goal:
+                                widget.viewModel.settings.specialGoals.slowDown,
+                            onTap: () {
+                              setState(() {
+                                popupWidget = _popup(
+                                  close: () {
+                                    setState(() {
+                                      popupWidget = null;
+                                    });
+                                  },
+                                  goalSetting: SpecialGoal.slowDown,
+                                  currentGoal: widget
+                                      .viewModel
+                                      .settings
+                                      .specialGoals
+                                      .slowDown,
+                                );
+                              });
+                            },
+                          ),
+                          GoalSetting(
+                            label: 'Stoke goal',
+                            goal: widget.viewModel.settings.specialGoals.stoke,
+                            onTap: () {
+                              setState(() {
+                                popupWidget = _popup(
+                                  close: () {
+                                    setState(() {
+                                      popupWidget = null;
+                                    });
+                                  },
+                                  goalSetting: SpecialGoal.stoke,
+                                  currentGoal: widget
+                                      .viewModel
+                                      .settings
+                                      .specialGoals
+                                      .stoke,
+                                );
+                              });
                             },
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorCompositionFromAction(
-                                context,
-                                ApplicationAction.downloadBackup,
-                              ).background,
-                              foregroundColor: colorCompositionFromAction(
-                                context,
-                                ApplicationAction.downloadBackup,
-                              ).foreground,
-                            ),
-                            onPressed: _shareBackup,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 10),
-                              child: Row(
-                                spacing: 10,
-                                children: [
-                                  Icon(Icons.download, size: 23),
-                                  const Text('Backup state.db'),
-                                ],
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colorCompositionFromAction(
+                                    context,
+                                    ApplicationAction.downloadBackup,
+                                  ).background,
+                                  foregroundColor: colorCompositionFromAction(
+                                    context,
+                                    ApplicationAction.downloadBackup,
+                                  ).foreground,
+                                ),
+                                onPressed: _shareBackup,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 10),
+                                  child: Row(
+                                    spacing: 10,
+                                    children: [
+                                      Icon(Icons.download, size: 23),
+                                      const Text('Backup state.db'),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              );
-            },
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
-        ),
+          popupWidget ?? SizedBox.shrink(),
+        ],
       ),
     );
   }
