@@ -29,7 +29,7 @@ class GoalSetting extends StatelessWidget {
               width: size,
               height: size,
               decoration: BoxDecoration(
-                color: cs.secondaryContainer, // background colour
+                //color: cs.primaryContainer, // background colour
                 shape: BoxShape.circle,
                 // Optional: a subtle border that also respects the scheme
                 border: Border.all(
@@ -53,7 +53,7 @@ class GoalSetting extends StatelessWidget {
                     child: Icon(
                       Icons.edit,
                       size: size * 0.5, // 50 % of the button’s diameter
-                      color: cs.onSecondaryContainer, // icon colour
+                      color: cs.primary, // icon colour
                     ),
                   ),
                 ),
