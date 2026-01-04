@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/notifications.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
@@ -24,6 +27,8 @@ class HomeViewmodel extends ChangeNotifier {
     updateRoutineGoal = Command1(_updateRoutineGoal);
     addRoutine = Command1(_createRoutine);
     archiveOrBinRoutine = Command1(_archiveOrBinRoutine);
+    updateSpecialSessionStatus = Command1(_updateSpecialSessionStatus);
+    toggleSpecialSession = Command1(_toggleSpecialSession);
   }
 
   final RoutinesRepository _routinesRepository;
@@ -39,6 +44,8 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, String> addRoutine;
   late Command1<void, (int, DestinationBucket)> archiveOrBinRoutine;
   late Command1<void, int> trashRoutine;
+  late Command1<void, DateTime> updateSpecialSessionStatus;
+  late Command1<void, SpecialGoal> toggleSpecialSession;
 
   List<RoutineSummary> get routines => _routines;
   RoutineSummary? get pinnedRoutine => _pinnedRoutine;
@@ -334,7 +341,9 @@ class HomeViewmodel extends ChangeNotifier {
 
       final Result<void> resultSwitch;
       final String action;
+
       bool started = false;
+
       if (resultRoutine.value.running) {
         resultSwitch = await _routinesRepository.logStop(id, now);
         action = 'Stopped';
@@ -350,6 +359,10 @@ class HomeViewmodel extends ChangeNotifier {
           return resultSwitch;
         case Ok<void>():
           _log.fine('$action routine $id');
+      }
+
+      if (started && _runningSpecialSession != null) {
+        _toggleSpecialSession(_runningSpecialSession!);
       }
 
       // _routines = _listRoutines(
@@ -410,5 +423,83 @@ class HomeViewmodel extends ChangeNotifier {
     sortedRoutines.addAll(remainingRoutines);
     sortedRoutines.addAll(completedRoutines);
     return sortedRoutines;
+  }
+
+  SpecialSessionDuration? _specialSessionStatus;
+  SpecialSessionDuration? get specialSessionStatus => _specialSessionStatus;
+
+  Future<Result<void>> _updateSpecialSessionStatus(DateTime day) async {
+    try {
+      final result = await _routinesRepository.sumSpecialSessionDurations(day);
+      switch (result) {
+        case Error<SpecialSessionDuration>():
+          _log.warning(
+            '_updateSpecialSessionStatus: sumSpecialSessionDurations: ${result.error}',
+          );
+          return Result.error(result.error);
+        case Ok<SpecialSessionDuration>():
+          _log.fine('_updateSpecialSessionStatus: ${result.value}');
+          _specialSessionStatus = result.value;
+      }
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  SpecialGoal? _runningSpecialSession;
+  SpecialGoal? get runningSpecialSession => _runningSpecialSession;
+
+  RoutineSummary? _lastPinnedRoutine;
+
+  Future<Result<void>> _toggleSpecialSession(SpecialGoal goal) async {
+    try {
+      final resultToggle = await _routinesRepository.toggleSpecialSession(
+        goal,
+        DateTime.now(),
+      );
+      switch (resultToggle) {
+        case Error<(SpecialGoalSession?, SpecialGoalSession?)>():
+          _log.warning(
+            '_toggleSpecialSession: toggleSpecialSession: ${resultToggle.error}',
+          );
+          return Result.error(resultToggle.error);
+        case Ok<(SpecialGoalSession?, SpecialGoalSession?)>():
+      }
+
+      final started = resultToggle.value.$2, stopped = resultToggle.value.$1;
+
+      if (started != null) {
+        _log.fine('started $started');
+      }
+      if (stopped != null) {
+        _log.fine('stopped $stopped');
+      }
+
+      _runningSpecialSession = started?.goal;
+
+      _log.fine(
+        '_toggleSpecialSession: _runningSpecialSession: $_runningSpecialSession',
+      );
+
+      if (stopped != null && _lastPinnedRoutine != null) {
+        final id = _lastPinnedRoutine!.id;
+        _startOrStopRoutine(id);
+        _lastPinnedRoutine = null;
+        _log.fine(
+          '_toggleSpecialSession: ${goal.column} started: _startOrStopRoutine($id) _lastPinnedRoutine<-null',
+        );
+      } else if (started != null && _pinnedRoutine != null) {
+        _lastPinnedRoutine = _pinnedRoutine;
+        final id = _pinnedRoutine!.id;
+        _startOrStopRoutine(id);
+        _log.fine(
+          '_toggleSpecialSession: ${goal.column} started: refresh _lastPinnedRoutine then _startOrStopRoutine($id)',
+        );
+      }
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
   }
 }

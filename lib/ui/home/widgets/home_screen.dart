@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/notifications.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
@@ -13,20 +15,26 @@ import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/widgets/action_button.dart';
+import 'package:too_many_tabs/ui/home/widgets/expandable_fab.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
+import 'package:too_many_tabs/ui/home/widgets/special_goal_action.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
+import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.homeModel,
     required this.notesModel,
+    required this.settingsModel,
   });
 
   final HomeViewmodel homeModel;
   final NotesViewmodel notesModel;
+  final SettingsViewmodel settingsModel;
 
   @override
   createState() => HomeScreenState();
@@ -162,8 +170,32 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  Row(
-                    children: [HeaderEta(routines: widget.homeModel.routines)],
+                  ListenableBuilder(
+                    listenable: widget.settingsModel.load,
+                    builder: (context, child) {
+                      final running = widget.settingsModel.load.running,
+                          error = widget.settingsModel.load.error;
+                      return Loader(
+                        error: error,
+                        running: running,
+                        onError: widget.settingsModel.load.execute,
+                        child: child!,
+                      );
+                    },
+                    child: ListenableBuilder(
+                      listenable: widget.settingsModel,
+                      builder: (context, _) {
+                        return Row(
+                          children: [
+                            HeaderEta(
+                              routines: widget.homeModel.routines,
+                              specialGoals:
+                                  widget.settingsModel.settings.specialGoals,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ],
               );
@@ -235,6 +267,32 @@ class HomeScreenState extends State<HomeScreen> {
               //),
             ),
             showNewRoutinePopup
+                ? ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [.01, .7, 1],
+                      colors: [Colors.black, Colors.black, Colors.transparent],
+                    ).createShader(bounds),
+                    blendMode: BlendMode.dstIn,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0, .4],
+                          colors: [
+                            colorScheme.surface,
+                            darkMode
+                                ? colorScheme.primaryContainer
+                                : colorScheme.primaryFixed,
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : SizedBox.shrink(),
+            showNewRoutinePopup
                 ? Center(
                     child: NewRoutine(
                       closeCancel: () {
@@ -258,21 +316,65 @@ class HomeScreenState extends State<HomeScreen> {
                   )
                 : Container(),
             isSomePopupShown || showNewRoutinePopup
-                ? Container()
-                : Align(
-                    alignment: Alignment.bottomRight,
-                    child: FloatingAction(
-                      icon: Icons.add,
-                      onPressed: () => setState(() {
-                        showNewRoutinePopup = true;
-                      }),
-                      colorComposition: colorCompositionFromAction(
-                        context,
-                        ApplicationAction.addRoutine,
-                      ),
-                      verticalOffset: actionVerticalOffset,
-                    ),
+                ? SizedBox.shrink()
+                : ListenableBuilder(
+                    listenable: widget.homeModel,
+                    builder: (context, _) {
+                      return ExpandableFab(
+                        initialOpen: false,
+                        distance: 90,
+                        children: [
+                          ...[
+                            SpecialGoalAction(
+                              goal: SpecialGoal.slowDown,
+                              symbol: Symbols.bedtime,
+                            ),
+                            SpecialGoalAction(
+                              goal: SpecialGoal.stoke,
+                              symbol: Symbols.fork_spoon,
+                            ),
+                            SpecialGoalAction(
+                              goal: SpecialGoal.sitBack,
+                              symbol: Symbols.beach_access,
+                            ),
+                          ].map(
+                            (action) => ActionButton(
+                              onPressed: () {
+                                widget.homeModel.toggleSpecialSession.execute(
+                                  action.goal,
+                                );
+                              },
+                              icon: action.symbol,
+                              highlight:
+                                  widget.homeModel.runningSpecialSession ==
+                                  action.goal,
+                            ),
+                          ),
+                          ActionButton(
+                            onPressed: () => setState(() {
+                              showNewRoutinePopup = true;
+                            }),
+                            icon: Symbols.add,
+                            highlight: true,
+                          ),
+                        ],
+                      );
+                    },
                   ),
+            // Align(
+            //     alignment: Alignment.bottomRight,
+            //     child: FloatingAction(
+            //       icon: Icons.add,
+            //       onPressed: () => setState(() {
+            //         showNewRoutinePopup = true;
+            //       }),
+            //       colorComposition: colorCompositionFromAction(
+            //         context,
+            //         ApplicationAction.addRoutine,
+            //       ),
+            //       verticalOffset: actionVerticalOffset,
+            //     ),
+            //   ),
             isSomePopupShown || showNewRoutinePopup
                 ? Container()
                 : Align(

@@ -2,13 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 
 class HeaderRoutinesDynamicGoalLabel extends StatefulWidget {
-  const HeaderRoutinesDynamicGoalLabel({super.key, required this.routines});
+  const HeaderRoutinesDynamicGoalLabel({
+    super.key,
+    required this.routines,
+    required this.specialGoals,
+  });
 
   final List<RoutineSummary> routines;
+  final SpecialGoals specialGoals;
 
   @override
   createState() => _HeaderRoutinesDynamicGoalLabelState();

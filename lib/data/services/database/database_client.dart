@@ -4,6 +4,7 @@ import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -423,6 +424,117 @@ class DatabaseClient {
         whereArgs: [noteId],
       );
       return Result.ok(null);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<SpecialGoalSession?>> getCurrentSpecialGoalSession() async {
+    try {
+      final rows = await _database.query(
+        'special_goal_sessions',
+        where: 'stopped_at IS NULL',
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        return Result.ok(null);
+      }
+      final {'started_at': start as String, 'code': code as int} = rows[0];
+      return Result.ok(
+        SpecialGoalSession(
+          goal: SpecialGoal.of(code),
+          startedAt: DateTime.parse(start),
+        ),
+      );
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<SpecialGoalSession>> startSpecialGoalSession(
+    SpecialGoal goal,
+    DateTime time,
+  ) async {
+    try {
+      await _database.transaction((tx) async {
+        await tx.update('special_goal_sessions', {
+          'stopped_at': time.toIso8601String(),
+        }, where: 'stopped_at IS NULL');
+        await tx.insert('special_goal_sessions', {
+          'code': goal.code,
+          'started_at': time.toIso8601String(),
+        });
+      });
+      return Result.ok(SpecialGoalSession(goal: goal, startedAt: time));
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<SpecialGoalSession?>> stopSpecialGoalSession(
+    DateTime time,
+  ) async {
+    try {
+      SpecialGoalSession? session;
+      await _database.transaction((tx) async {
+        final row = await tx.query(
+          'special_goal_sessions',
+          where: 'stopped_at IS NULL',
+        );
+        if (row.isEmpty) {
+          return null;
+        }
+        final {
+          'id': id as int,
+          'started_at': startTimestamp as String,
+          'code': code as int,
+        } = row[0];
+        final startedAt = DateTime.parse(startTimestamp);
+        await tx.update(
+          'special_goal_sessions',
+          {'stopped_at': time.toIso8601String()},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        session = SpecialGoalSession(
+          goal: SpecialGoal.of(code),
+          startedAt: startedAt,
+          stoppedAt: time,
+        );
+      });
+      return Result.ok(session);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<List<SpecialGoalSession>>> getSpecialGoalSessions(
+    DateTime day,
+  ) async {
+    try {
+      final start = DateTime(day.year, day.month, day.day);
+      final end = start.add(Duration(days: 1));
+      final rows = await _database.query(
+        'special_goal_sessions',
+        where: '(started_at >= % AND started_at <= %) || stopped_at IS NULL',
+        whereArgs: [start.toIso8601String(), end.toIso8601String()],
+      );
+      final sessions = <SpecialGoalSession>[];
+      for (final {
+            'started_at': startedAt as String,
+            'stopped_at': stoppedAt as String?,
+            'code': code as int,
+          }
+          in rows) {
+        sessions.add(
+          SpecialGoalSession(
+            goal: SpecialGoal.of(code),
+            startedAt: DateTime.parse(startedAt),
+            stoppedAt: stoppedAt == null ? null : DateTime.parse(stoppedAt),
+          ),
+        );
+      }
+      return Result.ok(sessions);
     } on Exception catch (e) {
       return Result.error(e);
     }
