@@ -2,13 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_routines_dynamic_goal_label.dart';
 
 class HeaderEta extends StatefulWidget {
-  const HeaderEta({super.key, required this.routines});
+  const HeaderEta({
+    super.key,
+    required this.routines,
+    required this.specialGoals,
+  });
 
   final List<RoutineSummary> routines;
+  final SpecialGoals specialGoals;
 
   @override
   createState() => _HeaderEtaSTate();
@@ -107,7 +113,10 @@ class _HeaderEtaSTate extends State<HeaderEta> {
             ),
           ],
         ),
-        HeaderRoutinesDynamicGoalLabel(routines: widget.routines),
+        HeaderRoutinesDynamicGoalLabel(
+          routines: widget.routines,
+          specialGoals: widget.specialGoals,
+        ),
       ],
     );
   }

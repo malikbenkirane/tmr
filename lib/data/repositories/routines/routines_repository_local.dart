@@ -1,8 +1,11 @@
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class RoutinesRepositoryLocal implements RoutinesRepository {
@@ -380,5 +383,76 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   @override
   Future<Result<void>> dismissNote(int noteId) async {
     return _databaseClient.updateNoteDismissed(noteId, true);
+  }
+
+  @override
+  Future<Result<(SpecialGoalSession?, SpecialGoalSession?)>>
+  toggleSpecialSession(SpecialGoal goal, DateTime time) async {
+    final resultCurrent = await _databaseClient.getCurrentSpecialGoalSession();
+    switch (resultCurrent) {
+      case Error<SpecialGoalSession?>():
+        _log.warning(
+          'toggleSpecialSession: db.getCurrentSpecialGoalSession: ${resultCurrent.error}',
+        );
+        return Result.error(resultCurrent.error);
+      case Ok<SpecialGoalSession?>():
+        _log.fine(
+          'toggleSpecialSession: db.getCurrentSpecialGoalSession: ${resultCurrent.value}',
+        );
+    }
+    if (resultCurrent.value == null || resultCurrent.value!.goal != goal) {
+      final result = await _databaseClient.startSpecialGoalSession(goal, time);
+      switch (result) {
+        case Error<SpecialGoalSession>():
+          _log.warning(
+            'toggleSpecialSession: db.startSpecialGoalSession: ${result.error}',
+          );
+          return Result.error(result.error);
+        case Ok<SpecialGoalSession>():
+          _log.fine(
+            'toggleSpecialSession: db.startSpecialGoalSession: started ${goal.column}',
+          );
+      }
+
+      return Result.ok((resultCurrent.value, result.value));
+    }
+    final result = await _databaseClient.stopSpecialGoalSession(time);
+    switch (result) {
+      case Ok<SpecialGoalSession?>():
+        _log.fine(
+          'toggleSpecialSession: db.stopSpecialGoalSession: stopped ${goal.column}',
+        );
+
+        // session stopped: return stopped session and stooped=!started
+
+        return Result.ok((result.value, null));
+      case Error<SpecialGoalSession?>():
+        _log.warning(
+          'toggleSpecialSession: db.stopSpecialGoalSession: ${result.error}',
+        );
+        return Result.error(result.error);
+    }
+  }
+
+  @override
+  Future<Result<SpecialSessionDuration>> sumSpecialSessionDurations(
+    DateTime day,
+  ) async {
+    final result = await _databaseClient.getSpecialGoalSessions(day);
+    switch (result) {
+      case Error<List<SpecialGoalSession>>():
+        return Result.error(result.error);
+      case Ok<List<SpecialGoalSession>>():
+    }
+    var total = Duration();
+    DateTime? current;
+    for (final session in result.value) {
+      if (session.stoppedAt == null) {
+        current = session.startedAt;
+        continue;
+      }
+      total += session.stoppedAt!.difference(session.startedAt);
+    }
+    return Result.ok(SpecialSessionDuration(duration: total, current: current));
   }
 }

@@ -36,9 +36,9 @@ class _NewRoutineState extends State<NewRoutine> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      width: MediaQuery.of(context).size.width * .88,
+      width: MediaQuery.of(context).size.width * .8,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(60),
         color: colorScheme.surfaceContainer,
         boxShadow: List<BoxShadow>.generate(4, (index) {
           var i = 1, j = 1;
@@ -50,18 +50,19 @@ class _NewRoutineState extends State<NewRoutine> {
           }
           final double offset = 10;
           return BoxShadow(
-            color: colorScheme.surfaceDim,
+            color: colorScheme.surfaceDim.withValues(alpha: .1),
             offset: Offset(i * offset, j * offset),
             blurRadius: 10,
           );
         }),
+        // border: Border.all(color: colorScheme.secondary, width: 2),
         //BoxShadow(
         //  color: colorScheme.surfaceDim,
         //  offset: Offset(30, 30),
         //  blurRadius: 20,
         //),
       ),
-      padding: EdgeInsets.all(22),
+      padding: EdgeInsets.all(30),
       child: Column(
         spacing: 20,
         mainAxisSize: MainAxisSize.min,
@@ -69,9 +70,9 @@ class _NewRoutineState extends State<NewRoutine> {
           TextField(
             decoration: InputDecoration(
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(30),
               ),
-              hintText: "Name your planned routine",
+              hintText: "Name it! 🚀",
             ),
             controller: textController,
           ),
@@ -80,7 +81,7 @@ class _NewRoutineState extends State<NewRoutine> {
             children: [
               ElevatedButton(
                 onPressed: widget.closeCancel,
-                child: const Text('Cancel'),
+                child: const Text('Never mind'),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -98,7 +99,7 @@ class _NewRoutineState extends State<NewRoutine> {
                   backgroundColor: addComp.background,
                   foregroundColor: addComp.foreground,
                 ),
-                child: const Text('Add routine'),
+                child: const Text('Create'),
               ),
             ],
           ),

@@ -26,7 +26,12 @@ GoRouter router() => GoRouter(
           notificationsPlugin: context.read(),
         );
         final notesViewmodel = NotesViewmodel(repo: context.read());
-        return HomeScreen(homeModel: homeViewmodel, notesModel: notesViewmodel);
+        final settingsViewmodel = SettingsViewmodel(repository: context.read());
+        return HomeScreen(
+          homeModel: homeViewmodel,
+          notesModel: notesViewmodel,
+          settingsModel: settingsViewmodel,
+        );
       },
     ),
     GoRoute(

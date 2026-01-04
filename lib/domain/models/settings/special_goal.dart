@@ -6,5 +6,27 @@ enum SpecialGoal {
 
   final String column;
   final int code;
+
   const SpecialGoal({required this.column, required this.code});
+
+  static SpecialGoal of(int code) {
+    if (code == 1) {
+      return sitBack;
+    }
+    if (code == 2) {
+      return stoke;
+    }
+    if (code == 3) {
+      return startSlow;
+    }
+    if (code == 4) {
+      return slowDown;
+    }
+    throw Exception('unknown special goal code=$code');
+  }
+
+  @override
+  String toString() {
+    return column;
+  }
 }

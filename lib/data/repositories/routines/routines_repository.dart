@@ -1,5 +1,8 @@
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 abstract class RoutinesRepository {
@@ -24,4 +27,9 @@ abstract class RoutinesRepository {
     required int routineId,
   });
   Future<Result<void>> dismissNote(int noteId);
+  Future<Result<(SpecialGoalSession?, SpecialGoalSession?)>>
+  toggleSpecialSession(SpecialGoal goal, DateTime time);
+  Future<Result<SpecialSessionDuration>> sumSpecialSessionDurations(
+    DateTime day,
+  );
 }
