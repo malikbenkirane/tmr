@@ -330,14 +330,16 @@ class HomeViewmodel extends ChangeNotifier {
 
       _log.fine('_startOrStopRoutine: routine ${resultRoutine.value}');
 
+      final now = DateTime.now();
+
       final Result<void> resultSwitch;
       final String action;
       bool started = false;
       if (resultRoutine.value.running) {
-        resultSwitch = await _routinesRepository.logStop(id, DateTime.now());
+        resultSwitch = await _routinesRepository.logStop(id, now);
         action = 'Stopped';
       } else {
-        resultSwitch = await _routinesRepository.logStart(id, DateTime.now());
+        resultSwitch = await _routinesRepository.logStart(id, now);
         action = 'Started';
         started = true;
       }
@@ -350,20 +352,36 @@ class HomeViewmodel extends ChangeNotifier {
           _log.fine('$action routine $id');
       }
 
-      _routines = _listRoutines(
-        _routines.map((routine) {
-          if (routine.id == id) {
-            return routine.from(
-              setRunning: started,
-              setLastStarted: started ? DateTime.now() : null,
-            );
-          }
-          if (routine.running) {
-            return routine.from(setRunning: false);
-          }
-          return routine;
-        }).toList(),
+      // _routines = _listRoutines(
+      //   _routines.map((routine) {
+      //     if (routine.id == id) {
+      //       return routine.from(
+      //         setRunning: started,
+      //         setLastStarted: started ? now : null,
+      //       );
+      //     }
+      //     if (routine.running) {
+      //       return routine.from(setRunning: false);
+      //     }
+      //     return routine;
+      //   }).toList(),
+      // );
+      //
+      // Can't do this as repository getRoutinesList does more than listing routines
+      // especially "daily check".
+      final resultList = await _routinesRepository.getRoutinesList(
+        archived: false,
+        binned: false,
       );
+      switch (resultList) {
+        case Error<List<RoutineSummary>>():
+          _log.warning(
+            '_startOrStopRoutine: getRoutinesList: ${resultList.error}',
+          );
+          return Result.error(resultList.error);
+        case Ok<List<RoutineSummary>>():
+          _routines = _listRoutines(resultList.value);
+      }
 
       return await _updateRunningRoutine();
     } finally {
