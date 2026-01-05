@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/core/colors.dart' as comp;
+import 'package:timeago/timeago.dart' as timeago;
 
 class Routine extends StatelessWidget {
   const Routine({
@@ -90,7 +91,7 @@ class Routine extends StatelessWidget {
                             fontWeight: FontWeight.w300,
                           ),
                         ),
-                        Text(_format(routine.lastStarted!)),
+                        Text(timeago.format(routine.lastStarted!)),
                       ],
                     ),
               // Text(
@@ -102,21 +103,5 @@ class Routine extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _format(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(Duration(days: 1));
-    if (date.isAfter(yesterday) && date.isBefore(today)) {
-      return 'yesterday';
-    }
-    if (date.isBefore(yesterday)) {
-      if (date.year < today.year) {
-        return DateFormat('EEE, MMM d, yyyy').format(date);
-      }
-      return DateFormat('EEE, MMM d').format(date);
-    }
-    return DateFormat.jm().format(date);
   }
 }
