@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
+import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/menu_item.dart';
 
 class RoutineMenu extends StatelessWidget {
@@ -10,10 +11,12 @@ class RoutineMenu extends StatelessWidget {
     required this.onClose,
     required this.routine,
     required this.popup,
+    required this.homeViewmodel,
   });
   final void Function() onClose;
   final void Function(MenuItem) popup;
   final RoutineSummary routine;
+  final HomeViewmodel homeViewmodel;
 
   @override
   build(BuildContext context) {
@@ -22,10 +25,18 @@ class RoutineMenu extends StatelessWidget {
       child: Column(
         spacing: 10,
         children: [
-          _MenuItem(
-            icon: routine.running ? Icons.stop_circle : Icons.play_circle,
-            label: routine.running ? "Stop" : "Start",
-            onTap: () {},
+          ListenableBuilder(
+            listenable: homeViewmodel,
+            builder: (context, _) {
+              final running = homeViewmodel.pinnedRoutine != null;
+              return _MenuItem(
+                icon: running ? Icons.stop_circle : Icons.play_circle,
+                label: running ? "Stop" : "Start",
+                onTap: () {
+                  homeViewmodel.startOrStopRoutine.execute(routine.id);
+                },
+              );
+            },
           ),
           _MenuItem(
             icon: Icons.star,

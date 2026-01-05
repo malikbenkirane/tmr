@@ -3,6 +3,7 @@ import 'package:too_many_tabs/data/repositories/routines/routines_repository.dar
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
@@ -105,13 +106,10 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
-  Future<Result<List<RoutineSummary>>> getRoutinesList({
-    required bool archived,
-    required bool binned,
-  }) async {
+  Future<Result<List<RoutineSummary>>> getRoutinesList(RoutineBin bin) async {
     final resultGet = await _databaseClient.getRoutines(
-      archived: archived,
-      binned: binned,
+      archived: bin == RoutineBin.backlog,
+      binned: bin == RoutineBin.archives,
     );
     switch (resultGet) {
       case Error<List<RoutineSummary>>():
@@ -120,10 +118,39 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
       case Ok<List<RoutineSummary>>():
     }
 
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final resultCurrentSpecialSession = await _databaseClient
+        .getCurrentSpecialGoalSession();
+    switch (resultCurrentSpecialSession) {
+      case Error<SpecialGoalSession?>():
+        _log.warning(
+          '_dailyCheck: getCurrentSpecialGoalSession: ${resultCurrentSpecialSession.error}',
+        );
+        return Result.error(resultCurrentSpecialSession.error);
+      case Ok<SpecialGoalSession?>():
+        _log.fine(
+          '_dailyCheck: getCurrentSpecialGoalSession: ${resultCurrentSpecialSession.value}',
+        );
+    }
+
+    if (resultCurrentSpecialSession.value != null &&
+        resultCurrentSpecialSession.value!.startedAt.isBefore(today)) {
+      final result = await _databaseClient.stopSpecialGoalSession(today);
+      switch (result) {
+        case Error<SpecialGoalSession?>():
+          _log.warning('_dailyCheck: stopSpecialGoalSession: ${result.error}');
+          return Result.error(result.error);
+        case Ok<SpecialGoalSession?>():
+          _log.fine('_dailyCheck: stopSpecialGoalSession: ${result.value}');
+      }
+    }
+
     List<RoutineSummary> routines = [];
     for (final routine in resultGet.value) {
-      _log.fine('_dailyCheck ${routine.id}');
-      final resultCheck = await _dailyCheck(routine.id);
+      // _log.fine('_dailyCheck ${routine.id}');
+      final resultCheck = await _dailyCheck(routine.id, now, today);
       switch (resultCheck) {
         case Error<RoutineSummary>():
           _log.warning(
@@ -138,11 +165,12 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
     return Result.ok(routines);
   }
 
-  Future<Result<RoutineSummary>> _dailyCheck(int routineID) async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    _log.fine('_dailyCheck $routineID: last log started');
+  Future<Result<RoutineSummary>> _dailyCheck(
+    int routineID,
+    DateTime now,
+    DateTime today,
+  ) async {
+    // _log.fine('_dailyCheck $routineID: last log started');
     final resultStarted = await _databaseClient.lastLog(
       routineID,
       RoutineState.started,
@@ -161,7 +189,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
           if (resultStarted.value!.isBefore(today)) {
             // therefore we need to reset routine "spent" attribute
             needSpentReset = true;
-            _log.fine('_dailyCheck $routineID: last log stopped');
+            //_log.fine('_dailyCheck $routineID: last log stopped');
             final resultStopped = await _databaseClient.lastLog(
               routineID,
               RoutineState.stopped,
@@ -185,7 +213,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
           }
         }
         if (needLogStop) {
-          _log.fine('_dailyCheck $routineID: logStop');
+          // _log.fine('_dailyCheck $routineID: logStop');
           final resultStop = await logStop(routineID, now);
           switch (resultStop) {
             case Error<void>():
@@ -195,7 +223,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
           }
         }
         if (needSpentReset) {
-          _log.fine('_dailyCheck $routineID: spent reset');
+          // _log.fine('_dailyCheck $routineID: spent reset');
           final resultUpdateSpent = await _databaseClient.updateRoutineSpent(
             routineID,
             Duration(),
@@ -209,7 +237,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
             case Ok<void>():
           }
 
-          _log.fine('_dailyCheck $routineID: running reset');
+          // _log.fine('_dailyCheck $routineID: running reset');
           final resultUpdateRunning = await _databaseClient
               .updateRoutineRunning(routineID, false);
           switch (resultUpdateRunning) {
@@ -435,6 +463,11 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
+  Future<Result<SpecialGoalSession?>> currentSpecialSession() async {
+    return _databaseClient.getCurrentSpecialGoalSession();
+  }
+
+  @override
   Future<Result<SpecialSessionDuration>> sumSpecialSessionDurations(
     DateTime day,
   ) async {
@@ -454,5 +487,11 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
       total += session.stoppedAt!.difference(session.startedAt);
     }
     return Result.ok(SpecialSessionDuration(duration: total, current: current));
+  }
+
+  @override
+  Future<Result<SpecialSessionDuration?>>
+  currentSpecialSessionDuration() async {
+    return _databaseClient.getCurrentSpecialSessionDuration(DateTime.now());
   }
 }

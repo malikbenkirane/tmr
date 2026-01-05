@@ -7,11 +7,13 @@ class ActionButton extends StatelessWidget {
     required this.onPressed,
     required this.icon,
     this.highlight,
+    this.secondary,
   });
 
   final void Function() onPressed;
   final IconData icon;
   final bool? highlight;
+  final bool? secondary;
 
   @override
   build(BuildContext context) {
@@ -19,7 +21,9 @@ class ActionButton extends StatelessWidget {
     return Material(
       shape: const CircleBorder(),
       clipBehavior: Clip.antiAlias,
-      color: highlight ?? false
+      color: secondary ?? false
+          ? theme.colorScheme.secondaryContainer
+          : highlight ?? false
           ? theme.colorScheme.onPrimary
           : theme.colorScheme.primary,
       elevation: 4,
@@ -27,7 +31,9 @@ class ActionButton extends StatelessWidget {
         onPressed: onPressed,
         icon: Icon(
           icon,
-          color: highlight ?? false
+          color: secondary ?? false
+              ? theme.colorScheme.onSecondaryContainer
+              : highlight ?? false
               ? theme.colorScheme.primary
               : theme.colorScheme.onPrimary,
         ),

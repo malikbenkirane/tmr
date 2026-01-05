@@ -1,6 +1,8 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
@@ -114,6 +116,8 @@ class DatabaseClient {
       'goal_30m': goal as int,
       'spent_1s': spent as int,
       'running': running as int,
+      'archived': archived as int,
+      'binned': binned as int,
     } = row;
     final DateTime? lastStarted;
 
@@ -125,6 +129,12 @@ class DatabaseClient {
         lastStarted = resultLog.value;
     }
 
+    final bin = archived == 1
+        ? RoutineBin.backlog
+        : binned == 1
+        ? RoutineBin.archives
+        : RoutineBin.today;
+
     final summary = RoutineSummary(
       id: id,
       name: name,
@@ -132,8 +142,9 @@ class DatabaseClient {
       spent: Duration(seconds: spent),
       running: running == 0 ? false : true,
       lastStarted: lastStarted,
+      bin: bin,
     );
-    _log.fine('_extractRoutineSummary: $summary');
+    // _log.fine('_extractRoutineSummary: $summary');
 
     return Result.ok(summary);
   }
@@ -177,6 +188,8 @@ class DatabaseClient {
       'name': name as String,
       'goal_30m': goal as int,
       'spent_1s': spent as int,
+      'archived': archived as int,
+      'binned': binned as int,
     } = running[0];
 
     final DateTime? routineLastLog;
@@ -190,6 +203,12 @@ class DatabaseClient {
         return Result.error(resultLast.error);
     }
 
+    final bin = archived == 1
+        ? RoutineBin.backlog
+        : binned == 1
+        ? RoutineBin.archives
+        : RoutineBin.today;
+
     return Result.ok(
       RoutineSummary(
         id: id,
@@ -198,6 +217,7 @@ class DatabaseClient {
         spent: Duration(seconds: spent),
         running: true,
         lastStarted: routineLastLog,
+        bin: bin,
       ),
     );
   }
@@ -451,6 +471,60 @@ class DatabaseClient {
     }
   }
 
+  Future<Result<SpecialSessionDuration?>> getCurrentSpecialSessionDuration(
+    DateTime day,
+  ) async {
+    try {
+      final SpecialGoalSession specialGoalSession;
+      {
+        final result = await getCurrentSpecialGoalSession();
+        switch (result) {
+          case Error<SpecialGoalSession?>():
+            return Result.error(result.error);
+          case Ok<SpecialGoalSession?>():
+            if (result.value == null) {
+              return Result.ok(null);
+            }
+            specialGoalSession = result.value!;
+        }
+      }
+      final from = DateTime(day.year, day.month, day.day);
+      final to = from.add(Duration(days: 1));
+      final rows = await _database.query(
+        'special_goal_sessions',
+        where:
+            '((started_at >= ? AND started_at <= ?) OR stopped_at IS NULL) AND code = ?',
+        whereArgs: [
+          from.toIso8601String(),
+          to.toIso8601String(),
+          specialGoalSession.goal.code,
+        ],
+      );
+      var d = Duration();
+      for (final {
+            'started_at': startTimestamp as String,
+            'stopped_at': stopTimestamp as String?,
+          }
+          in rows) {
+        final startedAt = DateTime.parse(startTimestamp);
+        if (stopTimestamp == null) {
+          d += DateTime.now().difference(startedAt);
+          continue;
+        }
+        final stoppedAt = DateTime.parse(stopTimestamp);
+        d += stoppedAt.difference(startedAt);
+      }
+      return Result.ok(
+        SpecialSessionDuration(
+          duration: d,
+          current: specialGoalSession.startedAt,
+        ),
+      );
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
   Future<Result<SpecialGoalSession>> startSpecialGoalSession(
     SpecialGoal goal,
     DateTime time,
@@ -514,10 +588,12 @@ class DatabaseClient {
     try {
       final start = DateTime(day.year, day.month, day.day);
       final end = start.add(Duration(days: 1));
+      final startTimestamp = start.toIso8601String(),
+          endTimestamp = end.toIso8601String();
       final rows = await _database.query(
         'special_goal_sessions',
-        where: '(started_at >= % AND started_at <= %) || stopped_at IS NULL',
-        whereArgs: [start.toIso8601String(), end.toIso8601String()],
+        where: '(started_at >= ? AND started_at <= ?) OR stopped_at IS NULL',
+        whereArgs: [startTimestamp, endTimestamp],
       );
       final sessions = <SpecialGoalSession>[];
       for (final {

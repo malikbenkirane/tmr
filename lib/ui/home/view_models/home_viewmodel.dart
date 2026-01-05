@@ -2,12 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
+import 'package:too_many_tabs/data/repositories/settings/settings_repository.dart';
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/notifications.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
@@ -20,8 +25,10 @@ class HomeViewmodel extends ChangeNotifier {
   HomeViewmodel({
     required RoutinesRepository routinesRepository,
     required FlutterLocalNotificationsPlugin notificationsPlugin,
+    required SettingsRepository settingsRepository,
   }) : _routinesRepository = routinesRepository,
-       _notificationsPlugin = notificationsPlugin {
+       _notificationsPlugin = notificationsPlugin,
+       _settingsRepository = settingsRepository {
     load = Command0(_load)..execute();
     startOrStopRoutine = Command1(_startOrStopRoutine);
     updateRoutineGoal = Command1(_updateRoutineGoal);
@@ -51,22 +58,46 @@ class HomeViewmodel extends ChangeNotifier {
   RoutineSummary? get pinnedRoutine => _pinnedRoutine;
   int? get lastCreatedRoutineID => _lastCreatedRoutineID;
 
+  bool _newDay = true;
+  bool get newDay => _newDay;
+
+  final SettingsRepository _settingsRepository;
+
   Future<Result> _load() async {
     try {
-      final result = await _routinesRepository.getRoutinesList(
-        archived: false,
-        binned: false,
-      );
-      switch (result) {
-        case Error<List<RoutineSummary>>():
-          _log.warning('Failed to load routines', result.error);
-          return result;
-        case Ok<List<RoutineSummary>>():
-          _routines = _listRoutines(result.value);
-          _log.fine('Loaded routines');
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      for (final bin in [
+        RoutineBin.today,
+        RoutineBin.archives,
+        RoutineBin.backlog,
+      ]) {
+        final result = await _routinesRepository.getRoutinesList(bin);
+        switch (result) {
+          case Error<List<RoutineSummary>>():
+            _log.warning(
+              '_load: getRoutinesList(${bin.toStringValue()}) ${result.error}',
+            );
+            return result;
+          case Ok<List<RoutineSummary>>():
+            for (final routine in result.value) {
+              if (routine.lastStarted != null &&
+                  routine.lastStarted!.isAfter(today)) {
+                _newDay = false;
+              }
+            }
+            _log.fine(
+              '_load: getRoutinesList(${bin.toStringValue()}): ${result.value.length} routines loaded',
+            );
+            if (bin == RoutineBin.today) {
+              _routines = _listRoutines(result.value);
+            }
+        }
       }
 
       await _updateNotifications();
+      await _updateSpecialSessionStatus(DateTime.now());
 
       return await _updateRunningRoutine();
     } finally {
@@ -152,6 +183,154 @@ class HomeViewmodel extends ChangeNotifier {
     } on Exception catch (e) {
       _log.warning('_createRoutine: _load: $e');
       return Result.error(e);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> _updateSpecialNotifications(SpecialGoals settings) async {
+    try {
+      for (final code in [
+        NotificationCode.specialGoalStoke50,
+        NotificationCode.specialGoalStoke90,
+        NotificationCode.specialGoalSitback5,
+        NotificationCode.specialGoalSitback15,
+        NotificationCode.specialGoalSitback50,
+        NotificationCode.specialGoalSitback100,
+        NotificationCode.specialGoalStartSlow33,
+        NotificationCode.specialGoalStartSlow66,
+        NotificationCode.specialGoalStartSlow100,
+      ]) {
+        await _notificationsPlugin.cancel(code.code);
+      }
+
+      SpecialSessionDuration session;
+      {
+        final result = await _routinesRepository
+            .currentSpecialSessionDuration();
+        switch (result) {
+          case Error<SpecialSessionDuration?>():
+            _log.warning(
+              '_updateSpecialNotifications: currentSpecialSessionDuration: ${result.error}',
+            );
+            return;
+          case Ok<SpecialSessionDuration?>():
+            if (result.value == null) return;
+            session = result.value!;
+        }
+      }
+
+      final spent =
+          session.duration +
+          (session.current != null
+              ? DateTime.now().difference(session.current!)
+              : Duration());
+      final now = DateTime.now();
+
+      switch (_runningSpecialSession!) {
+        case SpecialGoal.stoke:
+          final goal = settings.stoke.inMinutes;
+          final ratio = spent.inMinutes / goal;
+
+          if (ratio <= .9) {
+            await scheduleNotification(
+              title: 'Stoke 90%',
+              body: 'Belly is full... Time to get back to work.',
+              id: NotificationCode.specialGoalStoke90,
+              schedule: now.add(
+                Duration(minutes: ((.9 - ratio) * goal).ceil()),
+              ),
+            );
+          }
+
+          if (ratio <= .5) {
+            await scheduleNotification(
+              title: 'Soke 50%',
+              body: 'Bong Appetite!',
+              id: NotificationCode.specialGoalStoke50,
+              schedule: now.add(
+                Duration(minutes: ((.5 - ratio) * goal).ceil()),
+              ),
+            );
+          }
+
+          break;
+        case SpecialGoal.sitBack:
+          await scheduleNotification(
+            title: 'Nice breeze!',
+            body: '5min sit back and counting...',
+            id: NotificationCode.specialGoalSitback5,
+            schedule: now.add(Duration(minutes: 5)),
+          );
+          await scheduleNotification(
+            title: 'What a break',
+            body: '15min sit back and counting...',
+            id: NotificationCode.specialGoalSitback15,
+            schedule: now.add(Duration(minutes: 15)),
+          );
+
+          final goal = settings.sitBack.inMinutes;
+          final ratio = spent.inMinutes / goal;
+
+          if (ratio <= 1) {
+            await scheduleNotification(
+              title: 'Total allowed sit back time reached',
+              body: 'No more sweet time for today, unless you insist',
+              id: NotificationCode.specialGoalSitback100,
+              schedule: now.add(Duration(minutes: ((1 - ratio) * goal).ceil())),
+            );
+          }
+
+          if (ratio <= .5) {
+            await scheduleNotification(
+              title: 'Total allowed sit back time reached 50%',
+              body: 'Use your rest time carefully or the day will get longer',
+              id: NotificationCode.specialGoalSitback50,
+              schedule: now.add(
+                Duration(minutes: ((.5 - ratio) * goal).ceil()),
+              ),
+            );
+          }
+
+          break;
+        case SpecialGoal.startSlow:
+          final goal = settings.startSlow.inMinutes;
+          final ratio = spent.inMinutes / goal;
+
+          if (ratio <= .33) {
+            await scheduleNotification(
+              title: 'No need to hurry, take it easy.',
+              body: 'Try to ready in ${(goal * .66).ceil()} minutes',
+              id: NotificationCode.specialGoalStartSlow33,
+              schedule: now.add(
+                Duration(minutes: ((.33 - ratio) * goal).ceil()),
+              ),
+            );
+          }
+
+          if (ratio <= .66) {
+            final at = now.add(
+              Duration(minutes: ((.66 - ratio) * goal).ceil()),
+            );
+            await scheduleNotification(
+              title: "🌈 Let's go we're about to have a beautiful day",
+              body: 'Time to get ready for ${DateFormat.jm(at)}',
+              id: NotificationCode.specialGoalStartSlow66,
+              schedule: at,
+            );
+          }
+
+          if (ratio <= 1) {
+            final at = now.add(Duration(minutes: ((1 - ratio) * goal).ceil()));
+            await scheduleNotification(
+              title: "Start Slow at 100%",
+              body: "🏎️Let's go!",
+              id: NotificationCode.specialGoalStartSlow100,
+              schedule: at,
+            );
+          }
+        default:
+      }
     } finally {
       notifyListeners();
     }
@@ -383,8 +562,7 @@ class HomeViewmodel extends ChangeNotifier {
       // Can't do this as repository getRoutinesList does more than listing routines
       // especially "daily check".
       final resultList = await _routinesRepository.getRoutinesList(
-        archived: false,
-        binned: false,
+        RoutineBin.today,
       );
       switch (resultList) {
         case Error<List<RoutineSummary>>():
@@ -430,6 +608,35 @@ class HomeViewmodel extends ChangeNotifier {
 
   Future<Result<void>> _updateSpecialSessionStatus(DateTime day) async {
     try {
+      final resultCurrent = await _routinesRepository.currentSpecialSession();
+      switch (resultCurrent) {
+        case Error<SpecialGoalSession?>():
+          _log.warning(
+            '_updateSpecialSessionStatus: currentSpecialSession: ${resultCurrent.error}',
+          );
+          return Result.error(resultCurrent.error);
+        case Ok<SpecialGoalSession?>():
+          _log.fine(
+            '_updateSpecialSessionStatus: currentSpecialSession: ${resultCurrent.value}',
+          );
+      }
+
+      _runningSpecialSession = resultCurrent.value?.goal;
+      SpecialGoals goalSettings;
+      {
+        final result = await _settingsRepository.getSettings();
+        switch (result) {
+          case Error<SettingsSummary>():
+            _log.warning(
+              '_updateSpecialSessionStatus: getSettings: ${result.error}',
+            );
+            return Result.error(result.error);
+          case Ok<SettingsSummary>():
+            goalSettings = result.value.specialGoals;
+        }
+      }
+      await _updateSpecialNotifications(goalSettings);
+
       final result = await _routinesRepository.sumSpecialSessionDurations(day);
       switch (result) {
         case Error<SpecialSessionDuration>():
@@ -454,9 +661,10 @@ class HomeViewmodel extends ChangeNotifier {
 
   Future<Result<void>> _toggleSpecialSession(SpecialGoal goal) async {
     try {
+      final now = DateTime.now();
       final resultToggle = await _routinesRepository.toggleSpecialSession(
         goal,
-        DateTime.now(),
+        now,
       );
       switch (resultToggle) {
         case Error<(SpecialGoalSession?, SpecialGoalSession?)>():
@@ -476,7 +684,7 @@ class HomeViewmodel extends ChangeNotifier {
         _log.fine('stopped $stopped');
       }
 
-      _runningSpecialSession = started?.goal;
+      _updateSpecialSessionStatus(now);
 
       _log.fine(
         '_toggleSpecialSession: _runningSpecialSession: $_runningSpecialSession',

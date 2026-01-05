@@ -42,7 +42,10 @@ class Routine extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: routine.running ? 4 : 0),
+        padding: EdgeInsets.symmetric(
+          horizontal: routine.running ? 4 : 0,
+          vertical: 10,
+        ),
         child: Stack(
           children: [
             Positioned.fill(

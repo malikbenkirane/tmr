@@ -114,6 +114,7 @@ class _RoutinesListState extends State<RoutinesList> {
                             tappedRoutine!.routineSummary.id == routine.id &&
                             popup == null) {
                           return RoutineMenu(
+                            homeViewmodel: widget.homeModel,
                             onClose: () {
                               widget.onPopup()(false);
                               setState(() {
