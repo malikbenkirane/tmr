@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/notifications.dart';
@@ -191,6 +192,12 @@ class HomeScreenState extends State<HomeScreen> {
                               routines: widget.homeModel.routines,
                               specialGoals:
                                   widget.settingsModel.settings.specialGoals,
+                              specialSessionState:
+                                  widget.homeModel.specialSessionStatus ??
+                                  SpecialSessionDuration(
+                                    current: null,
+                                    duration: Duration(),
+                                  ),
                             ),
                           ],
                         );
@@ -319,47 +326,8 @@ class HomeScreenState extends State<HomeScreen> {
                 ? SizedBox.shrink()
                 : ListenableBuilder(
                     listenable: widget.homeModel,
-                    builder: (context, _) {
-                      return ExpandableFab(
-                        initialOpen: false,
-                        distance: 90,
-                        children: [
-                          ...[
-                            SpecialGoalAction(
-                              goal: SpecialGoal.slowDown,
-                              symbol: Symbols.bedtime,
-                            ),
-                            SpecialGoalAction(
-                              goal: SpecialGoal.stoke,
-                              symbol: Symbols.fork_spoon,
-                            ),
-                            SpecialGoalAction(
-                              goal: SpecialGoal.sitBack,
-                              symbol: Symbols.beach_access,
-                            ),
-                          ].map(
-                            (action) => ActionButton(
-                              onPressed: () {
-                                widget.homeModel.toggleSpecialSession.execute(
-                                  action.goal,
-                                );
-                              },
-                              icon: action.symbol,
-                              highlight:
-                                  widget.homeModel.runningSpecialSession ==
-                                  action.goal,
-                            ),
-                          ),
-                          ActionButton(
-                            onPressed: () => setState(() {
-                              showNewRoutinePopup = true;
-                            }),
-                            icon: Symbols.add,
-                            highlight: true,
-                          ),
-                        ],
-                      );
-                    },
+                    builder: (context, _) =>
+                        _buildExpandableFab(widget.homeModel.newDay),
                   ),
             // Align(
             //     alignment: Alignment.bottomRight,
@@ -394,6 +362,64 @@ class HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildExpandableFab(bool newDay) {
+    debugPrint('_buildExpandableFab: $newDay');
+    return ExpandableFab(
+      initialOpen: false,
+      distance: newDay ? 80 : 90,
+      spreadAngle: newDay ? 90 : 135,
+      children: [
+        ...[
+              ...newDay
+                  ? []
+                  : [
+                      SpecialGoalAction(
+                        goal: SpecialGoal.slowDown,
+                        symbol: Symbols.bedtime,
+                      ),
+                      SpecialGoalAction(
+                        goal: SpecialGoal.stoke,
+                        symbol: Symbols.fork_spoon,
+                      ),
+                      SpecialGoalAction(
+                        goal: SpecialGoal.sitBack,
+                        symbol: Symbols.beach_access,
+                      ),
+                    ],
+              newDay
+                  ? SpecialGoalAction(
+                      goal: SpecialGoal.startSlow,
+                      symbol: Symbols.wb_twilight,
+                    )
+                  : null,
+            ]
+            .map(
+              (action) => action != null
+                  ? ActionButton(
+                      onPressed: () {
+                        widget.homeModel.toggleSpecialSession.execute(
+                          action.goal,
+                        );
+                      },
+                      icon: action.symbol,
+                      highlight:
+                          widget.homeModel.runningSpecialSession == action.goal,
+                    )
+                  : null,
+            )
+            .where((widget) => widget != null)
+            .cast(),
+        ActionButton(
+          onPressed: () => setState(() {
+            showNewRoutinePopup = true;
+          }),
+          icon: Symbols.add,
+          secondary: newDay,
+        ),
+      ],
     );
   }
 }

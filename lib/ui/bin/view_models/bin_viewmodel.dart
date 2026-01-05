@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -25,8 +26,7 @@ class BinViewmodel extends ChangeNotifier {
   Future<Result> _load() async {
     try {
       final resultGet = await _routinesRepository.getRoutinesList(
-        archived: false,
-        binned: true,
+        RoutineBin.archives,
       );
       switch (resultGet) {
         case Error<List<RoutineSummary>>():

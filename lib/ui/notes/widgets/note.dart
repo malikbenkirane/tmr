@@ -18,9 +18,9 @@ class Note extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final base = 10 ^ (math.log(count) / math.ln10).ceil();
     final uid = base + note.id!;
-    debugPrint(
-      'note ${note.id} dismissed=${note.dismissed} idx=$index uid=$uid',
-    );
+    // debugPrint(
+    //   'note ${note.id} dismissed=${note.dismissed} idx=$index uid=$uid',
+    // );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

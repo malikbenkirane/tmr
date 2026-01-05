@@ -23,6 +23,7 @@ GoRouter router() => GoRouter(
       builder: (context, state) {
         final homeViewmodel = HomeViewmodel(
           routinesRepository: context.read(),
+          settingsRepository: context.read(),
           notificationsPlugin: context.read(),
         );
         final notesViewmodel = NotesViewmodel(repo: context.read());

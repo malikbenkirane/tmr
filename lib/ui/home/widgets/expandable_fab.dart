@@ -9,10 +9,12 @@ class ExpandableFab extends StatefulWidget {
     required this.initialOpen,
     required this.distance,
     required this.children,
+    required this.spreadAngle,
   });
 
   final bool? initialOpen;
   final double distance;
+  final double spreadAngle;
   final List<Widget> children;
 
   @override
@@ -87,9 +89,9 @@ class _ExpandableFabState extends State<ExpandableFab>
   List<Widget> _buildExpandingActionButtons() {
     final children = <Widget>[];
     final count = widget.children.length;
-    final step = (90 + 45) / (count - 1);
+    final step = (widget.spreadAngle) / (count - 1);
     for (
-      var i = 0, angleInDegress = -45 / 2;
+      var i = 0, angleInDegress = -(widget.spreadAngle - 90) / 2;
       i < count;
       i++, angleInDegress += step
     ) {

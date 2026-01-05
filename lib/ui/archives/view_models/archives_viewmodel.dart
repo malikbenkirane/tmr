@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -27,8 +28,7 @@ class ArchivesViewmodel extends ChangeNotifier {
     try {
       _routines = [];
       final resultGet = await _routinesRepository.getRoutinesList(
-        archived: true,
-        binned: false,
+        RoutineBin.backlog,
       );
       switch (resultGet) {
         case Error<List<RoutineSummary>>():

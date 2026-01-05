@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
@@ -11,10 +12,12 @@ class HeaderEta extends StatefulWidget {
     super.key,
     required this.routines,
     required this.specialGoals,
+    required this.specialSessionState,
   });
 
   final List<RoutineSummary> routines;
   final SpecialGoals specialGoals;
+  final SpecialSessionDuration specialSessionState;
 
   @override
   createState() => _HeaderEtaSTate();
@@ -59,19 +62,37 @@ class _HeaderEtaSTate extends State<HeaderEta> {
           eta = eta.add(left);
         }
       }
-      if (inPause && !_ticking) {
-        _ticking = true;
-        _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-          _refreshEta();
-        });
-      }
-      if (!inPause && _ticking) {
-        _ticking = false;
-        _timer.cancel();
-      }
-      setState(() {
-        _eta = eta;
+    }
+
+    if (widget.specialSessionState.current != null) {
+      final sessionLastStartedAt = widget.specialSessionState.current!;
+      eta = eta.add(now.difference(sessionLastStartedAt));
+      inPause = false;
+    }
+
+    for (final goal in [
+      widget.specialGoals.sitBack,
+      widget.specialGoals.startSlow,
+      widget.specialGoals.stoke,
+      widget.specialGoals.slowDown,
+    ]) {
+      eta = eta.add(goal);
+    }
+    eta = eta.subtract(widget.specialSessionState.duration);
+
+    setState(() {
+      _eta = eta;
+    });
+
+    if (inPause && !_ticking) {
+      _ticking = true;
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        _refreshEta();
       });
+    }
+    if (!inPause && _ticking) {
+      _ticking = false;
+      _timer.cancel();
     }
   }
 
@@ -79,14 +100,19 @@ class _HeaderEtaSTate extends State<HeaderEta> {
   build(BuildContext context) {
     _refreshEta();
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      spacing: 2,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
+          spacing: 2,
           children: [
             Icon(
               Icons.alarm,
-              size: 17,
-              color: labelColor(context, Label.homeScreenDayETA),
+              size: 19,
+              color: labelColor(
+                context,
+                Label.homeScreenDayETA,
+              ).withValues(alpha: .8),
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,7 +128,7 @@ class _HeaderEtaSTate extends State<HeaderEta> {
                 Padding(
                   padding: EdgeInsets.only(top: 2),
                   child: Text(
-                    _eta.hour >= 12 ? "pm" : "am",
+                    (_eta.hour >= 12 ? "pm" : "am").toUpperCase(),
                     style: TextStyle(
                       fontSize: 10.5,
                       color: labelColor(context, Label.homeScreenDayETA),
@@ -116,6 +142,7 @@ class _HeaderEtaSTate extends State<HeaderEta> {
         HeaderRoutinesDynamicGoalLabel(
           routines: widget.routines,
           specialGoals: widget.specialGoals,
+          specialSessionState: widget.specialSessionState,
         ),
       ],
     );

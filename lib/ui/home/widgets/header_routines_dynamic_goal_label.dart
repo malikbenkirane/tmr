@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
@@ -11,10 +13,12 @@ class HeaderRoutinesDynamicGoalLabel extends StatefulWidget {
     super.key,
     required this.routines,
     required this.specialGoals,
+    required this.specialSessionState,
   });
 
   final List<RoutineSummary> routines;
   final SpecialGoals specialGoals;
+  final SpecialSessionDuration specialSessionState;
 
   @override
   createState() => _HeaderRoutinesDynamicGoalLabelState();
@@ -25,6 +29,7 @@ class _HeaderRoutinesDynamicGoalLabelState
   late Timer _timer;
   bool _ticking = false;
   late Duration _goal;
+  late Duration _goalSpecial;
 
   @override
   void dispose() {
@@ -57,6 +62,25 @@ class _HeaderRoutinesDynamicGoalLabelState
         goal += left;
       }
     }
+    var goalSpecial = Duration();
+    for (final goalSetting in [
+      widget.specialGoals.sitBack,
+      widget.specialGoals.startSlow,
+      widget.specialGoals.stoke,
+      widget.specialGoals.slowDown,
+    ]) {
+      goalSpecial += goalSetting;
+    }
+    goalSpecial -= widget.specialSessionState.duration;
+    if (widget.specialSessionState.current != null) {
+      goalSpecial -= DateTime.now().difference(
+        widget.specialSessionState.current!,
+      );
+      inPause = false;
+    }
+    if (goalSpecial < Duration()) {
+      goalSpecial = Duration();
+    }
     if (inPause && _ticking) {
       _ticking = false;
       _timer.cancel();
@@ -69,6 +93,8 @@ class _HeaderRoutinesDynamicGoalLabelState
     }
     setState(() {
       _goal = goal;
+      _goalSpecial = goalSpecial;
+      // debugPrint('$goal $goalSpecial');
     });
   }
 
@@ -76,13 +102,49 @@ class _HeaderRoutinesDynamicGoalLabelState
   build(BuildContext context) {
     _refreshGoal();
     final left = formatUntilGoal(_goal, Duration(), forceSuffix: false);
-    return Text(
-      left == "done" ? "done" : "$left left",
-      style: TextStyle(
-        fontWeight: FontWeight.w500,
-        fontSize: 10.5,
-        color: labelColor(context, Label.homeScreenGoalTotal),
-      ),
+    final leftSpecial = formatUntilGoal(
+      _goalSpecial,
+      Duration(),
+      forceSuffix: false,
+    );
+    return Row(
+      spacing: 5,
+      children: [
+        ...[
+          (Symbols.more_time, leftSpecial),
+          (Symbols.rewarded_ads, left),
+        ].map((item) => _GoalDisplay(icon: item.$1, text: item.$2)),
+      ],
+    );
+  }
+}
+
+@immutable
+class _GoalDisplay extends StatelessWidget {
+  const _GoalDisplay({required this.text, required this.icon});
+  final String text;
+  final IconData icon;
+  @override
+  build(BuildContext context) {
+    final definitiveTextStyle = TextStyle(
+      color: labelColor(context, Label.homeScreenGoalTotal),
+      fontWeight: FontWeight.w500,
+      fontSize: 10.5,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 2,
+      children: [
+        Text(text == "done" ? "done" : text, style: definitiveTextStyle),
+        Icon(
+          icon,
+          size: 16,
+          color: labelColor(
+            context,
+            Label.homeScreenGoalTotal,
+          ).withValues(alpha: .6),
+        ),
+      ],
     );
   }
 }

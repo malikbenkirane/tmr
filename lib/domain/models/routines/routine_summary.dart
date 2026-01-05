@@ -1,3 +1,5 @@
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
+
 class RoutineSummary {
   RoutineSummary({
     required int id,
@@ -6,11 +8,13 @@ class RoutineSummary {
     required Duration spent,
     required bool running,
     required DateTime? lastStarted, // last time the routine was started
+    required RoutineBin bin,
   }) : _id = id,
        _goal = goal,
        _name = name,
        _spent = spent,
        _running = running,
+       _bin = bin,
        _lastStarted = lastStarted;
 
   final int _id, _goal;
@@ -18,6 +22,7 @@ class RoutineSummary {
   final Duration _spent;
   final bool _running;
   final DateTime? _lastStarted;
+  final RoutineBin _bin;
 
   int get id => _id;
   String get name => _name;
@@ -25,6 +30,7 @@ class RoutineSummary {
   Duration get spent => _spent;
   bool get running => _running;
   DateTime? get lastStarted => _lastStarted;
+  RoutineBin get bin => _bin;
 
   @override
   String toString() {
@@ -37,19 +43,9 @@ class RoutineSummary {
         'spent=$_spent',
         'running=$_running',
         'lastStarted=$_lastStarted',
+        'bin=${_bin.toStringValue()}',
       ].join(' '),
       ')',
     ].join('');
-  }
-
-  RoutineSummary from({bool? setRunning, DateTime? setLastStarted}) {
-    return RoutineSummary(
-      id: id,
-      name: name,
-      goal: goal.inMinutes ~/ 30,
-      spent: spent,
-      running: setRunning ?? running,
-      lastStarted: setLastStarted ?? lastStarted,
-    );
   }
 }
