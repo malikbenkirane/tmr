@@ -53,3 +53,4 @@ app.*.map.json
 state.db
 pubspec.lock
 ios/Podfile.lock
+build_log_ios.txt

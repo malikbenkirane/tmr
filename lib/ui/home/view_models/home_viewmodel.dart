@@ -1,10 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'package:timezone/browser.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/data/repositories/settings/settings_repository.dart';
@@ -13,22 +10,16 @@ import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
-import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
-import 'package:too_many_tabs/notifications.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/utils/command.dart';
-import 'package:too_many_tabs/utils/notification_code.dart';
 import 'package:too_many_tabs/utils/result.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 class HomeViewmodel extends ChangeNotifier {
   HomeViewmodel({
     required RoutinesRepository routinesRepository,
-    required FlutterLocalNotificationsPlugin notificationsPlugin,
     required SettingsRepository settingsRepository,
   }) : _routinesRepository = routinesRepository,
-       _notificationsPlugin = notificationsPlugin,
        _settingsRepository = settingsRepository {
     load = Command0(_load)..execute();
     startOrStopRoutine = Command1(_startOrStopRoutine);
@@ -40,7 +31,6 @@ class HomeViewmodel extends ChangeNotifier {
   }
 
   final RoutinesRepository _routinesRepository;
-  final FlutterLocalNotificationsPlugin _notificationsPlugin;
   final _log = Logger('HomeViewmodel');
   List<RoutineSummary> _routines = [];
   RoutineSummary? _pinnedRoutine;
@@ -97,7 +87,6 @@ class HomeViewmodel extends ChangeNotifier {
         }
       }
 
-      await _updateNotifications();
       await _updateSpecialSessionStatus(DateTime.now());
 
       return await _updateRunningRoutine();
@@ -189,274 +178,6 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<void> _updateSpecialNotifications(SpecialGoals settings) async {
-    try {
-      for (final code in [
-        NotificationCode.specialGoalStoke50,
-        NotificationCode.specialGoalStoke90,
-        NotificationCode.specialGoalSitback5,
-        NotificationCode.specialGoalSitback15,
-        NotificationCode.specialGoalSitback50,
-        NotificationCode.specialGoalSitback100,
-        NotificationCode.specialGoalStartSlow33,
-        NotificationCode.specialGoalStartSlow66,
-        NotificationCode.specialGoalStartSlow100,
-      ]) {
-        await _notificationsPlugin.cancel(code.code);
-      }
-
-      SpecialSessionDuration session;
-      {
-        final result = await _routinesRepository
-            .currentSpecialSessionDuration();
-        switch (result) {
-          case Error<SpecialSessionDuration?>():
-            _log.warning(
-              '_updateSpecialNotifications: currentSpecialSessionDuration: ${result.error}',
-            );
-            return;
-          case Ok<SpecialSessionDuration?>():
-            if (result.value == null) return;
-            session = result.value!;
-        }
-      }
-
-      final spent =
-          session.duration +
-          (session.current != null
-              ? DateTime.now().difference(session.current!)
-              : Duration());
-      final now = DateTime.now();
-
-      final scheduled = <TZDateTime>[];
-
-      switch (_runningSpecialSession!) {
-        case SpecialGoal.stoke:
-          final goal = settings.stoke.inMinutes;
-          final ratio = spent.inMinutes / goal;
-
-          if (ratio <= .9) {
-            scheduled.add(
-              await scheduleNotification(
-                title: 'Stoke 90%',
-                body: 'Belly is full... Time to get back to work.',
-                id: NotificationCode.specialGoalStoke90,
-                schedule: now.add(
-                  Duration(minutes: ((.9 - ratio) * goal).ceil()),
-                ),
-              ),
-            );
-          }
-
-          if (ratio <= .5) {
-            scheduled.add(
-              await scheduleNotification(
-                title: 'Soke 50%',
-                body: 'Bong Appetite!',
-                id: NotificationCode.specialGoalStoke50,
-                schedule: now.add(
-                  Duration(minutes: ((.5 - ratio) * goal).ceil()),
-                ),
-              ),
-            );
-          }
-
-          break;
-        case SpecialGoal.sitBack:
-          scheduled.add(
-            await scheduleNotification(
-              title: 'Nice breeze!',
-              body: '5min sit back and counting...',
-              id: NotificationCode.specialGoalSitback5,
-              schedule: now.add(Duration(minutes: 5)),
-            ),
-          );
-          scheduled.add(
-            await scheduleNotification(
-              title: 'What a break',
-              body: '15min sit back and counting...',
-              id: NotificationCode.specialGoalSitback15,
-              schedule: now.add(Duration(minutes: 15)),
-            ),
-          );
-
-          final goal = settings.sitBack.inMinutes;
-          final ratio = spent.inMinutes / goal;
-
-          if (ratio <= 1) {
-            scheduled.add(
-              await scheduleNotification(
-                title: 'Total allowed sit back time reached',
-                body: 'No more sweet time for today, unless you insist',
-                id: NotificationCode.specialGoalSitback100,
-                schedule: now.add(
-                  Duration(minutes: ((1 - ratio) * goal).ceil()),
-                ),
-              ),
-            );
-          }
-
-          if (ratio <= .5) {
-            scheduled.add(
-              await scheduleNotification(
-                title: 'Total allowed sit back time reached 50%',
-                body: 'Use your rest time carefully or the day will get longer',
-                id: NotificationCode.specialGoalSitback50,
-                schedule: now.add(
-                  Duration(minutes: ((.5 - ratio) * goal).ceil()),
-                ),
-              ),
-            );
-          }
-
-          break;
-        case SpecialGoal.startSlow:
-          final goal = settings.startSlow.inMinutes;
-          final ratio = spent.inMinutes / goal;
-
-          if (ratio <= .33) {
-            scheduled.add(
-              await scheduleNotification(
-                title: 'No need to hurry, take it easy.',
-                body: 'Try to ready in ${(goal * .66).ceil()} minutes',
-                id: NotificationCode.specialGoalStartSlow33,
-                schedule: now.add(
-                  Duration(minutes: ((.33 - ratio) * goal).ceil()),
-                ),
-              ),
-            );
-          }
-
-          if (ratio <= .66) {
-            final at = now.add(
-              Duration(minutes: ((.66 - ratio) * goal).ceil()),
-            );
-            scheduled.add(
-              await scheduleNotification(
-                title: "🌈 Let's go we're about to have a beautiful day",
-                body: 'Time to get ready for ${DateFormat.jm(at)}',
-                id: NotificationCode.specialGoalStartSlow66,
-                schedule: at,
-              ),
-            );
-          }
-
-          if (ratio <= 1) {
-            final at = now.add(Duration(minutes: ((1 - ratio) * goal).ceil()));
-            scheduled.add(
-              await scheduleNotification(
-                title: "Start Slow at 100%",
-                body: "🏎️Let's go!",
-                id: NotificationCode.specialGoalStartSlow100,
-                schedule: at,
-              ),
-            );
-          }
-        default:
-      }
-
-      _log.fine('_updateSpecialNotifications: new schedule');
-      for (final scheduled in scheduled) {
-        _log.fine(
-          '_updateSpecialNotifications: notification scheduled at $scheduled',
-        );
-      }
-    } finally {
-      notifyListeners();
-    }
-  }
-
-  Future<void> _updateNotifications() async {
-    try {
-      _log.fine('_updateNotifications: tz.local: ${tz.local}');
-      for (final code in [
-        NotificationCode.routineCompletedGoal,
-        NotificationCode.routineHalfGoal,
-        NotificationCode.routineGoalIn10Minutes,
-        NotificationCode.routineGoalIn5Minutes,
-        NotificationCode.routineSettleCheck,
-      ]) {
-        await _notificationsPlugin.cancel(code.code);
-      }
-      if (_pinnedRoutine == null) return;
-      final left = _pinnedRoutine!.goal - _pinnedRoutine!.spent;
-      final untilHalfWay = Duration(minutes: left.inMinutes ~/ 2);
-      final roundedLastStarted = _pinnedRoutine!.lastStarted!.add(
-        // e.g. if started at 12:00:40 rounded would be 12:01:00
-        // and therefore notification is delayed by 20 seconds
-        Duration(seconds: 60 - _pinnedRoutine!.lastStarted!.second),
-      );
-      final halfWay = roundedLastStarted.add(untilHalfWay);
-      final scheduleHalfWay =
-          untilHalfWay.inMinutes >= 20 && halfWay.isAfter(DateTime.now());
-      if (scheduleHalfWay) {
-        try {
-          await scheduleNotification(
-            title: _pinnedRoutine!.name,
-            body: "Halfway there! ${untilHalfWay.inMinutes}min left.",
-            id: NotificationCode.routineHalfGoal,
-            schedule: halfWay,
-          );
-        } catch (e) {
-          _log.warning('_updateNotifications: schedule routineHalfGoal: $e');
-        }
-      }
-      if (!scheduleHalfWay && left.inMinutes >= 30) {
-        try {
-          final t = roundedLastStarted.add(Duration(minutes: 10));
-          await scheduleNotification(
-            title: _pinnedRoutine!.name,
-            body: "Settle in! ${left.inMinutes - 10}m left.",
-            id: NotificationCode.routineSettleCheck,
-            schedule: t,
-          );
-        } catch (e) {
-          _log.warning('_updateNotifications: routineSettleCheck: $e');
-        }
-      }
-
-      final done = roundedLastStarted.add(
-        _pinnedRoutine!.goal - _pinnedRoutine!.spent,
-      );
-      final scheduleDone = done.isAfter(DateTime.now());
-      if (scheduleDone) {
-        try {
-          await scheduleNotification(
-            title: _pinnedRoutine!.name,
-            body: 'We\'re Done!',
-            id: NotificationCode.routineCompletedGoal,
-            schedule: done,
-          );
-        } catch (e) {
-          _log.warning(
-            '_updateNotifications: schedule routineCompletedGoal: $e',
-          );
-        }
-      }
-
-      final goalIn10 = roundedLastStarted.add(
-        _pinnedRoutine!.goal - Duration(minutes: 10) - _pinnedRoutine!.spent,
-      );
-      final scheduleGoalIn10 = goalIn10.isAfter(DateTime.now());
-      if (scheduleGoalIn10) {
-        try {
-          await scheduleNotification(
-            title: _pinnedRoutine!.name,
-            body: 'Time to wrap up! 10 mins left.',
-            id: NotificationCode.routineGoalIn10Minutes,
-            schedule: goalIn10,
-          );
-        } catch (e) {
-          _log.warning(
-            '_updateNotifications: schedule routineGoalIn10Minutes: $e',
-          );
-        }
-      }
-    } on Exception catch (e) {
-      _log.severe('_updateNotifications: $e');
-    }
-  }
-
   Future<Result<void>> _updateRoutineGoal(GoalUpdate request) async {
     try {
       final goal30 = request.goal.inMinutes ~/ 30;
@@ -507,8 +228,6 @@ class HomeViewmodel extends ChangeNotifier {
           }).toList();
       }
 
-      await _updateNotifications();
-
       return Result.ok(null);
     } finally {
       notifyListeners();
@@ -523,7 +242,6 @@ class HomeViewmodel extends ChangeNotifier {
           _log.warning('_load get running routine: ${resultRunning.error}');
         case Ok<RoutineSummary?>():
           _pinnedRoutine = resultRunning.value;
-          await _updateNotifications();
       }
       return resultRunning;
     } finally {
@@ -652,7 +370,6 @@ class HomeViewmodel extends ChangeNotifier {
       }
 
       _runningSpecialSession = resultCurrent.value?.goal;
-      SpecialGoals goalSettings;
       {
         final result = await _settingsRepository.getSettings();
         switch (result) {
@@ -662,10 +379,8 @@ class HomeViewmodel extends ChangeNotifier {
             );
             return Result.error(result.error);
           case Ok<SettingsSummary>():
-            goalSettings = result.value.specialGoals;
         }
       }
-      await _updateSpecialNotifications(goalSettings);
 
       final result = await _routinesRepository.sumSpecialSessionDurations(day);
       switch (result) {

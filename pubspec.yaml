@@ -43,9 +43,6 @@ dependencies:
   flutter_slidable: ^4.0.3
   sync: ^0.3.0
   sliding_up_panel: ^2.0.0+1
-  timezone: ^0.10.1
-  share_plus: ^12.0.1
-  flutter_local_notifications: ^19.5.0
   fading_edge_scrollview: ^4.1.1
   synchronized: ^3.4.0
   scrollable_positioned_list: ^0.3.8
