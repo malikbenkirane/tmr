@@ -43,7 +43,7 @@ class Routine extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      ), // Container
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: routine.running ? 4 : 0,
@@ -59,7 +59,7 @@ class Routine extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       )
                     : BoxDecoration(),
-              ),
+              ), // Container
             ),
             InkWell(
               splashColor: colorScheme.primaryContainer,
@@ -71,7 +71,7 @@ class Routine extends StatelessWidget {
                   bottom: 2,
                   left: 15,
                   right: 10,
-                ),
+                ), // EdgeInsets.only
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -93,15 +93,15 @@ class Routine extends StatelessWidget {
                                     : (darkMode
                                           ? colorScheme.primaryContainer
                                           : colorScheme.primaryFixed),
-                              ),
-                            ),
-                          ),
+                              ), // BoxDecoration
+                            ), // Container
+                          ), // Padding
                           Flexible(
                             child: Padding(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 4,
                                 vertical: 2,
-                              ),
+                              ), // EdgeInsets.symmetric
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -112,8 +112,8 @@ class Routine extends StatelessWidget {
                                       style: TextStyle(fontSize: 16),
                                       // overflow: TextOverflow.fade,
                                       softWrap: false,
-                                    ),
-                                  ),
+                                    ), // Text
+                                  ), // FittedBox
                                   routine.running
                                       ? RoutineSpentDynamicLabel(
                                           restorationId:
@@ -121,15 +121,17 @@ class Routine extends StatelessWidget {
                                           key: ValueKey(routine.id),
                                           spent: routine.spent,
                                           lastStarted: routine.lastStarted!,
-                                        )
-                                      : RoutineSpentLabel(spent: routine.spent),
+                                        ) // RoutineSpentDynamicLabel
+                                      : RoutineSpentLabel(
+                                          spent: routine.spent,
+                                        ), // RoutineSpentLabel
                                 ],
-                              ),
-                            ),
-                          ),
+                              ), // Column
+                            ), // Padding
+                          ), // Flexible
                         ],
-                      ),
-                    ),
+                      ), // Row
+                    ), // SizedBox
                     Padding(
                       padding: EdgeInsets.only(left: 20),
                       child: routine.running
@@ -141,21 +143,21 @@ class Routine extends StatelessWidget {
                               goal: routine.goal,
                               state: state,
                               lastStarted: routine.lastStarted!,
-                            )
+                            ) // RoutineGoalDynamicLabel
                           : RoutineGoalLabel(
                               spent: routine.spent,
                               goal: routine.goal,
                               state: state,
                               lastStarted: routine.lastStarted,
-                            ),
-                    ),
+                            ), // RoutineGoalLabel
+                    ), // Padding
                   ],
-                ),
-              ),
-            ),
+                ), // Row
+              ), // Padding
+            ), // InkWell
           ],
-        ),
-      ),
-    );
+        ), // Stack
+      ), // Padding
+    ); // Dismissible
   }
 }

@@ -3,7 +3,8 @@ enum RoutineState {
   notStarted,
   isRunning,
   inProgress,
-  overRun;
+  overRun,
+  noPlannedGoal;
 
   const RoutineState();
 
@@ -20,6 +21,8 @@ enum RoutineState {
         return 'In Progress';
       case RoutineState.overRun:
         return 'Over Run';
+      case RoutineState.noPlannedGoal:
+        return 'No Planned Goal';
     }
   }
 }
