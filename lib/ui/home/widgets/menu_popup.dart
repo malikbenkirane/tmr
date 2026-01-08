@@ -44,7 +44,7 @@ class MenuPopup extends StatelessWidget {
           running: routine!.running,
           viewModel: homeModel,
           close: close,
-        );
+        ); // GoalPopup
         popup as GoalPopup;
         actions.add(
           _PopupAction(
@@ -52,7 +52,7 @@ class MenuPopup extends StatelessWidget {
             action: popup.commit,
             icon: Icons.check,
             applicationAction: ApplicationAction.setGoal,
-          ),
+          ), // _PopupAction
         );
         actions.add(
           _PopupAction(
@@ -60,7 +60,7 @@ class MenuPopup extends StatelessWidget {
             action: popup.close,
             icon: Icons.close,
             applicationAction: ApplicationAction.cancelSetGoal,
-          ),
+          ), // _PopupAction
         );
         break;
       case MenuItem.addNote:
@@ -68,7 +68,7 @@ class MenuPopup extends StatelessWidget {
           onClose: close,
           routineId: routine!.id,
           viewModel: notesModel,
-        );
+        ); // AddNotePopup
         popup as AddNotePopup;
         actions.add(
           _PopupAction(
@@ -76,7 +76,7 @@ class MenuPopup extends StatelessWidget {
             action: popup.commitNote,
             icon: Icons.check,
             applicationAction: ApplicationAction.addNote,
-          ),
+          ), // _PopupAction
         );
         actions.add(
           _PopupAction(
@@ -84,7 +84,7 @@ class MenuPopup extends StatelessWidget {
             action: popup.cancelNote,
             icon: Icons.close,
             applicationAction: ApplicationAction.cancelAddNote,
-          ),
+          ), // _PopupAction
         );
         break;
     }
@@ -128,8 +128,8 @@ class MenuPopup extends StatelessWidget {
             colorScheme.surfaceContainer.withValues(alpha: .8),
             colorScheme.surface.withValues(alpha: .8),
           ],
-        ),
-      ),
+        ), // LinearGradient
+      ), // BoxDecoration
       child: Column(
         children: [
           Flexible(
@@ -137,11 +137,11 @@ class MenuPopup extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 30),
               child: popupContainer,
-            ),
-          ),
+            ), // Padding
+          ), // Flexible
         ],
-      ),
-    );
+      ), // Column
+    ); // Container
   }
 }
 
@@ -168,7 +168,7 @@ class _PopupAction extends StatelessWidget {
           applicationAction,
         ),
         verticalOffset: 0,
-      ),
-    );
+      ), // FloatingAction
+    ); // Align
   }
 }
