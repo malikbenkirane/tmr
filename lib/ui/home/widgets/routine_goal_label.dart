@@ -42,32 +42,37 @@ class RoutineGoalLabel extends StatelessWidget {
     switch (state) {
       case RoutineState.isRunning:
         return _buildIsRunningLabel(context, eta);
-      case RoutineState.goalReached:
       case RoutineState.overRun:
         return Transform.translate(
-          offset: Offset((state == RoutineState.overRun) ? 4 : 0, 0),
+          offset: Offset(4, 0),
           child: Icon(
-            Icons.emoji_events,
+            Symbols.hourglass_check,
             color: colorScheme.primary.withValues(alpha: .6),
-          ), // Icon emoji_events
+          ), // Icon hourglass_check (Material Symbols)
         ); // Transform.translate
-      case RoutineState.notStarted:
+
+      case RoutineState.goalReached:
+        return Icon(
+          Icons.emoji_events,
+          color: colorScheme.primary.withValues(alpha: .6),
+        ); // Icon emoji_events (Material Icons)
+      case RoutineState.noPlannedGoal:
+        return Icon(
+          Symbols.cruelty_free,
+          color: colorScheme.primary.withValues(alpha: .6),
+        ); // Icon cruelty_free (Material Symbols)
       case RoutineState.inProgress:
-        return goal == Duration.zero
-            ? Icon(
-                Symbols.cruelty_free,
-                color: colorScheme.primary.withValues(alpha: .6),
-              ) // Icon cruelty_free
-            : Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: (darkMode
-                      ? colorScheme.primaryContainer
-                      : colorScheme.secondaryContainer),
-                ), // BoxDecoration
-                child: Text(formatUntilGoal(goal, spent), style: textStyle),
-              ); // Container
+      case RoutineState.notStarted:
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: (darkMode
+                ? colorScheme.primaryContainer
+                : colorScheme.secondaryContainer),
+          ), // BoxDecoration
+          child: Text(formatUntilGoal(goal, spent), style: textStyle),
+        ); // Container
     }
   }
 

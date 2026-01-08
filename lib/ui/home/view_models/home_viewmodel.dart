@@ -340,21 +340,25 @@ class HomeViewmodel extends ChangeNotifier {
   ) {
     final List<(RoutineSummary, RoutineState)> sorted = [];
     final List<RoutineSummary> completed = [];
+    final List<RoutineSummary> noGoal = [];
     final List<RoutineSummary> fresh = [];
     final List<RoutineSummary> inProgress = [];
     final now = DateTime.now();
     for (final routine in routines) {
       final RoutineState state;
-      if (routine.spentAt(now) <= Duration(minutes: 5)) {
-        state = RoutineState.notStarted;
-      } else if (routine.goal <= routine.spentAt(now)) {
-        if (routine.running) {
+      if (routine.running) {
+        if (routine.goal <= routine.spentAt(now)) {
           state = RoutineState.overRun;
         } else {
-          state = RoutineState.goalReached;
+          state = RoutineState.isRunning;
         }
-      } else if (routine.running) {
-        state = RoutineState.isRunning;
+      } else if (routine.goal == Duration.zero) {
+        state = RoutineState.noPlannedGoal;
+      } else if (!routine.running &&
+          routine.spentAt(now) <= Duration(minutes: 5)) {
+        state = RoutineState.notStarted;
+      } else if (routine.goal <= routine.spentAt(now)) {
+        state = RoutineState.goalReached;
       } else {
         state = RoutineState.inProgress;
       }
@@ -372,16 +376,38 @@ class HomeViewmodel extends ChangeNotifier {
         case RoutineState.notStarted:
           fresh.add(routine);
           break;
+        case RoutineState.noPlannedGoal:
+          noGoal.add(routine);
       }
     }
 
-    inProgress.sort((a, b) => b.spentAt(now).compareTo(a.spentAt(now)));
+    inProgress.sort((a, b) {
+      // compare by goal first
+      final highsetGoalFirst = b.goal.compareTo(a.goal);
+      return highsetGoalFirst != 0
+          ? highsetGoalFirst
+          : b.spentAt(now).compareTo(a.spentAt(now));
+    });
     sorted.addAll(inProgress.map((r) => (r, RoutineState.inProgress)));
 
     completed.sort((a, b) => b.lastStarted!.compareTo(a.lastStarted!));
     sorted.addAll(completed.map((r) => (r, RoutineState.goalReached)));
 
+    fresh.sort((a, b) => b.goal.compareTo(a.goal));
     sorted.addAll(fresh.map((r) => (r, RoutineState.notStarted)));
+
+    noGoal.sort((a, b) {
+      if (a.lastStarted == null && b.lastStarted == null) {
+        return 0;
+      } else if (a.lastStarted == null) {
+        return -1;
+      } else if (b.lastStarted == null) {
+        return 1;
+      } else {
+        return b.lastStarted!.compareTo(a.lastStarted!);
+      }
+    });
+    sorted.addAll(noGoal.map((r) => (r, RoutineState.noPlannedGoal)));
 
     for (final rs in sorted) {
       debugPrint('${rs.$2} ${rs.$1}');
