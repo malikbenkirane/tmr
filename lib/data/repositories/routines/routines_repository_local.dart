@@ -490,6 +490,37 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
+  Future<Result<Map<SpecialGoal, SpecialSessionDuration>>>
+  specialSessionSummary(DateTime now) async {
+    final Map<SpecialGoal, SpecialSessionDuration> sessions = {};
+    {
+      final result = await _databaseClient.getSpecialGoalSessions(now);
+      switch (result) {
+        case Error<List<SpecialGoalSession>>():
+          return Result.error(result.error);
+        case Ok<List<SpecialGoalSession>>():
+          for (final session in result.value) {
+            final goal = session.goal;
+            if (sessions[goal] == null) {
+              sessions[goal] = SpecialSessionDuration(
+                duration: Duration.zero,
+                current: null,
+              );
+            }
+            final state = sessions[goal]!;
+            final to = session.stoppedAt ?? now;
+            final duration = to.difference(session.startedAt);
+            sessions[goal] = SpecialSessionDuration(
+              duration: state.duration + duration,
+              current: state.current ?? session.startedAt,
+            );
+          }
+      }
+    }
+    return Result.ok(sessions);
+  }
+
+  @override
   Future<Result<SpecialSessionDuration?>>
   currentSpecialSessionDuration() async {
     return _databaseClient.getCurrentSpecialSessionDuration(DateTime.now());

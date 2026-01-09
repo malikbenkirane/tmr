@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/home/widgets/header_routines_dynamic_goal_label.dart';
@@ -12,12 +13,12 @@ class HeaderEta extends StatefulWidget {
     super.key,
     required this.routines,
     required this.specialGoals,
-    required this.specialSessionState,
+    required this.specialSessions,
   });
 
   final List<RoutineSummary> routines;
   final SpecialGoals specialGoals;
-  final SpecialSessionDuration specialSessionState;
+  final Map<SpecialGoal, SpecialSessionDuration> specialSessions;
 
   @override
   createState() => _HeaderEtaSTate();
@@ -63,6 +64,14 @@ class _HeaderEtaSTate extends State<HeaderEta> {
         }
       }
     }
+
+    for (final goal in widget.specialSessions.keys) {
+    final session = widget.specialSessions[goal]!;
+if (session.current != null) inPause = false;
+widget.specialGoals
+final left = session.spentAt(now);
+eta.add(session.spentAt(now));
+}
 
     if (widget.specialSessionState.current != null) {
       final sessionLastStartedAt = widget.specialSessionState.current!;

@@ -28,6 +28,8 @@ abstract class RoutinesRepository {
   Future<Result<(SpecialGoalSession?, SpecialGoalSession?)>>
   toggleSpecialSession(SpecialGoal goal, DateTime time);
   Future<Result<SpecialGoalSession?>> currentSpecialSession();
+  Future<Result<Map<SpecialGoal, SpecialSessionDuration>>>
+  specialSessionSummary(DateTime now);
   Future<Result<SpecialSessionDuration>> sumSpecialSessionDurations(
     DateTime day,
   );

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
@@ -92,7 +91,7 @@ class HomeViewmodel extends ChangeNotifier {
         }
       }
 
-      await _updateSpecialSessionStatus(DateTime.now());
+      await _updateAllSpecialSessions(DateTime.now());
 
       return await _updateRunningRoutine();
     } finally {
@@ -328,7 +327,7 @@ class HomeViewmodel extends ChangeNotifier {
           _routines = _listRoutines(resultList.value);
       }
 
-      await _updateSpecialSessionStatus(DateTime.now());
+      await _updateAllSpecialSessions(DateTime.now());
       return await _updateRunningRoutine();
     } finally {
       notifyListeners();
@@ -420,8 +419,26 @@ class HomeViewmodel extends ChangeNotifier {
   SpecialSessionDuration? get specialSessionStatus => _specialSessionStatus;
 
   final Map<SpecialGoal, SpecialSessionDuration> _specialSessionAllStatum = {};
+
   Map<SpecialGoal, SpecialSessionDuration> get specialSessionAllStatum =>
       _specialSessionAllStatum;
+
+  Future<Result<void>> _updateAllSpecialSessions(DateTime now) async {
+    final result = await _routinesRepository.specialSessionSummary(now);
+    switch (result) {
+      case Error<Map<SpecialGoal, SpecialSessionDuration>>():
+        _log.warning(
+          '_updateAllSpecialSessions: specialSessionSummary: ${result.error}',
+        );
+        return Result.error(result.error);
+      case Ok<Map<SpecialGoal, SpecialSessionDuration>>():
+        for (final entry in result.value.entries) {
+          _log.fine('_updateAllSpecialSessions: ${entry.key} ${entry.value}');
+          _specialSessionAllStatum[entry.key] = entry.value;
+        }
+    } // switch(result)
+    return Result.ok(null);
+  }
 
   Future<Result<void>> _updateSpecialSessionStatus(DateTime day) async {
     try {

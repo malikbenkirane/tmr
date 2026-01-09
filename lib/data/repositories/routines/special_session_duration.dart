@@ -3,6 +3,11 @@ class SpecialSessionDuration {
   final Duration duration;
   final DateTime? current;
 
+  Duration spentAt(DateTime now) {
+    if (current == null) return duration;
+    return now.difference(current!) + duration;
+  }
+
   @override
   String toString() =>
       'SpecialSessionDuration(duration: $duration, current: $current)';
