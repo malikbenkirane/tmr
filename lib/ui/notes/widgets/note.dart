@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
@@ -41,22 +42,27 @@ class Note extends StatelessWidget {
                 onDismissed: (_) async {
                   onDismiss();
                 },
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _Note(note: note, top: index == 0),
-                    ),
-                  ],
-                ),
-              ),
+                child: InkWell(
+                  //TODO
+                  onDoubleTap: () {},
+                  child: Row(
+                    children: [
+                      note.topped ? Icon(Symbols.keep) : SizedBox.shrink(),
+                      Expanded(
+                        child: _Note(note: note, top: index == 0),
+                      ), // Expanded
+                    ],
+                  ), // Row
+                ), // InkWell
+              ), // Dismissible
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: index + 1 == count
               ? SizedBox.shrink()
               : Container(color: cs.primary, height: .2),
-        ),
+        ), // Padding
       ],
-    );
+    ); // Column
   }
 }
 

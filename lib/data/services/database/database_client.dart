@@ -402,6 +402,7 @@ class DatabaseClient {
             'created_at': createdAt3339 as String,
             'note': note as String?,
             'dismissed': dismissed as int,
+            'topped': topped as int,
           }
           in rows) {
         final createdAt = DateTime.parse(createdAt3339);
@@ -413,10 +414,46 @@ class DatabaseClient {
             id: id,
             note: note,
             dismissed: dismissed == 1,
+            topped: topped == 1,
           ),
         );
       }
       return Result.ok(notes);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<NoteSummary>> getNote(int noteId) async {
+    try {
+      final rows = await _database.query(
+        'notes',
+        where: 'note_id = ?',
+        whereArgs: [noteId],
+      );
+      if (rows.isEmpty) {
+        throw Exception('note $noteId note found');
+      }
+      final {
+        'routine_id': routineId as int,
+        'created_at': createdAt3339 as String,
+        'note': noteText as String?,
+        'dismissed': dismissed as int,
+        'topped': topped as int,
+      } = rows[0];
+      if (noteText == null) {
+        throw Exception('note id=$noteId note=null');
+      }
+      final createdAt = DateTime.parse(createdAt3339);
+      final note = NoteSummary(
+        routineId: routineId,
+        createdAt: createdAt,
+        id: noteId,
+        note: noteText,
+        dismissed: dismissed == 1,
+        topped: topped == 1,
+      );
+      return Result.ok(note);
     } on Exception catch (e) {
       return Result.error(e);
     }
@@ -440,6 +477,20 @@ class DatabaseClient {
       await _database.update(
         'notes',
         {'dismissed': dismissed ? 1 : 0},
+        where: 'id = ?',
+        whereArgs: [noteId],
+      );
+      return Result.ok(null);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> updateNoteTopped(int noteId, bool topped) async {
+    try {
+      await _database.update(
+        'notes',
+        {'topped': topped ? 1 : 0},
         where: 'id = ?',
         whereArgs: [noteId],
       );

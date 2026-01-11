@@ -19,12 +19,15 @@ abstract class RoutinesRepository {
   Future<Result<void>> restoreRoutine(int id);
   Future<Result<void>> binRoutine(int id);
   Future<Result<List<NoteSummary>>> getNotes(int routineId);
+  Future<Result<NoteSummary>> getNote(int noteId);
   Future<Result<void>> addNote({
     required String note,
     required DateTime createdAt,
     required int routineId,
   });
   Future<Result<void>> dismissNote(int noteId);
+  Future<Result<void>> pinNote(int noteId);
+  Future<Result<void>> unpinNote(int noteId);
   Future<Result<(SpecialGoalSession?, SpecialGoalSession?)>>
   toggleSpecialSession(SpecialGoal goal, DateTime time);
   Future<Result<SpecialGoalSession?>> currentSpecialSession();

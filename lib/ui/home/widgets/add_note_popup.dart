@@ -42,6 +42,7 @@ class AddNotePopupState extends State<AddNotePopup> {
         createdAt: DateTime.now(),
         routineId: widget.routineId,
         dismissed: false,
+        topped: false,
       ),
     );
     widget.onClose();

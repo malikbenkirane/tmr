@@ -393,6 +393,11 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
+  Future<Result<NoteSummary>> getNote(int noteId) async {
+    return _databaseClient.getNote(noteId);
+  }
+
+  @override
   Future<Result<void>> addNote({
     required String note,
     required DateTime createdAt,
@@ -404,6 +409,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
         createdAt: createdAt,
         note: note,
         dismissed: false,
+        topped: false,
       ),
     );
   }
@@ -411,6 +417,16 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   @override
   Future<Result<void>> dismissNote(int noteId) async {
     return _databaseClient.updateNoteDismissed(noteId, true);
+  }
+
+  @override
+  Future<Result<void>> pinNote(int noteId) async {
+    return _databaseClient.updateNoteTopped(noteId, true);
+  }
+
+  @override
+  Future<Result<void>> unpinNote(int noteId) async {
+    return _databaseClient.updateNoteTopped(noteId, false);
   }
 
   @override

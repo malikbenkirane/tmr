@@ -5,23 +5,27 @@ class NoteSummary {
     required String note,
     required DateTime createdAt,
     required bool dismissed,
+    required bool topped,
   }) : _id = id,
        _note = note,
        _createdAt = createdAt,
        _routineId = routineId,
-       _dismissed = dismissed;
+       _dismissed = dismissed,
+       _topped = topped;
 
   final int? _id;
   final DateTime _createdAt;
   final String _note;
   final int _routineId;
   final bool _dismissed;
+  final bool _topped;
 
   int? get id => _id;
   int get routineId => _routineId;
   DateTime get createdAt => _createdAt;
   String get text => _note;
   bool get dismissed => _dismissed;
+  bool get topped => _topped;
 
   /// Returns a list of pairs where the first element is the original text
   /// fragment and the second element indicates whether that fragment could be
@@ -53,6 +57,7 @@ class NoteSummary {
         'note=$_note',
         'routineId=$_routineId',
         'dismissed=$_dismissed',
+        'dismissed=$_topped',
       ].join(' '),
     ].join(' ');
   }

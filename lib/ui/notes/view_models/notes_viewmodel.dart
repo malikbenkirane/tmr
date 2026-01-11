@@ -108,4 +108,45 @@ class NotesViewmodel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<Result<void>> _togglePin(int noteId) async {
+    try {
+
+      final NoteSummary note;
+
+      {
+        final result = await _repo.getNote(noteId);
+        switch (result) {
+          case Error<NoteSummary>():
+            _log.warning('_togglePin: getNote: ${result.error}');
+            return Result.error(result.error);
+          case Ok<NoteSummary>():
+            note = result.value;
+        }
+      }
+
+      if (note.topped) {
+      final result = await _repo.unpinNote(noteId);
+      switch (result) {
+      case 
+      // Work in Progress TODO
+      }
+      }
+
+
+
+      final result = await _repo.dismissNote(noteId);
+      switch (result) {
+        case Ok<void>():
+          _log.fine('_dismissNote: dismissed $noteId');
+          await _load();
+          break;
+        case Error<void>():
+          _log.warning('_dismissNote: ${result.error}');
+      }
+      return result;
+    } finally {
+      notifyListeners();
+    }
+  }
 }
