@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,6 +10,7 @@ import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/routing/router.dart';
 import 'package:too_many_tabs/ui/core/themes/theme.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
+import 'package:too_many_tabs/utils/notifications.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 void main() async {
@@ -25,6 +27,8 @@ void main() async {
       ].join(' '),
     );
   });
+
+  initializeLocalNotifications();
 
   final resultDatabase = await prepareDatabase();
   final Database db;
@@ -61,6 +65,27 @@ void main() async {
         child: MainApp(),
       ),
     ),
+  );
+}
+
+void initializeLocalNotifications() async {
+  final List<DarwinNotificationCategory> darwinNotificationCategories = [];
+  final darwinInitializationSettings = DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+    notificationCategories: darwinNotificationCategories,
+  );
+  final androidInitializationSettings = AndroidInitializationSettings(
+    '@mipmap/ic_launcher',
+  );
+  final initializationSettings = InitializationSettings(
+    iOS: darwinInitializationSettings,
+    android: androidInitializationSettings,
+  );
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: selectNotificationStream.add,
   );
 }
 
