@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -21,6 +23,7 @@ import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:too_many_tabs/utils/notifications.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -54,6 +57,10 @@ class HomeScreenState extends State<HomeScreen> {
         await widget.homeModel.load.execute();
       },
     );
+
+    _requestPermission();
+    _configureSelectNotificationsSubject();
+    _isAndroidPermissionGranted();
 
     const MethodChannel(
       'com.example.tooManyTabs/settings',
@@ -390,5 +397,47 @@ class HomeScreenState extends State<HomeScreen> {
         .where((item) => item.$2 == session)
         .toList()[0]
         .$1;
+  }
+
+  Future<void> _isAndroidPermissionGranted() async {
+    if (Platform.isAndroid) {
+      final bool granted =
+          await flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.areNotificationsEnabled() ??
+          false;
+      debugPrint('isAndroidPermissionGranted: $granted');
+    }
+  }
+
+  Future<void> _requestPermission() async {
+    if (Platform.isIOS) {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    } else if (Platform.isAndroid) {
+      final plugin = flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final granted = await plugin?.requestNotificationsPermission();
+      debugPrint('android: granted notifications permissions: $granted');
+      final grantedExact = await plugin?.requestExactAlarmsPermission();
+      debugPrint('android: granted exact alarms permissions: $grantedExact');
+    }
+  }
+
+  void _configureSelectNotificationsSubject() {
+    selectNotificationStream.stream.listen((
+      NotificationResponse? response,
+    ) async {
+      debugPrint(
+        'notification response stream: ${response?.payload} data ${response?.data}',
+      );
+    });
   }
 }
