@@ -46,6 +46,7 @@ void schedulePeriodicNotification({
     notificationDetails,
     payload: jsonEncode({
       'channel_id': channel.index,
+      'scheduled_at': DateTime.now().toIso8601String(),
       if (payload != null) ...payload,
     }),
   );
