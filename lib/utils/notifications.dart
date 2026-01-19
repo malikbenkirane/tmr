@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:too_many_tabs/utils/notification_channel.dart';
 
 final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -15,12 +16,37 @@ const MethodChannel platformNotifications = MethodChannel(
 
 const notificationsPortName = 'notification_send_port';
 
-@pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse notificationResponse) {
-  debugPrint(
-    'notification(${notificationResponse.id}) action tapped:${notificationResponse.actionId} with payload:${notificationResponse.payload}',
+void schedulePeriodicNotification({
+  required int periodInMinutes,
+  required String title,
+  required String body,
+  required NotificationChannel channel,
+  Map<String, Object>? payload,
+}) {
+  const androidNotificationDetails = AndroidNotificationDetails(
+    'ttt_routines',
+    'ttt_routines',
+    priority: Priority.max,
+    importance: Importance.max,
+    fullScreenIntent: true,
   );
-  if (notificationResponse.input?.isNotEmpty ?? false) {
-    debugPrint('notification typed with input: ${notificationResponse.input}');
-  }
+  const darwinNotificationDetails = DarwinNotificationDetails(
+    interruptionLevel: InterruptionLevel.timeSensitive,
+  );
+  final notificationDetails = NotificationDetails(
+    android: androidNotificationDetails,
+    iOS: darwinNotificationDetails,
+  );
+
+  flutterLocalNotificationsPlugin.periodicallyShowWithDuration(
+    channel.index,
+    'title',
+    'body',
+    Duration(minutes: periodInMinutes),
+    notificationDetails,
+    payload: jsonEncode({
+      'channel_id': channel.index,
+      if (payload != null) ...payload,
+    }),
+  );
 }

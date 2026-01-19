@@ -1,0 +1,1 @@
+enum NotificationChannel { halfWay }
