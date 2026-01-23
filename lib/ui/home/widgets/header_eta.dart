@@ -66,29 +66,13 @@ class _HeaderEtaSTate extends State<HeaderEta> {
     }
 
     for (final goal in widget.specialSessions.keys) {
-    final session = widget.specialSessions[goal]!;
-if (session.current != null) inPause = false;
-widget.specialGoals
-final left = session.spentAt(now);
-eta.add(session.spentAt(now));
-}
-
-    if (widget.specialSessionState.current != null) {
-      final sessionLastStartedAt = widget.specialSessionState.current!;
-      eta = eta.add(now.difference(sessionLastStartedAt));
-      inPause = false;
+      final session = widget.specialSessions[goal]!;
+      final g = widget.specialGoals.of(goal);
+      final left = g - session.spentAt(now);
+      final leftAbs = left < Duration.zero ? Duration.zero : left;
+      if (session.current != null) inPause = false;
+      eta = eta.add(leftAbs);
     }
-
-    for (final goal in [
-      widget.specialGoals.sitBack,
-      widget.specialGoals.startSlow,
-      widget.specialGoals.stoke,
-      widget.specialGoals.slowDown,
-    ]) {
-      eta = eta.add(goal);
-    }
-    eta = eta.subtract(widget.specialSessionState.duration);
-
     setState(() {
       _eta = eta;
     });
@@ -151,7 +135,7 @@ eta.add(session.spentAt(now));
         HeaderRoutinesDynamicGoalLabel(
           routines: widget.routines,
           specialGoals: widget.specialGoals,
-          specialSessionState: widget.specialSessionState,
+          specialSessionState: widget.specialSessions,
         ),
       ],
     );

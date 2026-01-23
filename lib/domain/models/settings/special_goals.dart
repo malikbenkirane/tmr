@@ -28,12 +28,14 @@ class SpecialGoals {
 
   Duration of(SpecialGoal goal) {
     switch (goal) {
-      // WIP complete this of() function to be used by _refreshEta
-      // at lib/ui/home/widgets/header_eta.dart
       case SpecialGoal.sitBack:
-      case SpecialGoal.sitBack:
-      case SpecialGoal.sitBack:
-      case SpecialGoal.sitBack:
+        return sitBack;
+      case SpecialGoal.stoke:
+        return stoke;
+      case SpecialGoal.startSlow:
+        return startSlow;
+      case SpecialGoal.slowDown:
+        return slowDown;
     }
   }
 

@@ -499,14 +499,14 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
         case Error<List<SpecialGoalSession>>():
           return Result.error(result.error);
         case Ok<List<SpecialGoalSession>>():
+          for (final goal in SpecialGoal.values) {
+            sessions[goal] = SpecialSessionDuration(
+              duration: Duration.zero,
+              current: null,
+            );
+          }
           for (final session in result.value) {
             final goal = session.goal;
-            if (sessions[goal] == null) {
-              sessions[goal] = SpecialSessionDuration(
-                duration: Duration.zero,
-                current: null,
-              );
-            }
             final state = sessions[goal]!;
             final to = session.stoppedAt ?? now;
             final duration = to.difference(session.startedAt);

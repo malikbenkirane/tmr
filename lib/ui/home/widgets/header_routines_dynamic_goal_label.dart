@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
@@ -18,7 +19,7 @@ class HeaderRoutinesDynamicGoalLabel extends StatefulWidget {
 
   final List<RoutineSummary> routines;
   final SpecialGoals specialGoals;
-  final SpecialSessionDuration specialSessionState;
+  final Map<SpecialGoal, SpecialSessionDuration> specialSessionState;
 
   @override
   createState() => _HeaderRoutinesDynamicGoalLabelState();
@@ -63,23 +64,12 @@ class _HeaderRoutinesDynamicGoalLabelState
       }
     }
     var goalSpecial = Duration();
-    for (final goalSetting in [
-      widget.specialGoals.sitBack,
-      widget.specialGoals.startSlow,
-      widget.specialGoals.stoke,
-      widget.specialGoals.slowDown,
-    ]) {
-      goalSpecial += goalSetting;
-    }
-    goalSpecial -= widget.specialSessionState.duration;
-    if (widget.specialSessionState.current != null) {
-      goalSpecial -= DateTime.now().difference(
-        widget.specialSessionState.current!,
-      );
-      inPause = false;
-    }
-    if (goalSpecial < Duration()) {
-      goalSpecial = Duration();
+    for (final goal in SpecialGoal.values) {
+      final setting = widget.specialGoals.of(goal);
+      goalSpecial += setting;
+      final s = widget.specialSessionState[goal]!;
+      if (s.current != null) inPause = false;
+      goalSpecial -= s.spentAt(DateTime.now());
     }
     if (inPause && _ticking) {
       _ticking = false;

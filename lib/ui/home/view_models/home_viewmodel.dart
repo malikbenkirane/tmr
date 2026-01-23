@@ -92,6 +92,10 @@ class HomeViewmodel extends ChangeNotifier {
       }
 
       await _updateAllSpecialSessions(DateTime.now());
+      debugPrint(
+        '_load: _updateAllSpecialSessions: '
+        '${SpecialGoal.values.map((goal) => specialSessionAllStatum[goal].toString()).join(', ')}',
+      );
 
       return await _updateRunningRoutine();
     } finally {

@@ -143,12 +143,8 @@ class HomeScreenState extends State<HomeScreen> {
                                   .toList(),
                               specialGoals:
                                   widget.settingsModel.settings.specialGoals,
-                              specialSessionState:
-                                  widget.homeModel.specialSessionStatus ??
-                                  SpecialSessionDuration(
-                                    current: null,
-                                    duration: Duration(),
-                                  ),
+                              specialSessions:
+                                  widget.homeModel.specialSessionAllStatum,
                             ),
                           ],
                         );
