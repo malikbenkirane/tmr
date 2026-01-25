@@ -41,8 +41,8 @@ void schedulePeriodicNotification({
 
   flutterLocalNotificationsPlugin.periodicallyShowWithDuration(
     channel.index,
-    'title',
-    'body',
+    title,
+    body,
     Duration(minutes: periodInMinutes),
     notificationDetails,
     payload: jsonEncode({
