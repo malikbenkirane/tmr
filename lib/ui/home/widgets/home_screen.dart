@@ -5,7 +5,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
@@ -46,7 +45,6 @@ class HomeScreenState extends State<HomeScreen> {
   bool isSomePopupShown = false;
   bool showNewRoutinePopup = false;
   RoutineSummary? tappedRoutine;
-  PanelController? pc;
 
   late final AppLifecycleListener _listener;
 
@@ -62,25 +60,16 @@ class HomeScreenState extends State<HomeScreen> {
     _requestPermission();
     _configureSelectNotificationsSubject();
     _isAndroidPermissionGranted();
+    _handlePendingNotifications();
 
     const MethodChannel(
       'com.example.tooManyTabs/settings',
     ).setMethodCallHandler((MethodCall call) async {
       debugPrint(call.method);
     });
-
-    _pendingNotifications();
-
-    schedulePeriodicNotification(
-      periodInMinutes: 1,
-      title: 'test',
-      body: 'test',
-      channel: NotificationChannel.halfSplit,
-      payload: {'some': 'payload'},
-    );
   }
 
-  void _pendingNotifications() async {
+  void _handlePendingNotifications() async {
     final pending = await flutterLocalNotificationsPlugin
         .pendingNotificationRequests();
     for (final pending in pending) {
@@ -263,7 +252,6 @@ class HomeScreenState extends State<HomeScreen> {
                           }
                           showNewRoutinePopup = false;
                         });
-                        pc!.open();
                       },
                       viewModel: widget.homeModel,
                     ),
