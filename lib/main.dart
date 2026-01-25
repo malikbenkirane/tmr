@@ -68,6 +68,20 @@ void main() async {
   );
 }
 
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  debugPrint(
+    'notification(${notificationResponse.id}) action tapped: '
+    '${notificationResponse.actionId} with'
+    ' payload: ${notificationResponse.payload}',
+  );
+  if (notificationResponse.input?.isNotEmpty ?? false) {
+    debugPrint(
+      'notification action tapped with input: ${notificationResponse.input}',
+    );
+  }
+}
+
 void initializeLocalNotifications() async {
   final List<DarwinNotificationCategory> darwinNotificationCategories = [];
   final darwinInitializationSettings = DarwinInitializationSettings(
@@ -86,6 +100,7 @@ void initializeLocalNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: selectNotificationStream.add,
+    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
   );
 }
 
