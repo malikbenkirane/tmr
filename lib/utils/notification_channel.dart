@@ -1,1 +1,1 @@
-enum NotificationChannel { halfSplit }
+enum NotificationChannel { halfSplit, pomodoro, wrapUp }
