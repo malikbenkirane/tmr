@@ -15,11 +15,13 @@ class HeaderRoutinesDynamicGoalLabel extends StatefulWidget {
     required this.routines,
     required this.specialGoals,
     required this.specialSessionState,
+    required this.currentSpecial,
   });
 
   final List<RoutineSummary> routines;
   final SpecialGoals specialGoals;
   final Map<SpecialGoal, SpecialSessionDuration> specialSessionState;
+  final SpecialGoal currentSpecial;
 
   @override
   createState() => _HeaderRoutinesDynamicGoalLabelState();
@@ -64,13 +66,19 @@ class _HeaderRoutinesDynamicGoalLabelState
       }
     }
     var goalSpecial = Duration();
+    debugPrint('_refreshGoal: 👹');
     for (final goal in SpecialGoal.values) {
       final setting = widget.specialGoals.of(goal);
       goalSpecial += setting;
       final s = widget.specialSessionState[goal]!;
       if (s.current != null) inPause = false;
       goalSpecial -= s.spentAt(DateTime.now());
+      debugPrint(
+        '_refreshGoal: '
+        '$goal ${goalSpecial.inSeconds} ${s.current}',
+      );
     }
+    debugPrint('_refreshGoal: 🚀');
     if (inPause && _ticking) {
       _ticking = false;
       _timer.cancel();
@@ -101,9 +109,11 @@ class _HeaderRoutinesDynamicGoalLabelState
       spacing: 5,
       children: [
         ...[
-          (Symbols.more_time, leftSpecial),
-          (Symbols.rewarded_ads, left),
-        ].map((item) => _GoalDisplay(icon: item.$1, text: item.$2)),
+          (Symbols.more_time, leftSpecial, _goalSpecial),
+          (Symbols.rewarded_ads, left, _goal),
+        ].map(
+          (item) => _GoalDisplay(icon: item.$1, text: '${item.$3.inSeconds}'),
+        ),
       ],
     );
   }

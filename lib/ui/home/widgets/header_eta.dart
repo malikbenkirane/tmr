@@ -148,6 +148,6 @@ class _HeaderEtaSTate extends State<HeaderEta> {
     } else {
       h = h.remainder(12);
     }
-    return '$h:${t.minute.toString().padLeft(2, "0")}';
+    return '${t.second}';
   }
 }
