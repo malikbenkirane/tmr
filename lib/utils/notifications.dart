@@ -32,6 +32,7 @@ void schedulePeriodicNotification({
   );
   const darwinNotificationDetails = DarwinNotificationDetails(
     interruptionLevel: InterruptionLevel.timeSensitive,
+    sound: "spacial.aif",
   );
   final notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
