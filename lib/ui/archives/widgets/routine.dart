@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/core/colors.dart' as comp;
 import 'package:timeago/timeago.dart' as timeago;
@@ -67,40 +69,45 @@ class Routine extends StatelessWidget {
       },
       child: Container(
         color: background,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text(
-                  routine.name.trim(),
-                  style: TextStyle(color: foreground),
+        child: InkWell(
+          onTap: () {
+            context.go('${Routes.notes}/${routine.id}');
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    routine.name.trim(),
+                    style: TextStyle(color: foreground),
+                  ),
                 ),
-              ),
-              routine.lastStarted == null
-                  ? const Text("new")
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'last session',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w300,
+                routine.lastStarted == null
+                    ? const Text("new")
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'last session',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w300,
+                            ),
                           ),
-                        ),
-                        Text(
-                          timeago.format(routine.lastStarted!),
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-              // Text(
-              //   formatUntilGoal(routine.goal, routine.spent),
-              //   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
-              // ),
-            ],
+                          Text(
+                            timeago.format(routine.lastStarted!),
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                // Text(
+                //   formatUntilGoal(routine.goal, routine.spent),
+                //   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
+                // ),
+              ],
+            ),
           ),
         ),
       ),
