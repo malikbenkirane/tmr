@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:too_many_tabs/ui/home/widgets/slideup_panel.dart';
+import 'package:too_many_tabs/ui/home/widgets/index_goal.dart';
 
 void main() {
   group('Test _GoalSelect: indexGoal', () {
