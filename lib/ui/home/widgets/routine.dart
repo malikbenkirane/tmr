@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_goal_label.dart';
@@ -10,14 +12,13 @@ class Routine extends StatelessWidget {
     super.key,
     required this.routine,
     required this.state,
-    required this.onTap,
     required this.startStopSwitch,
     required this.archive,
   });
 
   final RoutineSummary routine;
   final RoutineState state;
-  final Function() onTap, startStopSwitch, archive;
+  final Function() startStopSwitch, archive;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +65,9 @@ class Routine extends StatelessWidget {
             InkWell(
               splashColor: colorScheme.primaryContainer,
               onDoubleTap: startStopSwitch,
-              onTap: onTap,
+              onTap: () {
+                context.go('${Routes.notes}/${routine.id}');
+              },
               child: Padding(
                 padding: EdgeInsets.only(
                   top: 2,

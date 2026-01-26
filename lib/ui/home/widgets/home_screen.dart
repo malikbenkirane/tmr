@@ -185,18 +185,6 @@ class HomeScreenState extends State<HomeScreen> {
               child: RoutinesList(
                 homeModel: widget.homeModel,
                 notesModel: widget.notesModel,
-                onTap: (index) {
-                  setState(() {
-                    tappedRoutine = widget.homeModel.routineAtIndex(index);
-                  });
-                },
-                onPopup: () {
-                  return (popup) {
-                    setState(() {
-                      isSomePopupShown = popup;
-                    });
-                  };
-                },
               ),
             ),
             showNewRoutinePopup

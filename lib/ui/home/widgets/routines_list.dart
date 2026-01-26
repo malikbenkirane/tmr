@@ -13,12 +13,10 @@ class RoutinesList extends StatefulWidget {
     super.key,
     required this.homeModel,
     required this.notesModel,
-    required this.onTap,
   });
 
   final HomeViewmodel homeModel;
   final NotesViewmodel notesModel;
-  final void Function(int) onTap;
 
   @override
   createState() => _RoutinesListState();
@@ -176,9 +174,6 @@ class _ListItemState extends State<_ListItem> {
           key: ValueKey(widget.routine.id),
           routine: widget.routine,
           state: widget.state,
-          onTap: () {
-            widget.onTap(widget.index);
-          },
           startStopSwitch: widget.onStartOrStop,
           archive: widget.onMoveToBacklog,
         ),
