@@ -160,19 +160,82 @@ class HomeScreenState extends State<HomeScreen> {
                       builder: (context, _) {
                         return Row(
                           children: [
-                            HeaderEta(
-                              routines: widget.homeModel.routines
-                                  .map((rs) => rs.$1)
-                                  .toList(),
-                              specialGoals:
-                                  widget.settingsModel.settings.specialGoals,
-                              specialSessionState:
-                                  widget.homeModel.specialSessionStatus ??
-                                  SpecialSessionDuration(
-                                    current: null,
-                                    duration: Duration(),
-                                  ),
-                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return Scaffold(
+                                      backgroundColor: Colors.black.withValues(
+                                        alpha: 0,
+                                      ),
+                                      body: Center(
+                                        child: TapRegion(
+                                          onTapOutside: (_) {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Material(
+                                            elevation: 4,
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            textStyle: TextStyle(
+                                              color: colorScheme.onPrimary,
+                                              fontSize: 20,
+                                            ),
+                                            color: colorScheme.primary,
+                                            child: InkWell(
+                                              onTap: () async {
+                                                await flutterLocalNotificationsPlugin
+                                                    .cancel(
+                                                      NotificationChannel
+                                                          .pomodoro
+                                                          .index,
+                                                    );
+                                                if (context.mounted) {
+                                                  Navigator.pop(context);
+                                                }
+                                              },
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(20),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  spacing: 5,
+                                                  children: [
+                                                    Icon(
+                                                      Symbols.timer_off,
+                                                      color:
+                                                          colorScheme.onPrimary,
+                                                    ),
+                                                    const Text('End Pomodoro'),
+                                                  ],
+                                                ), // Row
+                                              ), // Padding
+                                            ), // InkWell
+                                          ), // Material
+                                        ), // TapRegion
+                                      ), // Center
+                                    );
+                                  },
+                                );
+                              },
+                              child: HeaderEta(
+                                routines: widget.homeModel.routines
+                                    .map((rs) => rs.$1)
+                                    .toList(),
+                                specialGoals:
+                                    widget.settingsModel.settings.specialGoals,
+                                specialSessionState:
+                                    widget.homeModel.specialSessionStatus ??
+                                    SpecialSessionDuration(
+                                      current: null,
+                                      duration: Duration(),
+                                    ),
+                              ), // HeaderETA
+                            ), // GestureDetector
                           ],
                         );
                       },
