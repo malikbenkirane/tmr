@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -24,6 +26,7 @@ import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/utils/notification_channel.dart';
 import 'package:too_many_tabs/utils/notifications.dart';
+import 'package:too_many_tabs/utils/pomodoro_trigger.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -450,6 +453,27 @@ class HomeScreenState extends State<HomeScreen> {
       debugPrint(
         'notification response stream: ${response?.payload} data ${response?.data}',
       );
+      final payload = response?.payload;
+      final id = response?.id;
+      if (payload != null && id != null) {
+        if (id == NotificationChannel.pomodoro.index) {
+          final {"onTap": trigger as String} = jsonDecode(payload);
+          debugPrint("selectNotificationStream: channel=$id onTap=$trigger");
+          switch (trigger.toPomodoroTrigger()) {
+            case PomodoroTrigger.breakPeriod:
+              widget.homeModel.startOrStopRoutine.execute(
+                widget.homeModel.pinnedRoutine!.id,
+              );
+            case PomodoroTrigger.workPeriod:
+              widget.homeModel.startOrStopRoutine.execute(
+                widget.homeModel.lastPinnedRoutine!.id,
+              );
+          }
+        }
+        if (id == NotificationChannel.wrapUp.index) {
+          await flutterLocalNotificationsPlugin.cancel(id);
+        }
+      }
     });
   }
 }
