@@ -200,7 +200,7 @@ class HomeViewmodel extends ChangeNotifier {
       schedulePeriodicNotification(
         periodInMinutes: left.inMinutes,
         title: routine.name,
-        body: "Time to wrap up!",
+        body: "All set to wrap things up! 🎉😊",
         channel: NotificationChannel.wrapUp,
       );
     }
@@ -353,15 +353,28 @@ class HomeViewmodel extends ChangeNotifier {
 
       final routine = resultRoutine.value;
       if (started) {
+        // Log that the work period scheduling is starting.
         _log.fine('schedulePeriodicNotification: work period');
+
+        // Schedule a periodic notification for the work period.
         schedulePeriodicNotification(
+          // Notify every 20 minutes.
           periodInMinutes: 20,
+          // Use the routine's name as the notification title.
           title: routine.name,
+          // Notification body encouraging a short snack break.
           body:
               '☕️ **Snack‑time!**  '
               'When you’re ready for a quick 5‑minute pause, just tap the notification. 🌿✨',
+          // Use the Pomodoro notification channel.
           channel: NotificationChannel.pomodoro,
+          // Payload to indicate that tapping the notification should trigger a break period.
           payload: {"onTap": PomodoroTrigger.breakPeriod.name},
+        );
+
+        // Schedule wrap‑up notification for the routine after scheduling.
+        await flutterLocalNotificationsPlugin.cancel(
+          NotificationChannel.wrapUp.index,
         );
         _scheduleWrapUp(routine);
       } else {
