@@ -14,6 +14,9 @@ import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/utils/command.dart';
+import 'package:too_many_tabs/utils/notification_channel.dart';
+import 'package:too_many_tabs/utils/notifications.dart';
+import 'package:too_many_tabs/utils/pomodoro_trigger.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class HomeViewmodel extends ChangeNotifier {
@@ -52,6 +55,7 @@ class HomeViewmodel extends ChangeNotifier {
       routines.map((rs) => rs.$1).toList()[index];
 
   RoutineSummary? get pinnedRoutine => _pinnedRoutine;
+  RoutineSummary? get lastPinnedRoutine => _lastPinnedRoutine;
   int? get lastCreatedRoutineID => _lastCreatedRoutineID;
 
   bool _newDay = true;
@@ -149,6 +153,12 @@ class HomeViewmodel extends ChangeNotifier {
           );
       }
 
+      for (final chan in [
+        NotificationChannel.pomodoro,
+        NotificationChannel.wrapUp,
+      ]) {
+        await flutterLocalNotificationsPlugin.cancel(chan.index);
+      }
       await _load();
 
       return Result.ok(null);
@@ -180,6 +190,19 @@ class HomeViewmodel extends ChangeNotifier {
       return Result.error(e);
     } finally {
       notifyListeners();
+    }
+  }
+
+  void _scheduleWrapUp(RoutineSummary routine) {
+    final now = DateTime.now();
+    final left = routine.goal - routine.spentAt(now) - Duration(minutes: 10);
+    if (left > Duration.zero) {
+      schedulePeriodicNotification(
+        periodInMinutes: left.inMinutes,
+        title: routine.name,
+        body: "Time to wrap up!",
+        channel: NotificationChannel.wrapUp,
+      );
     }
   }
 
@@ -328,6 +351,42 @@ class HomeViewmodel extends ChangeNotifier {
           _routines = _listRoutines(resultList.value);
       }
 
+      final routine = resultRoutine.value;
+      if (started) {
+        _log.fine('schedulePeriodicNotification: work period');
+        schedulePeriodicNotification(
+          periodInMinutes: 20,
+          title: routine.name,
+          body:
+              '☕️ **Snack‑time!**  '
+              'When you’re ready for a quick 5‑minute pause, just tap the notification. 🌿✨',
+          channel: NotificationChannel.pomodoro,
+          payload: {"onTap": PomodoroTrigger.breakPeriod.name},
+        );
+        _scheduleWrapUp(routine);
+      } else {
+        for (final chan in [
+          NotificationChannel.pomodoro,
+          NotificationChannel.wrapUp,
+        ]) {
+          await flutterLocalNotificationsPlugin.cancel(chan.index);
+        }
+        _log.fine('schedulePeriodicNotification: break period');
+        // When more than 20 minutes remain before the task deadline,
+        // send a 5‑minute reminder through the Pomodoro notification channel.
+        if (routine.spent < routine.goal + Duration(minutes: 20)) {
+          schedulePeriodicNotification(
+            periodInMinutes: 5,
+            title: routine.name,
+            body:
+                'Tap the 🍅 notification when you’d like to start a 20‑minute focus session. Let’s get it done.',
+            channel: NotificationChannel.pomodoro,
+            payload: {"onTap": PomodoroTrigger.workPeriod.name},
+          );
+        }
+        _lastPinnedRoutine = routine;
+      }
+
       await _updateSpecialSessionStatus(DateTime.now());
       return await _updateRunningRoutine();
     } finally {
@@ -409,9 +468,9 @@ class HomeViewmodel extends ChangeNotifier {
     });
     sorted.addAll(noGoal.map((r) => (r, RoutineState.noPlannedGoal)));
 
-    for (final rs in sorted) {
-      debugPrint('${rs.$2} ${rs.$1}');
-    }
+    // for (final rs in sorted) {
+    //   debugPrint('${rs.$2} ${rs.$1}');
+    // }
 
     return sorted;
   }
