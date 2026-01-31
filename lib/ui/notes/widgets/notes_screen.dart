@@ -14,6 +14,7 @@ import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/notes/widgets/note.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/utils/notifications.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({
@@ -31,6 +32,12 @@ class NotesScreen extends StatefulWidget {
 
 class _NotesScreenState extends State<NotesScreen> {
   bool showActionButtons = true;
+
+  @override
+  initState() {
+    super.initState();
+    handleNotificationResponse(widget.homeViewmodel);
+  }
 
   @override
   build(BuildContext context) {
