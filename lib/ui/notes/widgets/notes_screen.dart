@@ -58,91 +58,111 @@ class _NotesScreenState extends State<NotesScreen> {
               backgroundColor: darkMode
                   ? colorScheme.primaryContainer
                   : colorScheme.primaryFixed,
-              title: widget.notesViewmodel.routine == null
+              title: routine == null
                   ? SizedBox.shrink()
                   : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Text(routine!.name),
-                        GestureDetector(
-                          onTap: () => widget.homeViewmodel.startOrStopRoutine
-                              .execute(routine.id),
-                          child: ListenableBuilder(
-                            listenable: widget.homeViewmodel,
-                            builder: (context, _) {
-                              final routineUpdate = _getRoutine(routine.id);
-                              if (routineUpdate == null) {
-                                return SizedBox.shrink();
-                              }
-                              if (!routineUpdate.running) {
-                                return Column(
-                                  spacing: 2,
-                                  children: [
-                                    Icon(Symbols.play_circle),
-                                    Text(
-                                      'Start',
-                                      style: TextStyle(fontSize: 14),
-                                    ),
-                                  ],
-                                );
-                              }
-                              final now = DateTime.now();
-                              final spent = routineUpdate.spentAt(now);
-                              final to = now.add(routineUpdate.goal - spent);
-                              return Column(
-                                spacing: 2,
-                                children: [
-                                  Icon(Symbols.stop_circle),
-                                  spent < routineUpdate.goal
-                                      ? Text(
-                                          'ETA ${DateFormat.jm().format(to)}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w300,
+                        Expanded(
+                          child: GestureDetector(
+                            child: ListenableBuilder(
+                              listenable: widget.homeViewmodel,
+                              builder: (context, _) {
+                                final routineUpdate = _getRoutine(routine.id);
+                                return routineUpdate == null
+                                    ? SizedBox.shrink()
+                                    : Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(Symbols.trophy),
+                                          Text(
+                                            formatUntilGoal(
+                                              routineUpdate.goal,
+                                              Duration.zero,
+                                            ),
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w300,
+                                            ),
                                           ),
-                                        )
-                                      : Text(
-                                          'overtime',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                ],
-                              );
+                                        ],
+                                      ); // Row
+                              },
+                            ),
+                            onTap: () {
+                              _goalPopup();
                             },
                           ),
-                        ), // GestureDetector: toggle routine start/stop
-                        GestureDetector(
-                          child: ListenableBuilder(
-                            listenable: widget.homeViewmodel,
-                            builder: (context, _) {
-                              final routineUpdate = _getRoutine(routine.id);
-                              return routineUpdate == null
-                                  ? SizedBox.shrink()
-                                  : Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Icon(Symbols.trophy),
-                                        Text(
-                                          formatUntilGoal(
-                                            routineUpdate.goal,
-                                            Duration.zero,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w300,
-                                          ),
-                                        ),
-                                      ],
-                                    ); // Row
-                            },
-                          ),
-                          onTap: () {
-                            _goalPopup();
-                          },
                         ), // GestureDetector: goal setting
+                        Expanded(
+                          child: Text(
+                            routine.name,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              GestureDetector(
+                                onTap: () => widget
+                                    .homeViewmodel
+                                    .startOrStopRoutine
+                                    .execute(routine.id),
+                                child: ListenableBuilder(
+                                  listenable: widget.homeViewmodel,
+                                  builder: (context, _) {
+                                    final routineUpdate = _getRoutine(
+                                      routine.id,
+                                    );
+                                    if (routineUpdate == null) {
+                                      return SizedBox.shrink();
+                                    }
+                                    if (!routineUpdate.running) {
+                                      return Column(
+                                        spacing: 2,
+                                        children: [
+                                          Icon(Symbols.play_circle),
+                                          Text(
+                                            'Start',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                        ],
+                                      );
+                                    }
+                                    final now = DateTime.now();
+                                    final spent = routineUpdate.spentAt(now);
+                                    final to = now.add(
+                                      routineUpdate.goal - spent,
+                                    );
+                                    return Column(
+                                      spacing: 2,
+                                      children: [
+                                        Icon(Symbols.stop_circle),
+                                        spent < routineUpdate.goal
+                                            ? Text(
+                                                'ETA ${DateFormat.jm().format(to)}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w300,
+                                                ),
+                                              )
+                                            : Text(
+                                                'overtime',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w400,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                      ],
+                                    ); // Column
+                                  },
+                                ), // ListenableBuilder
+                              ), // GestureDetector: toggle routine start/stop
+                            ],
+                          ), // Row: align Start/Stop
+                        ),
                       ],
                     ), // Row
             ),
