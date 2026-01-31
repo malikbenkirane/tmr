@@ -510,33 +510,6 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _configureSelectNotificationsSubject() {
-    selectNotificationStream.stream.listen((
-      NotificationResponse? response,
-    ) async {
-      debugPrint(
-        'notification response stream: ${response?.payload} data ${response?.data}',
-      );
-      final payload = response?.payload;
-      final id = response?.id;
-      if (payload != null && id != null) {
-        if (id == NotificationChannel.pomodoro.index) {
-          final {"onTap": trigger as String} = jsonDecode(payload);
-          debugPrint("selectNotificationStream: channel=$id onTap=$trigger");
-          switch (trigger.toPomodoroTrigger()) {
-            case PomodoroTrigger.breakPeriod:
-              widget.homeModel.startOrStopRoutine.execute(
-                widget.homeModel.pinnedRoutine!.id,
-              );
-            case PomodoroTrigger.workPeriod:
-              widget.homeModel.startOrStopRoutine.execute(
-                widget.homeModel.lastPinnedRoutine!.id,
-              );
-          }
-        }
-        if (id == NotificationChannel.wrapUp.index) {
-          await flutterLocalNotificationsPlugin.cancel(id);
-        }
-      }
-    });
+    handleNotificationResponse(widget.homeModel);
   }
 }
