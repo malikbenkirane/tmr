@@ -69,23 +69,42 @@ class _NotesScreenState extends State<NotesScreen> {
                               listenable: widget.homeViewmodel,
                               builder: (context, _) {
                                 final routineUpdate = _getRoutine(routine.id);
+                                var dayGoal = Duration.zero;
+                                for (final routine
+                                    in widget.homeViewmodel.routines) {
+                                  dayGoal += routine.$1.goal;
+                                }
                                 return routineUpdate == null
                                     ? SizedBox.shrink()
                                     : Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Icon(Symbols.trophy),
-                                          Text(
-                                            formatUntilGoal(
-                                              routineUpdate.goal,
-                                              Duration.zero,
-                                            ),
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w300,
-                                            ),
-                                          ),
+                                          Icon(Symbols.trophy, size: 30),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                formatUntilGoal(
+                                                  routineUpdate.goal,
+                                                  Duration.zero,
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w300,
+                                                ),
+                                              ), // Text: routine goal
+                                              Text(
+                                                formatUntilGoal(
+                                                  dayGoal,
+                                                  Duration.zero,
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w300,
+                                                ),
+                                              ),
+                                            ],
+                                          ), // Column
                                         ],
                                       ); // Row
                               },

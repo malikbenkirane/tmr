@@ -393,7 +393,7 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Text(
-          'routine${plannedCount <= 1 ? '' : 's'} completed',
+          'completed',
           style: TextStyle(
             color: labelColor(context, Label.homeScreenRoutinesPlannedToday),
             fontWeight: FontWeight.w300,

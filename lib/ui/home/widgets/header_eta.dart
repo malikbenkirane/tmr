@@ -5,7 +5,6 @@ import 'package:too_many_tabs/data/repositories/routines/special_session_duratio
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
-import 'package:too_many_tabs/ui/home/widgets/header_routines_dynamic_goal_label.dart';
 
 class HeaderEta extends StatefulWidget {
   const HeaderEta({
@@ -108,7 +107,7 @@ class _HeaderEtaSTate extends State<HeaderEta> {
           children: [
             Icon(
               Icons.alarm,
-              size: 19,
+              size: 22,
               color: labelColor(
                 context,
                 Label.homeScreenDayETA,
@@ -121,7 +120,7 @@ class _HeaderEtaSTate extends State<HeaderEta> {
                 Text(
                   _format(_eta),
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 22,
                     color: labelColor(context, Label.homeScreenDayETA),
                   ),
                 ),
@@ -138,11 +137,6 @@ class _HeaderEtaSTate extends State<HeaderEta> {
               ],
             ),
           ],
-        ),
-        HeaderRoutinesDynamicGoalLabel(
-          routines: widget.routines,
-          specialGoals: widget.specialGoals,
-          specialSessionState: widget.specialSessionState,
         ),
       ],
     );
