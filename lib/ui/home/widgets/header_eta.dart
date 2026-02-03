@@ -57,9 +57,9 @@ class _HeaderEtaSTate extends State<HeaderEta> {
             routine.spent -
             (routine.running
                 ? now.difference(routine.lastStarted!)
-                : Duration());
-        if (left > Duration()) {
-          eta = eta.add(left);
+                : Duration.zero);
+        if (left > Duration.zero) {
+          eta = eta.add(left * 1.2);
         }
       }
     }
