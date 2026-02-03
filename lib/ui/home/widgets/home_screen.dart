@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -21,6 +23,7 @@ import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
+import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/utils/notification_channel.dart';
 import 'package:too_many_tabs/utils/notifications.dart';
@@ -44,7 +47,6 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   bool isSomePopupShown = false;
   bool showNewRoutinePopup = false;
-  bool isNotificationListenerReady = false;
   RoutineSummary? tappedRoutine;
 
   late final AppLifecycleListener _listener;
@@ -61,6 +63,7 @@ class HomeScreenState extends State<HomeScreen> {
     _requestPermission();
     _isAndroidPermissionGranted();
     _handlePendingNotifications();
+    _configureNotificationListener();
 
     const MethodChannel(
       'com.example.tooManyTabs/settings',
@@ -88,15 +91,25 @@ class HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  void _configureNotificationListener() {
+    selectNotificationStream.stream.listen((response) {
+      final payload = response.payload;
+      final channel = response.id;
+      if (channel == null) return;
+      if (channel != NotificationChannel.pomodoro.index) return;
+      if (payload == null) return;
+      final {'routineId': routineId as int, 'onTap': trigger as String} =
+          jsonDecode(payload);
+      if (!mounted) return;
+      context.go(
+        '${Routes.notes}/$routineId',
+        extra: PomodoroPayload(routineId: routineId, onTap: trigger),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!isNotificationListenerReady) {
-      configureNotificationStreamListener(context, widget.homeModel);
-      setState(() {
-        isNotificationListenerReady = true;
-      });
-    }
-
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 

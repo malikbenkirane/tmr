@@ -9,6 +9,7 @@ import 'package:too_many_tabs/ui/bin/widgets/bin_screen.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
+import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
 import 'package:too_many_tabs/ui/notes/widgets/notes_screen.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/widgets/settings_screen.dart';
@@ -68,9 +69,14 @@ GoRouter router() => GoRouter(
           routinesRepository: context.read(),
           settingsRepository: context.read(),
         );
+        PomodoroPayload? pomodoroPayload;
+        if (state.extra != null) {
+          pomodoroPayload = state.extra as PomodoroPayload;
+        }
         return NotesScreen(
           notesViewmodel: viewModel,
           homeViewmodel: homeViewmodel,
+          pomodoroPayload: pomodoroPayload,
         );
       },
     ),
