@@ -388,21 +388,17 @@ class HomeViewmodel extends ChangeNotifier {
           await flutterLocalNotificationsPlugin.cancel(chan.index);
         }
         _log.fine('schedulePeriodicNotification: break period');
-        // When more than 20 minutes remain before the task deadline,
-        // send a 5‑minute reminder through the Pomodoro notification channel.
-        if (routine.spent < routine.goal + Duration(minutes: 20)) {
-          schedulePeriodicNotification(
-            periodInMinutes: 5,
-            title: routine.name,
-            body:
-                'Tap the 🍅 notification when you’d like to start a 20‑minute focus session. Let’s get it done.',
-            channel: NotificationChannel.pomodoro,
-            payload: {
-              "onTap": PomodoroTrigger.workPeriod.name,
-              "routineId": routine.id,
-            },
-          );
-        }
+        schedulePeriodicNotification(
+          periodInMinutes: 5,
+          title: routine.name,
+          body:
+              'Tap the 🍅 notification when you’d like to start a 20‑minute focus session. Let’s get it done.',
+          channel: NotificationChannel.pomodoro,
+          payload: {
+            "onTap": PomodoroTrigger.workPeriod.name,
+            "routineId": routine.id,
+          },
+        );
         _lastPinnedRoutine = routine;
       }
 
