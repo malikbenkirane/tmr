@@ -132,7 +132,7 @@ class RoutineGoalLabel extends StatelessWidget {
                     style: _primaryTextStyle(
                       theme: theme,
                       darkMode: darkMode,
-                      fontSize: 16,
+                      fontSize: 13,
                     ),
                   ),
                   Text(
