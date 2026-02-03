@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -26,7 +24,6 @@ import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/utils/notification_channel.dart';
 import 'package:too_many_tabs/utils/notifications.dart';
-import 'package:too_many_tabs/utils/pomodoro_trigger.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -47,6 +44,7 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   bool isSomePopupShown = false;
   bool showNewRoutinePopup = false;
+  bool isNotificationListenerReady = false;
   RoutineSummary? tappedRoutine;
 
   late final AppLifecycleListener _listener;
@@ -61,7 +59,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
 
     _requestPermission();
-    _configureSelectNotificationsSubject();
     _isAndroidPermissionGranted();
     _handlePendingNotifications();
 
@@ -93,6 +90,13 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!isNotificationListenerReady) {
+      configureNotificationStreamListener(context, widget.homeModel);
+      setState(() {
+        isNotificationListenerReady = true;
+      });
+    }
+
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -507,9 +511,5 @@ class HomeScreenState extends State<HomeScreen> {
       final grantedExact = await plugin?.requestExactAlarmsPermission();
       debugPrint('android: granted exact alarms permissions: $grantedExact');
     }
-  }
-
-  void _configureSelectNotificationsSubject() {
-    handleNotificationResponse(widget.homeModel);
   }
 }

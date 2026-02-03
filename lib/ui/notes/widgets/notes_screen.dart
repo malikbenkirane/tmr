@@ -32,15 +32,16 @@ class NotesScreen extends StatefulWidget {
 
 class _NotesScreenState extends State<NotesScreen> {
   bool showActionButtons = true;
-
-  @override
-  initState() {
-    super.initState();
-    handleNotificationResponse(widget.homeViewmodel);
-  }
+  bool isNotificationListenerReady = false;
 
   @override
   build(BuildContext context) {
+    if (!isNotificationListenerReady) {
+      configureNotificationStreamListener(context, widget.homeViewmodel);
+      setState(() {
+        isNotificationListenerReady = true;
+      });
+    }
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
     return ListenableBuilder(

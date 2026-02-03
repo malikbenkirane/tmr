@@ -369,7 +369,10 @@ class HomeViewmodel extends ChangeNotifier {
           // Use the Pomodoro notification channel.
           channel: NotificationChannel.pomodoro,
           // Payload to indicate that tapping the notification should trigger a break period.
-          payload: {"onTap": PomodoroTrigger.breakPeriod.name},
+          payload: {
+            "onTap": PomodoroTrigger.breakPeriod.name,
+            "routineId": routine.id,
+          },
         );
 
         // Schedule wrap‑up notification for the routine after scheduling.
@@ -394,7 +397,10 @@ class HomeViewmodel extends ChangeNotifier {
             body:
                 'Tap the 🍅 notification when you’d like to start a 20‑minute focus session. Let’s get it done.',
             channel: NotificationChannel.pomodoro,
-            payload: {"onTap": PomodoroTrigger.workPeriod.name},
+            payload: {
+              "onTap": PomodoroTrigger.workPeriod.name,
+              "routineId": routine.id,
+            },
           );
         }
         _lastPinnedRoutine = routine;
