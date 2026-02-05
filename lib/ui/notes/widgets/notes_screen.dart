@@ -102,6 +102,9 @@ class _NotesScreenState extends State<NotesScreen> {
         builder: (context, child) {
           final count = widget.notesViewmodel.notes.length;
           final routine = widget.notesViewmodel.routine;
+          final foreground = darkMode
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onPrimaryFixed;
           return Scaffold(
             appBar: AppBar(
               backgroundColor: darkMode
@@ -126,11 +129,18 @@ class _NotesScreenState extends State<NotesScreen> {
                                 return routineUpdate == null
                                     ? SizedBox.shrink()
                                     : Row(
+                                        spacing: 2,
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Icon(Symbols.trophy, size: 30),
+                                          Icon(
+                                            Symbols.trophy,
+                                            size: 30,
+                                            color: foreground,
+                                          ),
                                           Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 formatUntilGoal(
@@ -140,6 +150,7 @@ class _NotesScreenState extends State<NotesScreen> {
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w300,
+                                                  color: foreground,
                                                 ),
                                               ), // Text: routine goal
                                               Text(
@@ -150,6 +161,7 @@ class _NotesScreenState extends State<NotesScreen> {
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w300,
+                                                  color: foreground,
                                                 ),
                                               ),
                                             ],
@@ -167,6 +179,7 @@ class _NotesScreenState extends State<NotesScreen> {
                           child: Text(
                             routine.name,
                             textAlign: TextAlign.center,
+                            style: TextStyle(color: foreground),
                           ),
                         ),
                         Expanded(
@@ -191,10 +204,16 @@ class _NotesScreenState extends State<NotesScreen> {
                                       return Column(
                                         spacing: 2,
                                         children: [
-                                          Icon(Symbols.play_circle),
+                                          Icon(
+                                            Symbols.play_circle,
+                                            color: foreground,
+                                          ),
                                           Text(
                                             'Start',
-                                            style: TextStyle(fontSize: 14),
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: foreground,
+                                            ),
                                           ),
                                         ],
                                       );
@@ -207,13 +226,17 @@ class _NotesScreenState extends State<NotesScreen> {
                                     return Column(
                                       spacing: 2,
                                       children: [
-                                        Icon(Symbols.stop_circle),
+                                        Icon(
+                                          Symbols.stop_circle,
+                                          color: foreground,
+                                        ),
                                         spent < routineUpdate.goal
                                             ? Text(
                                                 'ETA ${DateFormat.jm().format(to)}',
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w300,
+                                                  color: foreground,
                                                 ),
                                               )
                                             : Text(
@@ -221,6 +244,7 @@ class _NotesScreenState extends State<NotesScreen> {
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.w400,
                                                   fontSize: 14,
+                                                  color: foreground,
                                                 ),
                                               ),
                                       ],
