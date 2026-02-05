@@ -7,6 +7,7 @@ import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 
 class BinScreen extends StatefulWidget {
   const BinScreen({super.key, required this.viewModel});
@@ -40,13 +41,9 @@ class _ArchivesScreenState extends State<BinScreen> {
 
   @override
   build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: darkMode
-            ? colorScheme.primaryContainer
-            : colorScheme.primaryFixed,
+        backgroundColor: labelColor(context, Label.appBarBackground),
         title: Padding(
           padding: EdgeInsets.only(left: 5),
           child: Row(
@@ -56,9 +53,7 @@ class _ArchivesScreenState extends State<BinScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.w300,
                   fontSize: 18,
-                  color: darkMode
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onPrimaryFixed,
+                  color: labelColor(context, Label.appBarForeground),
                 ),
               ),
             ],

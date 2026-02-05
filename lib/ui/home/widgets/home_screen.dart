@@ -117,9 +117,7 @@ class HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: darkMode
-            ? colorScheme.primaryContainer
-            : colorScheme.primaryFixed,
+        backgroundColor: labelColor(context, Label.homeAppBarBackground),
         title: Padding(
           padding: EdgeInsets.all(0),
           child: ListenableBuilder(

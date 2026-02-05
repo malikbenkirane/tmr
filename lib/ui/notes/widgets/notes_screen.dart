@@ -10,6 +10,7 @@ import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/add_note_popup.dart';
 import 'package:too_many_tabs/ui/home/widgets/goal_popup.dart';
@@ -83,8 +84,6 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
     return ListenableBuilder(
       listenable: widget.notesViewmodel.load,
       builder: (context, child) {
@@ -102,14 +101,10 @@ class _NotesScreenState extends State<NotesScreen> {
         builder: (context, child) {
           final count = widget.notesViewmodel.notes.length;
           final routine = widget.notesViewmodel.routine;
-          final foreground = darkMode
-              ? colorScheme.onPrimaryContainer
-              : colorScheme.onPrimaryFixed;
+          final foreground = labelColor(context, Label.appBarForeground);
           return Scaffold(
             appBar: AppBar(
-              backgroundColor: darkMode
-                  ? colorScheme.primaryContainer
-                  : colorScheme.primaryFixed,
+              backgroundColor: labelColor(context, Label.appBarBackground),
               title: routine == null
                   ? SizedBox.shrink()
                   : Row(

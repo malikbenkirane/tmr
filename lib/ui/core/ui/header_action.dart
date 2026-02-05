@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 
 class HeaderAction extends StatelessWidget {
   const HeaderAction({super.key, required this.icon, required this.onPressed});
@@ -7,16 +8,10 @@ class HeaderAction extends StatelessWidget {
 
   @override
   build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
-
     return IconButton(
       onPressed: onPressed,
       icon: Icon(icon),
-      // color: darkMode
-      //     ? colorScheme.onPrimaryContainer
-      //     : colorScheme.onPrimaryFixed,
-      color: darkMode ? colorScheme.onPrimaryContainer : colorScheme.primary,
+      color: labelColor(context, Label.homeScreenSettingsWheel),
     );
   }
 }

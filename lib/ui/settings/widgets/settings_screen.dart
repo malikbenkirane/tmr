@@ -7,6 +7,7 @@ import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/settings/widgets/goal_popup.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/widgets/overwrite_database_switch.dart';
@@ -60,13 +61,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: darkMode
-            ? colorScheme.primaryContainer
-            : colorScheme.primaryFixed,
+        backgroundColor: labelColor(context, Label.appBarBackground),
         title: Padding(
           padding: EdgeInsets.only(left: 5),
           child: Row(
@@ -76,18 +73,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.w300,
                   fontSize: 18,
-                  color: darkMode
-                      ? colorScheme.onPrimaryContainer
-                      : colorScheme.onPrimaryFixed,
+                  color: labelColor(context, Label.appBarForeground),
                 ),
               ),
             ],
           ),
         ),
         actions: [
-          HeaderAction(
-            icon: Icons.home,
+          IconButton(
             onPressed: () => context.go(Routes.home),
+            icon: Icon(
+              Icons.home,
+              color: labelColor(context, Label.appBarForeground),
+            ),
           ),
         ],
       ),
