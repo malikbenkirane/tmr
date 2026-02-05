@@ -4,8 +4,6 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:too_many_tabs/ui/core/themes/colors.dart';
-
 class ErrorIndicator extends StatelessWidget {
   const ErrorIndicator({
     super.key,
@@ -49,8 +47,10 @@ class ErrorIndicator extends StatelessWidget {
         const SizedBox(height: 10),
         FilledButton(
           onPressed: onPressed,
-          style: const ButtonStyle(
-            backgroundColor: WidgetStatePropertyAll(AppColors.red1),
+          style: ButtonStyle(
+            backgroundColor: WidgetStatePropertyAll(
+              Theme.of(context).colorScheme.error,
+            ),
             foregroundColor: WidgetStatePropertyAll(Colors.white),
           ),
           child: Text(label),
@@ -59,4 +59,3 @@ class ErrorIndicator extends StatelessWidget {
     );
   }
 }
-

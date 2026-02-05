@@ -7,8 +7,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../themes/colors.dart';
-
 class TagChip extends StatelessWidget {
   const TagChip({
     super.key,
@@ -37,7 +35,7 @@ class TagChip extends StatelessWidget {
             color:
                 chipColor ??
                 Theme.of(context).extension<TagChipTheme>()?.chipColor ??
-                AppColors.whiteTransparent,
+                Color(0x4D000000),
           ),
           child: SizedBox(
             height: height,

@@ -8,7 +8,6 @@ import 'package:too_many_tabs/config/dependencies.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/routing/router.dart';
-import 'package:too_many_tabs/ui/core/themes/theme.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
 import 'package:too_many_tabs/utils/notifications.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -109,10 +108,26 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final seedColor = Colors.black;
+    final lightTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
+        seedColor: seedColor,
+        brightness: Brightness.light,
+      ),
+    );
+    final darkTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
+        seedColor: seedColor,
+        brightness: Brightness.dark,
+      ),
+    );
+
     return MaterialApp.router(
       scrollBehavior: AppCustomScrollBehavior(),
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: lightTheme,
+      darkTheme: darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: router(),
       restorationScopeId: 'app',

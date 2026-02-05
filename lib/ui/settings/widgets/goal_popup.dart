@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
-import 'package:too_many_tabs/ui/core/themes/dimens.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/special_goal_setting_update.dart';
 
@@ -82,7 +81,7 @@ class _SetGoal extends StatelessWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              spacing: Dimens.of(context).rowSpacing,
+              spacing: 6,
               children: [
                 Text(
                   'Set',
