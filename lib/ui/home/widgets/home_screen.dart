@@ -96,6 +96,10 @@ class HomeScreenState extends State<HomeScreen> {
       final payload = response.payload;
       final channel = response.id;
       if (channel == null) return;
+      if (channel == NotificationChannel.wrapUp.index ||
+          channel == NotificationChannel.goalCompleted.index) {
+        flutterLocalNotificationsPlugin.cancel(channel);
+      }
       if (channel != NotificationChannel.pomodoro.index) return;
       if (payload == null) return;
       final {'routineId': routineId as int, 'onTap': trigger as String} =

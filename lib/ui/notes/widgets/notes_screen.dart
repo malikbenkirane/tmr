@@ -65,7 +65,8 @@ class _NotesScreenState extends State<NotesScreen> {
       if (response == null) return;
       final channel = response.id;
       if (channel == null) return;
-      if (channel == NotificationChannel.wrapUp.index) {
+      if (channel == NotificationChannel.wrapUp.index ||
+          channel == NotificationChannel.goalCompleted.index) {
         flutterLocalNotificationsPlugin.cancel(channel);
         return;
       }

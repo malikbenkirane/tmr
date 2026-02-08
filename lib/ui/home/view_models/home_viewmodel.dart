@@ -193,15 +193,25 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  void _scheduleWrapUp(RoutineSummary routine) {
+  /// Schedules a notification to trigger before the routine's goal is reached.
+  void _scheduleGoalNotification(
+    RoutineSummary routine,
+    Duration leadTimeOffset,
+    NotificationChannel channel,
+  ) {
+    // Current moment.
     final now = DateTime.now();
-    final left = routine.goal - routine.spentAt(now) - Duration(minutes: 10);
+
+    // Remaining time until the goal, minus the lead‑time offset.
+    final left = routine.goal - routine.spentAt(now) - leadTimeOffset;
+
+    // Schedule only if there is still time left.
     if (left > Duration.zero) {
       schedulePeriodicNotification(
         periodInMinutes: left.inMinutes,
         title: routine.name,
-        body: "All set to wrap things up! 🎉😊",
-        channel: NotificationChannel.wrapUp,
+        body: channel.message(),
+        channel: channel,
       );
     }
   }
@@ -379,7 +389,19 @@ class HomeViewmodel extends ChangeNotifier {
         await flutterLocalNotificationsPlugin.cancel(
           NotificationChannel.wrapUp.index,
         );
-        _scheduleWrapUp(routine);
+        await flutterLocalNotificationsPlugin.cancel(
+          NotificationChannel.goalCompleted.index,
+        );
+        _scheduleGoalNotification(
+          routine,
+          Duration(minutes: 10),
+          NotificationChannel.wrapUp,
+        );
+        _scheduleGoalNotification(
+          routine,
+          Duration.zero,
+          NotificationChannel.goalCompleted,
+        );
       } else {
         for (final chan in [
           NotificationChannel.pomodoro,
