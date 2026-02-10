@@ -183,32 +183,42 @@ class _Button extends StatelessWidget {
   });
   @override
   build(BuildContext context) {
+    final fg = colorCompositionFromAction(
+      context,
+      ApplicationAction.downloadBackup,
+    ).foreground;
+
+    final bg = colorCompositionFromAction(
+      context,
+      ApplicationAction.downloadBackup,
+    ).background;
     return Padding(
-      padding: EdgeInsets.all(10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorCompositionFromAction(
-                context,
-                ApplicationAction.downloadBackup,
-              ).background,
-              foregroundColor: colorCompositionFromAction(
-                context,
-                ApplicationAction.downloadBackup,
-              ).foreground,
-            ),
-            onPressed: onPressed,
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onPressed,
+          child: SizedBox(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
+              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               child: Row(
                 spacing: 10,
-                children: [Icon(icon, size: 30), Text(label)],
+                children: [
+                  Icon(icon, size: 30, color: fg),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(label, style: TextStyle(color: fg, fontSize: 18)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
