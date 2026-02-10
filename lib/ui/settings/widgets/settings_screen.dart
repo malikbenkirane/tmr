@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:too_many_tabs/utils/result.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.viewModel});
@@ -95,7 +97,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _Button(
-                              icon: Icons.download,
+                              icon: Icons.settings_backup_restore,
+                              label: 'Import state.db',
+                              onPressed: () async {
+                                final PlatformFile platformFile;
+                                {
+                                  final result = await FilePicker.platform
+                                      .pickFiles();
+                                  if (result == null) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text('no picked file'),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  platformFile = result.files.first;
+                                }
+                                final path = platformFile.path;
+                                if (path == null) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: const Text('null path')),
+                                  );
+                                  return;
+                                }
+                                final result = await restoreDatabase(path);
+                                switch (result) {
+                                  case Error<void>():
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'restoreDatabase: ${result.error}',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  case Ok<void>():
+                                    exit(0);
+                                }
+                              },
+                            ),
+                            _Button(
+                              icon: Symbols.download_for_offline,
                               label: "Save state.db",
                               onPressed: () async {
                                 final data = await saveDatabase();
@@ -109,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                                 exit(0);
                               },
-                            ),
+                            ), // _Button save state.db
                           ],
                         ), // Column
                       ), // Center
@@ -158,7 +204,7 @@ class _Button extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 10),
               child: Row(
                 spacing: 10,
-                children: [Icon(icon, size: 23), Text(label)],
+                children: [Icon(icon, size: 30), Text(label)],
               ),
             ),
           ),

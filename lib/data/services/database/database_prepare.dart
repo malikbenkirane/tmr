@@ -75,3 +75,28 @@ Future<Uint8List> saveDatabase() async {
 
   return File(backupPath).readAsBytes();
 }
+
+// Restores the database from a byte buffer
+Future<Result<void>> restoreDatabase(String importPath) async {
+  try {
+    // Get the path to the app's databases directory
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'state.db');
+
+    // Create a backup of the current DB
+    final backupPath = join(dbPath, 'state_backup.db');
+    await File(backupPath).delete(); // remove any old backup
+    final db = await openDatabase(path);
+    await db.execute("VACUUM INTO '$backupPath'"); // dump DB to backup file
+
+    // Replace the existing DB with the provided data
+    await deleteDatabase(path);
+    await File(
+      path,
+    ).writeAsBytes(File(importPath).readAsBytesSync(), flush: true);
+
+    return Result.ok(null);
+  } on Exception catch (e) {
+    return Result.error(e);
+  }
+}
