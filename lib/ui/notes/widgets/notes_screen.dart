@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +23,7 @@ import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/utils/notification_channel.dart';
 import 'package:too_many_tabs/utils/notifications.dart';
 import 'package:too_many_tabs/utils/pomodoro_trigger.dart';
+import 'package:clipboard/clipboard.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({
@@ -271,13 +273,32 @@ class _NotesScreenState extends State<NotesScreen> {
                     padding: EdgeInsets.only(bottom: 140),
                     itemBuilder: (_, index) {
                       final note = widget.notesViewmodel.notes[index];
-                      return Note(
-                        count: count,
-                        index: index,
-                        note: note,
-                        onDismiss: () {
-                          widget.notesViewmodel.dismissNote.execute(note.id!);
+                      return InkWell(
+                        onTap: () async {
+                          await FlutterClipboard.copy(note.text);
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                spacing: 2,
+                                children: [
+                                  Icon(Symbols.assignment),
+                                  const Text(
+                                    'Your note’s now on the clipboard',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
                         },
+                        child: Note(
+                          count: count,
+                          index: index,
+                          note: note,
+                          onDismiss: () {
+                            widget.notesViewmodel.dismissNote.execute(note.id!);
+                          },
+                        ),
                       );
                     },
                   ),
