@@ -2,15 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
-import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:too_many_tabs/config/dependencies.dart';
-import 'package:too_many_tabs/data/services/database/database_client.dart';
-import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/routing/router.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
 import 'package:too_many_tabs/utils/notifications.dart';
-import 'package:too_many_tabs/utils/result.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,42 +23,12 @@ void main() async {
 
   initializeLocalNotifications();
 
-  final resultDatabase = await prepareDatabase();
-  final Database db;
-  switch (resultDatabase) {
-    case Error<Database>():
-      return;
-    case Ok<Database>():
-  }
-  db = resultDatabase.value;
-
-  Logger.root.level = Level.ALL;
-  Logger.root.onRecord.listen((record) async {
-    final client = DatabaseClient(db: db);
-    if (record.level >= Level.INFO) {
-      client.log(
-        level: record.level.name,
-        time: record.time,
-        logger: record.loggerName,
-        message: record.message,
-      );
-    }
-  });
-
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(
-    MultiProvider(
-      providers: providerLocal(db: db),
-      child: const RootRestorationScope(
-        restorationId: 'root',
-        child: MainApp(),
-      ),
-    ),
-  );
+  runApp(const RootRestorationScope(restorationId: 'root', child: MainApp()));
 }
 
 @pragma('vm:entry-point')
