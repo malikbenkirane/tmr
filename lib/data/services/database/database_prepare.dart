@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart';
@@ -22,6 +23,7 @@ Future<Result<Database>> prepareDatabase() async {
     final resultSettings = await client.getSettings();
     switch (resultSettings) {
       case Error<SettingsSummary>():
+        debugPrint('getSettings(): ${resultSettings.error}');
         log.severe('unable to load settings');
         return Result.error(
           Exception('unable to get settings: ${resultSettings.error}'),
@@ -60,4 +62,16 @@ Future<Result<Database>> prepareDatabase() async {
   }
 
   return Result.ok(await openDatabase(path));
+}
+
+Future<Uint8List> saveDatabase() async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'state.db');
+  final backupPath = join(dbPath, 'state_backup.db');
+  await File(backupPath).delete();
+
+  Database db = await openDatabase(path);
+  await db.execute("VACUUM INTO '$backupPath'");
+
+  return File(backupPath).readAsBytes();
 }
