@@ -67,8 +67,12 @@ Future<Result<Database>> prepareDatabase() async {
 Future<Uint8List> saveDatabase() async {
   final dbPath = await getDatabasesPath();
   final path = join(dbPath, 'state.db');
+
   final backupPath = join(dbPath, 'state_backup.db');
-  await File(backupPath).delete();
+  final backupFile = File(backupPath);
+  if (await backupFile.exists()) {
+    await File(backupPath).delete();
+  }
 
   Database db = await openDatabase(path);
   await db.execute("VACUUM INTO '$backupPath'");
@@ -85,7 +89,10 @@ Future<Result<void>> restoreDatabase(String importPath) async {
 
     // Create a backup of the current DB
     final backupPath = join(dbPath, 'state_backup.db');
-    await File(backupPath).delete(); // remove any old backup
+    final backupFile = File(backupPath);
+    if (await backupFile.exists()) {
+      await File(backupPath).delete(); // remove any old backup
+    }
     final db = await openDatabase(path);
     await db.execute("VACUUM INTO '$backupPath'"); // dump DB to backup file
 
