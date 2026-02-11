@@ -59,6 +59,7 @@ void initializeLocalNotifications() async {
   final initializationSettings = InitializationSettings(
     iOS: darwinInitializationSettings,
     android: androidInitializationSettings,
+    macOS: darwinInitializationSettings,
   );
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
