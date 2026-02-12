@@ -188,54 +188,32 @@ class HomeScreenState extends State<HomeScreen> {
                                       backgroundColor: Colors.black.withValues(
                                         alpha: 0,
                                       ),
-                                      body: Center(
-                                        child: TapRegion(
-                                          onTapOutside: (_) {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Material(
-                                            elevation: 4,
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            textStyle: TextStyle(
-                                              color: colorScheme.onPrimary,
-                                              fontSize: 20,
-                                            ),
-                                            color: colorScheme.primary,
-                                            child: InkWell(
-                                              onTap: () async {
-                                                await flutterLocalNotificationsPlugin
-                                                    .cancel(
-                                                      NotificationChannel
-                                                          .pomodoro
-                                                          .index,
-                                                    );
-                                                if (context.mounted) {
-                                                  Navigator.pop(context);
-                                                }
-                                              },
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              child: Padding(
-                                                padding: EdgeInsets.all(20),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  spacing: 5,
-                                                  children: [
-                                                    Icon(
-                                                      Symbols.timer_off,
-                                                      color:
-                                                          colorScheme.onPrimary,
-                                                    ),
-                                                    const Text('End Pomodoro'),
-                                                  ],
-                                                ), // Row
-                                              ), // Padding
-                                            ), // InkWell
-                                          ), // Material
-                                        ), // TapRegion
+                                      body: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        spacing: 10,
+                                        children: [
+                                          _Button(
+                                            label: 'End Pomodoro',
+                                            icon: Symbols.timer_off,
+                                            onTap: () async {
+                                              await flutterLocalNotificationsPlugin
+                                                  .cancel(
+                                                    NotificationChannel
+                                                        .pomodoro
+                                                        .index,
+                                                  );
+                                            },
+                                          ),
+                                          _Button(
+                                            label: 'Cancel Notifications',
+                                            icon: Symbols.cancel,
+                                            onTap: () async {
+                                              await flutterLocalNotificationsPlugin
+                                                  .cancelAll();
+                                            },
+                                          ),
+                                        ],
                                       ), // Center
                                     );
                                   },
@@ -534,5 +512,52 @@ class HomeScreenState extends State<HomeScreen> {
       final grantedExact = await plugin?.requestExactAlarmsPermission();
       debugPrint('android: granted exact alarms permissions: $grantedExact');
     }
+  }
+}
+
+@immutable
+class _Button extends StatelessWidget {
+  final void Function() onTap;
+  final String label;
+  final IconData icon;
+  const _Button({required this.icon, required this.label, required this.onTap});
+  @override
+  build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        TapRegion(
+          onTapOutside: (_) {
+            Navigator.pop(context);
+          },
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(20),
+            textStyle: TextStyle(color: colorScheme.onPrimary, fontSize: 20),
+            color: colorScheme.primary,
+            child: InkWell(
+              onTap: () async {
+                onTap();
+                if (!context.mounted) return;
+                Navigator.pop(context);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 5,
+                  children: [
+                    Icon(icon, color: colorScheme.onPrimary),
+                    Text(label),
+                  ],
+                ), // Row
+              ), // Padding
+            ), // InkWell
+          ), // Material
+        ),
+      ],
+    ); // TapRegion
   }
 }

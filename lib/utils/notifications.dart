@@ -37,6 +37,7 @@ void schedulePeriodicNotification({
   final notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
     iOS: darwinNotificationDetails,
+    macOS: darwinNotificationDetails,
   );
 
   flutterLocalNotificationsPlugin.periodicallyShowWithDuration(
