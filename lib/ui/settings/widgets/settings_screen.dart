@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/routing/routes.dart';
@@ -149,7 +150,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 await FilePicker.platform.saveFile(
                                   dialogTitle:
                                       "Keep state.db safe in a cozy spot!",
-                                  fileName: "state.db",
+                                  fileName:
+                                      "tmr_state.${DateFormat('MMMM.dd.hh_mm_ss_aa').format(DateTime.now())}.db",
                                   bytes: data,
                                 );
 
