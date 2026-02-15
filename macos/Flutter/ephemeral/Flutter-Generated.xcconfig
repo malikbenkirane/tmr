@@ -2,12 +2,12 @@
 FLUTTER_ROOT=/Users/malikbenkirane/Downloads/flutter-develop/flutter
 FLUTTER_APPLICATION_PATH=/Users/malikbenkirane/Downloads/flutter-develop/too_many_tabs
 COCOAPODS_PARALLEL_CODE_SIGN=true
-FLUTTER_TARGET=/Users/malikbenkirane/Downloads/flutter-develop/too_many_tabs/lib/main.dart
+FLUTTER_TARGET=lib/main.dart
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.0
 FLUTTER_BUILD_NUMBER=1
 DART_DEFINES=RkxVVFRFUl9WRVJTSU9OPTMuNDEuMC0wLjAucHJl,RkxVVFRFUl9DSEFOTkVMPWJldGE=,RkxVVFRFUl9HSVRfVVJMPWdpdEBnaXRodWIuY29tOmZsdXR0ZXIvZmx1dHRlci5naXQ=,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049ZWUzN2I5NzQwNQ==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049YjI2NzA5MGUzMQ==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMS4wIChidWlsZCAzLjExLjAtMjk2LjMuYmV0YSk=
 DART_OBFUSCATION=false
 TRACK_WIDGET_CREATION=true
-TREE_SHAKE_ICONS=false
+TREE_SHAKE_ICONS=true
 PACKAGE_CONFIG=/Users/malikbenkirane/Downloads/flutter-develop/too_many_tabs/.dart_tool/package_config.json
