@@ -517,7 +517,7 @@ class HomeScreenState extends State<HomeScreen> {
 
 @immutable
 class _Button extends StatelessWidget {
-  final void Function() onTap;
+  final Future<void> Function() onTap;
   final String label;
   final IconData icon;
   const _Button({required this.icon, required this.label, required this.onTap});
@@ -533,12 +533,12 @@ class _Button extends StatelessWidget {
           },
           child: Material(
             elevation: 4,
+              await onTap();
             borderRadius: BorderRadius.circular(20),
             textStyle: TextStyle(color: colorScheme.onPrimary, fontSize: 20),
             color: colorScheme.primary,
             child: InkWell(
               onTap: () async {
-                onTap();
                 if (!context.mounted) return;
                 Navigator.pop(context);
               },
