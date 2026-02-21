@@ -188,32 +188,41 @@ class HomeScreenState extends State<HomeScreen> {
                                       backgroundColor: Colors.black.withValues(
                                         alpha: 0,
                                       ),
-                                      body: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        spacing: 10,
-                                        children: [
-                                          _Button(
-                                            label: 'End Pomodoro',
-                                            icon: Symbols.timer_off,
-                                            onTap: () async {
-                                              await flutterLocalNotificationsPlugin
-                                                  .cancel(
-                                                    NotificationChannel
-                                                        .pomodoro
-                                                        .index,
-                                                  );
-                                            },
-                                          ),
-                                          _Button(
-                                            label: 'Cancel Notifications',
-                                            icon: Symbols.cancel,
-                                            onTap: () async {
-                                              await flutterLocalNotificationsPlugin
-                                                  .cancelAll();
-                                            },
-                                          ),
-                                        ],
+                                      body: TapRegion(
+                                        onTapOutside: (_) {
+                                          if (Navigator.canPop(context)) {
+                                            Navigator.pop(context);
+                                          }
+                                        },
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          spacing: 10,
+                                          children: [
+                                            _Button(
+                                              dialogContext: context,
+                                              label: 'End Pomodoro',
+                                              icon: Symbols.timer_off,
+                                              onTap: () async {
+                                                await flutterLocalNotificationsPlugin
+                                                    .cancel(
+                                                      NotificationChannel
+                                                          .pomodoro
+                                                          .index,
+                                                    );
+                                              },
+                                            ),
+                                            _Button(
+                                              dialogContext: context,
+                                              label: 'Cancel Notifications',
+                                              icon: Symbols.cancel,
+                                              onTap: () async {
+                                                await flutterLocalNotificationsPlugin
+                                                    .cancelAll();
+                                              },
+                                            ),
+                                          ],
+                                        ),
                                       ), // Center
                                     );
                                   },
@@ -520,43 +529,47 @@ class _Button extends StatelessWidget {
   final Future<void> Function() onTap;
   final String label;
   final IconData icon;
-  const _Button({required this.icon, required this.label, required this.onTap});
+  final BuildContext dialogContext;
+  const _Button({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.dialogContext,
+  });
   @override
   build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        TapRegion(
-          onTapOutside: (_) {
-            Navigator.pop(context);
-          },
-          child: Material(
-            elevation: 4,
+        Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(20),
+          textStyle: TextStyle(
+            color: theme.colorScheme.onPrimary,
+            fontSize: 20,
+          ),
+          color: theme.colorScheme.primary,
+          child: InkWell(
+            onTap: () async {
               await onTap();
+              if (!context.mounted) return;
+              Navigator.pop(context);
+            },
             borderRadius: BorderRadius.circular(20),
-            textStyle: TextStyle(color: colorScheme.onPrimary, fontSize: 20),
-            color: colorScheme.primary,
-            child: InkWell(
-              onTap: () async {
-                if (!context.mounted) return;
-                Navigator.pop(context);
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 5,
-                  children: [
-                    Icon(icon, color: colorScheme.onPrimary),
-                    Text(label),
-                  ],
-                ), // Row
-              ), // Padding
-            ), // InkWell
-          ), // Material
-        ),
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 5,
+                children: [
+                  Icon(icon, color: theme.colorScheme.onPrimary),
+                  Text(label),
+                ],
+              ), // Row
+            ), // Padding
+          ), // InkWell
+        ), // Material
       ],
     ); // TapRegion
   }
