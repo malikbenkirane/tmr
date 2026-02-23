@@ -12,3 +12,4 @@
 20260103215930.sql add dismissed coloumn to notes table
 20260104184705.sql add special goals sessions table
 20260107171304.sql add routine graph model 
+20260223103111.sql add signal/noise ratio setting
