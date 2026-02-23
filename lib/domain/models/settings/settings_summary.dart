@@ -5,14 +5,18 @@ class SettingsSummary {
   const SettingsSummary({
     required bool overwriteDatabase,
     required SpecialGoals specialGoals,
+    required double signalNoiseRatio,
   }) : _overwriteDatabase = overwriteDatabase,
-       _specialGoals = specialGoals;
+       _specialGoals = specialGoals,
+       _signalNoiseRatio = signalNoiseRatio;
 
   final bool _overwriteDatabase;
   final SpecialGoals _specialGoals;
+  final double _signalNoiseRatio;
 
   bool get overwriteDatabase => _overwriteDatabase;
   SpecialGoals get specialGoals => _specialGoals;
+  double get signalNoiseRatio => _signalNoiseRatio;
 
   void set(SpecialGoal setting, Duration goal) {
     switch (setting) {
@@ -33,6 +37,7 @@ class SettingsSummary {
     final parts = <String>[
       'overwriteDatabase: $overwriteDatabase',
       'specialGoals: $specialGoals',
+      'signalNoiseRatio: $signalNoiseRatio',
     ];
 
     // Join them with commas and wrap in curly braces.

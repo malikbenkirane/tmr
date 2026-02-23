@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
@@ -350,6 +351,7 @@ class DatabaseClient {
         'stoke_goal': stokeGoal as int,
         'start_slow_goal': startSlowGoal as int,
         'slow_down_goal': slowDownGoal as int,
+        'signal_noise_ratio': signalNoiseRatio as int,
       } = rows[0];
       return Result.ok(
         SettingsSummary(
@@ -360,6 +362,7 @@ class DatabaseClient {
             startSlow: Duration(minutes: 30 * startSlowGoal),
             slowDown: Duration(minutes: 30 * slowDownGoal),
           ),
+          signalNoiseRatio: signalNoiseRatio.toDouble() / 10,
         ),
       );
     } on Exception catch (e) {
