@@ -22,7 +22,7 @@ import 'package:too_many_tabs/utils/result.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:logging/logging.dart';
 
-Future<Result<DatabaseClient>> _prepareDatabase() async {
+Future<Result<DatabaseClient>> prepareDatabaseClient() async {
   final result = await prepareDatabase();
   final Database db;
   switch (result) {
@@ -55,7 +55,7 @@ GoRouter router() => GoRouter(
     GoRoute(
       path: Routes.home,
       builder: (context, state) => FutureBuilder<Result<DatabaseClient>>(
-        future: _prepareDatabase(),
+        future: prepareDatabaseClient(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadScreen();
@@ -89,7 +89,7 @@ GoRouter router() => GoRouter(
     GoRoute(
       path: Routes.archives,
       builder: (context, state) => FutureBuilder(
-        future: _prepareDatabase(),
+        future: prepareDatabaseClient(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadScreen();
@@ -113,7 +113,7 @@ GoRouter router() => GoRouter(
     GoRoute(
       path: Routes.bin,
       builder: (context, state) => FutureBuilder(
-        future: _prepareDatabase(),
+        future: prepareDatabaseClient(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadScreen();
@@ -137,7 +137,7 @@ GoRouter router() => GoRouter(
     GoRoute(
       path: Routes.settings,
       builder: (context, state) => FutureBuilder(
-        future: _prepareDatabase(),
+        future: prepareDatabaseClient(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadScreen();
@@ -157,7 +157,7 @@ GoRouter router() => GoRouter(
     GoRoute(
       path: '${Routes.notes}/:routineId',
       builder: (context, state) => FutureBuilder(
-        future: _prepareDatabase(),
+        future: prepareDatabaseClient(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return LoadScreen();

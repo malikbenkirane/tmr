@@ -14,3 +14,7 @@ enum NotificationChannel {
     return "";
   }
 }
+
+abstract class NotificationChannelId {
+  static const pomodoro = 'pomodoro';
+}
