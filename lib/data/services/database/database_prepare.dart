@@ -18,7 +18,7 @@ Future<Result<Database>> prepareDatabase() async {
   log.fine('database ${exists ? "" : "does not"} exist${exists ? "s" : ""}');
   var reset = false;
   if (exists) {
-    log.fine('Opening existing database');
+    log.fine('Opening existing database $path');
     final client = DatabaseClient(db: await openDatabase(path));
     final resultSettings = await client.getSettings();
     switch (resultSettings) {
