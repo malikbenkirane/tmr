@@ -38,13 +38,13 @@ Future<void> initializeService() async {
   await service.configure(
     iosConfiguration: IosConfiguration(
       autoStart: true,
-      onForeground: onForeground,
+      onForeground: onStart,
       onBackground: onIosBackground,
     ),
     androidConfiguration: AndroidConfiguration(
       autoStart: true,
       isForegroundMode: true,
-      onStart: onForeground,
+      onStart: onStart,
       notificationChannelId: 'android_foreground',
       foregroundServiceNotificationId: 888,
     ),
@@ -87,17 +87,56 @@ void onStart(ServiceInstance service) async {
     }
   }
 
-  Timer.periodic(const Duration(minutes: 1), (timer) async {
-    if (service is IOSServiceInstance) {
-      final RoutineSummary? routine;
-      {
-        final result = await dbc.getRunningRoutine();
-        switch (result) {
-          case Error<RoutineSummary?>():
-            debugPrint('ERROR getRunningRoutine: ${result.error}');
-          case Ok<RoutineSummary?>():
-            routine = result.value;
-        }
+  Timer.periodic(const Duration(seconds: 2), (timer) async {
+    final RoutineSummary? routine;
+    {
+      final result = await dbc.getRunningRoutine();
+      switch (result) {
+        case Error<RoutineSummary?>():
+          debugPrint('ERROR getRunningRoutine: ${result.error}');
+          return;
+        case Ok<RoutineSummary?>():
+          routine = result.value;
+      }
+    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final int pomo;
+    {
+      final cached = prefs.getInt('pomo');
+      pomo = (cached ?? 0) + 1;
+      prefs.setInt('pomo', pomo);
+    }
+    final String name;
+    if (routine == null) {
+      final cached = prefs.getString('pomoName');
+      name = cached ?? 'noise';
+    } else {
+      prefs.setString('pomoName', routine.name);
+      name = routine.name;
+    }
+    final String message;
+    if (routine == null && pomo >= 5) {
+      message = 'time to get back to work';
+    } else if (routine != null && pomo >= 20) {
+      message = 'time to take a break';
+    } else {
+      message = '';
+    }
+    debugPrint('pomo: $pomo, message: "$message"');
+    if (message != '') {
+      if (service is IOSServiceInstance) {
+        flutterLocalNotificationsPlugin.show(
+          0,
+          name,
+          message,
+          NotificationDetails(
+            iOS: DarwinNotificationDetails(
+              sound: 'spacial.aif',
+              interruptionLevel: InterruptionLevel.timeSensitive,
+            ),
+          ),
+        );
+        prefs.setInt('pomo', 0);
       }
     }
   });
@@ -119,8 +158,6 @@ void main() async {
     );
   });
 
-  initializeLocalNotifications();
-
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -141,29 +178,6 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
       'notification action tapped with input: ${notificationResponse.input}',
     );
   }
-}
-
-void initializeLocalNotifications() async {
-  final List<DarwinNotificationCategory> darwinNotificationCategories = [];
-  final darwinInitializationSettings = DarwinInitializationSettings(
-    requestAlertPermission: false,
-    requestBadgePermission: false,
-    requestSoundPermission: false,
-    notificationCategories: darwinNotificationCategories,
-  );
-  final androidInitializationSettings = AndroidInitializationSettings(
-    '@mipmap/ic_launcher',
-  );
-  final initializationSettings = InitializationSettings(
-    iOS: darwinInitializationSettings,
-    android: androidInitializationSettings,
-    macOS: darwinInitializationSettings,
-  );
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveNotificationResponse: selectNotificationStream.add,
-    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
-  );
 }
 
 class MainApp extends StatelessWidget {

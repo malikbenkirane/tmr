@@ -26,7 +26,6 @@ import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/utils/notification_channel.dart';
-import 'package:too_many_tabs/utils/notifications.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -62,7 +61,6 @@ class HomeScreenState extends State<HomeScreen> {
 
     _requestPermission();
     _isAndroidPermissionGranted();
-    _handlePendingNotifications();
     _configureNotificationListener();
 
     const MethodChannel(
@@ -70,19 +68,6 @@ class HomeScreenState extends State<HomeScreen> {
     ).setMethodCallHandler((MethodCall call) async {
       debugPrint(call.method);
     });
-  }
-
-  void _handlePendingNotifications() async {
-    final pending = await flutterLocalNotificationsPlugin
-        .pendingNotificationRequests();
-    for (final pending in pending) {
-      debugPrint(
-        'pending notification: ${pending.title}'
-        'payload: ${pending.payload}',
-      );
-      // flutterLocalNotificationsPlugin.cancel(pending.id);
-      // debugPrint('cancel pending notification: ${pending.title}');
-    }
   }
 
   @override
