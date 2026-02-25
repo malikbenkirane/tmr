@@ -14,9 +14,6 @@ import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/utils/command.dart';
-import 'package:too_many_tabs/utils/notification_channel.dart';
-import 'package:too_many_tabs/utils/notifications.dart';
-import 'package:too_many_tabs/utils/pomodoro_trigger.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class HomeViewmodel extends ChangeNotifier {
@@ -153,14 +150,6 @@ class HomeViewmodel extends ChangeNotifier {
           );
       }
 
-      for (final chan in [
-        NotificationChannel.pomodoro,
-        NotificationChannel.wrapUp,
-      ]) {
-        await flutterLocalNotificationsPlugin.cancel(chan.index);
-      }
-      await _load();
-
       return Result.ok(null);
     } on Exception catch (e) {
       _log.warning('_archiveOrBinRoutine: $e');
@@ -190,29 +179,6 @@ class HomeViewmodel extends ChangeNotifier {
       return Result.error(e);
     } finally {
       notifyListeners();
-    }
-  }
-
-  /// Schedules a notification to trigger before the routine's goal is reached.
-  void _scheduleGoalNotification(
-    RoutineSummary routine,
-    Duration leadTimeOffset,
-    NotificationChannel channel,
-  ) {
-    // Current moment.
-    final now = DateTime.now();
-
-    // Remaining time until the goal, minus the lead‑time offset.
-    final left = routine.goal - routine.spentAt(now) - leadTimeOffset;
-
-    // Schedule only if there is still time left.
-    if (left > Duration.zero) {
-      schedulePeriodicNotification(
-        periodInMinutes: left.inMinutes,
-        title: routine.name,
-        body: channel.message(),
-        channel: channel,
-      );
     }
   }
 
@@ -362,65 +328,7 @@ class HomeViewmodel extends ChangeNotifier {
       }
 
       final routine = resultRoutine.value;
-      if (started) {
-        // Log that the work period scheduling is starting.
-        _log.fine('schedulePeriodicNotification: work period');
-
-        // Schedule a periodic notification for the work period.
-        schedulePeriodicNotification(
-          // Notify every 20 minutes.
-          periodInMinutes: 20,
-          // Use the routine's name as the notification title.
-          title: routine.name,
-          // Notification body encouraging a short snack break.
-          body:
-              '☕️ **Snack‑time!**  '
-              'When you’re ready for a quick 5‑minute pause, just tap the notification. 🌿✨',
-          // Use the Pomodoro notification channel.
-          channel: NotificationChannel.pomodoro,
-          // Payload to indicate that tapping the notification should trigger a break period.
-          payload: {
-            "onTap": PomodoroTrigger.breakPeriod.name,
-            "routineId": routine.id,
-          },
-        );
-
-        // Schedule wrap‑up notification for the routine after scheduling.
-        await flutterLocalNotificationsPlugin.cancel(
-          NotificationChannel.wrapUp.index,
-        );
-        await flutterLocalNotificationsPlugin.cancel(
-          NotificationChannel.goalCompleted.index,
-        );
-        _scheduleGoalNotification(
-          routine,
-          Duration(minutes: 10),
-          NotificationChannel.wrapUp,
-        );
-        _scheduleGoalNotification(
-          routine,
-          Duration.zero,
-          NotificationChannel.goalCompleted,
-        );
-      } else {
-        for (final chan in [
-          NotificationChannel.pomodoro,
-          NotificationChannel.wrapUp,
-        ]) {
-          await flutterLocalNotificationsPlugin.cancel(chan.index);
-        }
-        _log.fine('schedulePeriodicNotification: break period');
-        schedulePeriodicNotification(
-          periodInMinutes: 5,
-          title: routine.name,
-          body:
-              'Tap the 🍅 notification when you’d like to start a 20‑minute focus session. Let’s get it done.',
-          channel: NotificationChannel.pomodoro,
-          payload: {
-            "onTap": PomodoroTrigger.workPeriod.name,
-            "routineId": routine.id,
-          },
-        );
+      if (!started) {
         _lastPinnedRoutine = routine;
       }
 
