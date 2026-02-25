@@ -1,4 +1,3 @@
-import 'package:flutter/rendering.dart';
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
