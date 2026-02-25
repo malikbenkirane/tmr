@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -23,9 +21,7 @@ import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
-import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
-import 'package:too_many_tabs/utils/notification_channel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -61,7 +57,6 @@ class HomeScreenState extends State<HomeScreen> {
 
     _requestPermission();
     _isAndroidPermissionGranted();
-    _configureNotificationListener();
 
     const MethodChannel(
       'com.example.tooManyTabs/settings',
@@ -74,27 +69,6 @@ class HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _listener.dispose();
     super.dispose();
-  }
-
-  void _configureNotificationListener() {
-    selectNotificationStream.stream.listen((response) {
-      final payload = response.payload;
-      final channel = response.id;
-      if (channel == null) return;
-      if (channel == NotificationChannel.wrapUp.index ||
-          channel == NotificationChannel.goalCompleted.index) {
-        flutterLocalNotificationsPlugin.cancel(channel);
-      }
-      if (channel != NotificationChannel.pomodoro.index) return;
-      if (payload == null) return;
-      final {'routineId': routineId as int, 'onTap': trigger as String} =
-          jsonDecode(payload);
-      if (!mounted) return;
-      context.go(
-        '${Routes.notes}/$routineId',
-        extra: PomodoroPayload(routineId: routineId, onTap: trigger),
-      );
-    });
   }
 
   @override
@@ -189,12 +163,7 @@ class HomeScreenState extends State<HomeScreen> {
                                               label: 'End Pomodoro',
                                               icon: Symbols.timer_off,
                                               onTap: () async {
-                                                await flutterLocalNotificationsPlugin
-                                                    .cancel(
-                                                      NotificationChannel
-                                                          .pomodoro
-                                                          .index,
-                                                    );
+                                                //TODO
                                               },
                                             ),
                                             _Button(
@@ -202,8 +171,7 @@ class HomeScreenState extends State<HomeScreen> {
                                               label: 'Cancel Notifications',
                                               icon: Symbols.cancel,
                                               onTap: () async {
-                                                await flutterLocalNotificationsPlugin
-                                                    .cancelAll();
+                                                //TODO
                                               },
                                             ),
                                           ],
@@ -469,6 +437,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _isAndroidPermissionGranted() async {
+    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     if (Platform.isAndroid) {
       final bool granted =
           await flutterLocalNotificationsPlugin
@@ -482,6 +451,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _requestPermission() async {
+    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     if (Platform.isMacOS) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
