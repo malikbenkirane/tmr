@@ -87,7 +87,11 @@ void onStart(ServiceInstance service) async {
     }
   }
 
-  Timer.periodic(const Duration(seconds: 2), (timer) async {
+  const periodInSeconds = 5;
+  const pomoBreakInSeconds = 5 * 60;
+  const pomoWorkInSeconds = 20 * 60;
+
+  Timer.periodic(const Duration(seconds: periodInSeconds), (timer) async {
     final RoutineSummary? routine;
     {
       final result = await dbc.getRunningRoutine();
@@ -100,25 +104,43 @@ void onStart(ServiceInstance service) async {
       }
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final int pomo;
+    int pomo;
     {
       final cached = prefs.getInt('pomo');
       pomo = (cached ?? 0) + 1;
       prefs.setInt('pomo', pomo);
     }
     final String name;
-    if (routine == null) {
-      final cached = prefs.getString('pomoName');
-      name = cached ?? 'noise';
-    } else {
-      prefs.setString('pomoName', routine.name);
-      name = routine.name;
+    {
+      final started = prefs.getBool('pomoStarted') ?? false;
+      final cachedName = prefs.getString('pomoName');
+      debugPrint('started=$started cachedName=$cachedName');
+      if (routine != null) {
+        name = routine.name;
+        prefs.setString('pomoName', routine.name);
+        prefs.setBool('pomoStarted', true);
+        if (!started) {
+          pomo = 0; // routine start
+        }
+        if (cachedName != null && routine.name != cachedName) {
+          pomo = 0; // routine switch
+        }
+      } else {
+        prefs.setBool('pomoStarted', false);
+        name = cachedName ?? 'CACHE_MISS';
+        pomo = started ? 0 : pomo; // routine stop
+      }
     }
+    prefs.setInt('pomo', pomo);
     final String message;
-    if (routine == null && pomo >= 5) {
+    if (routine == null && pomo * periodInSeconds >= pomoBreakInSeconds) {
       message = 'time to get back to work';
-    } else if (routine != null && pomo >= 20) {
-      message = 'time to take a break';
+    } else if (routine != null) {
+      if (pomo * periodInSeconds >= pomoWorkInSeconds) {
+        message = 'time to take a break';
+      } else {
+        message = '';
+      }
     } else {
       message = '';
     }
