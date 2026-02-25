@@ -1,8 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -20,9 +16,6 @@ import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
 import 'package:too_many_tabs/ui/notes/widgets/note.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
-import 'package:too_many_tabs/utils/notification_channel.dart';
-import 'package:too_many_tabs/utils/notifications.dart';
-import 'package:too_many_tabs/utils/pomodoro_trigger.dart';
 import 'package:clipboard/clipboard.dart';
 
 class NotesScreen extends StatefulWidget {
@@ -44,45 +37,9 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   bool showActionButtons = true;
 
-  void _handlePomodoroNotification(PomodoroPayload? payload) async {
-    if (payload == null) return;
-    switch (payload.onTap.toPomodoroTrigger()) {
-      case PomodoroTrigger.breakPeriod:
-        await widget.homeViewmodel.startOrStopRoutine.execute(
-          payload.routineId,
-        );
-      case PomodoroTrigger.workPeriod:
-        await widget.homeViewmodel.startOrStopRoutine.execute(
-          payload.routineId,
-        );
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    selectNotificationStream.stream.listen((
-      NotificationResponse? response,
-    ) async {
-      if (response == null) return;
-      final channel = response.id;
-      if (channel == null) return;
-      if (channel == NotificationChannel.wrapUp.index ||
-          channel == NotificationChannel.goalCompleted.index) {
-        flutterLocalNotificationsPlugin.cancel(channel);
-        return;
-      }
-      final payload = response.payload;
-      if (payload == null) return;
-      if (channel == NotificationChannel.pomodoro.index) {
-        final {'routineId': routineId as int, 'onTap': trigger as String} =
-            jsonDecode(payload);
-        _handlePomodoroNotification(
-          PomodoroPayload(routineId: routineId, onTap: trigger),
-        );
-      }
-    });
-    _handlePomodoroNotification(widget.pomodoroPayload);
   }
 
   @override
