@@ -55,6 +55,92 @@ Future<void> initializeService() async {
 Future<bool> onIosBackground(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
+
+  final DatabaseClient conn;
+  {
+    final result = await prepareDatabaseClient();
+    switch (result) {
+      case Error<DatabaseClient>():
+        return true;
+      case Ok<DatabaseClient>():
+        conn = result.value;
+    }
+  }
+
+  final RoutineSummary? running;
+  {
+    final result = await conn.getRunningRoutine();
+    switch (result) {
+      case Error<RoutineSummary?>():
+        return true;
+      case Ok<RoutineSummary?>():
+        running = result.value;
+    }
+  }
+
+  final prefs = await SharedPreferences.getInstance();
+  final int? id;
+  final String? name;
+  if (running == null) {
+    id = prefs.getInt('lastRunningId');
+    name = prefs.getString('lastRunningName');
+  } else {
+    id = running.id;
+    prefs.setInt('lastRunningId', id);
+    name = running.name;
+    prefs.setString('lastRunningName', name);
+  }
+
+  if (id == null || name == null) return true;
+
+  String? message;
+  if (running == null) {
+    final DateTime? lastStopAt;
+    {
+      final result = await conn.lastLog(id, RoutineState.stopped);
+      switch (result) {
+        case Error<DateTime?>():
+          return true;
+        case Ok<DateTime?>():
+          lastStopAt = result.value;
+      }
+    }
+    if (lastStopAt == null) return true;
+    if (DateTime.now().difference(lastStopAt) > const Duration(minutes: 5)) {
+      message = 'end of the break';
+    }
+  } else {
+    final DateTime? lastStartAt;
+    {
+      final result = await conn.lastLog(id, RoutineState.started);
+      switch (result) {
+        case Error<DateTime?>():
+          return true;
+        case Ok<DateTime?>():
+          lastStartAt = result.value;
+      }
+    }
+    if (lastStartAt == null) return true;
+    if (DateTime.now().difference(lastStartAt) > const Duration(minutes: 20)) {
+      message = 'time for a break';
+    }
+  }
+
+  if (message == null) return true;
+
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  flutterLocalNotificationsPlugin.show(
+    0,
+    name,
+    message,
+    NotificationDetails(
+      iOS: DarwinNotificationDetails(
+        sound: 'spacial.aif',
+        interruptionLevel: InterruptionLevel.timeSensitive,
+      ),
+    ),
+  );
+
   return true;
 }
 
