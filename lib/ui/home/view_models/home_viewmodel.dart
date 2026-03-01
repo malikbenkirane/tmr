@@ -13,6 +13,7 @@ import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
+import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -29,6 +30,7 @@ class HomeViewmodel extends ChangeNotifier {
     archiveOrBinRoutine = Command1(_archiveOrBinRoutine);
     updateSpecialSessionStatus = Command1(_updateSpecialSessionStatus);
     toggleSpecialSession = Command1(_toggleSpecialSession);
+    updateSignalNoiseRatio = Command1(_updateSignalNoiseRatio);
   }
 
   final RoutinesRepository _routinesRepository;
@@ -45,6 +47,7 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, int> trashRoutine;
   late Command1<void, DateTime> updateSpecialSessionStatus;
   late Command1<void, SpecialGoal> toggleSpecialSession;
+  late Command1<void, DateTime> updateSignalNoiseRatio;
 
   List<(RoutineSummary, RoutineState)> get routines => _routines;
 
@@ -57,6 +60,23 @@ class HomeViewmodel extends ChangeNotifier {
 
   bool _newDay = true;
   bool get newDay => _newDay;
+
+  double? _signalNoiseRatio;
+  SignalNoiseRatio get signalNoiseRatio => () {
+    if (_signalNoiseRatio == null) {
+      return SignalNoiseRatio(
+        signalPercent: 0,
+        noisePercent: 0,
+        meaningful: false,
+      );
+    }
+    final n = (100 / (1 + _signalNoiseRatio!)).toInt();
+    return SignalNoiseRatio(
+      signalPercent: 100 - n,
+      noisePercent: n,
+      meaningful: true,
+    );
+  }();
 
   final SettingsRepository _settingsRepository;
 
@@ -95,10 +115,61 @@ class HomeViewmodel extends ChangeNotifier {
 
       await _updateSpecialSessionStatus(DateTime.now());
 
+      await _updateSignalNoiseRatio(DateTime.now());
+
       return await _updateRunningRoutine();
     } finally {
       notifyListeners();
     }
+  }
+
+  Future<Result> _updateSignalNoiseRatio(DateTime at) async {
+    final DateTime? firstSessionStartedAt;
+    {
+      final result = await _routinesRepository.firstSession();
+      switch (result) {
+        case Error<DateTime?>():
+          return Result.error(result.error);
+        case Ok<DateTime?>():
+          firstSessionStartedAt = result.value;
+      }
+    }
+    if (firstSessionStartedAt == null) {
+      return Result.ok(null);
+    }
+    final List<RoutineSummary> routines;
+    {
+      final result = await _routinesRepository.getRoutinesList(
+        RoutineBin.today,
+      );
+      switch (result) {
+        case Error<List<RoutineSummary>>():
+          return Result.error(result.error);
+        case Ok<List<RoutineSummary>>():
+          routines = result.value;
+      }
+    }
+    final Duration signal;
+    {
+      var s = Duration.zero;
+      for (final routine in routines) {
+        final spent = routine.spentAt(at);
+        s += spent > routine.goal ? routine.goal : spent;
+      }
+      signal = s;
+    }
+    if (signal == Duration.zero) {
+      _signalNoiseRatio = null;
+      return Result.ok(null);
+    }
+    final d = at.difference(firstSessionStartedAt);
+    if (d == Duration.zero) {
+      _signalNoiseRatio = null;
+      return Result.ok(null);
+    }
+    final q = d.inSeconds / signal.inSeconds;
+    _signalNoiseRatio = 1 / (q - 1);
+    return Result.ok(null);
   }
 
   Future<Result<void>> _archiveOrBinRoutine(
