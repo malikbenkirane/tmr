@@ -12,6 +12,7 @@ import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/router.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
 import 'package:too_many_tabs/utils/result.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 Future<void> initializeService() async {
   final service = FlutterBackgroundService();
@@ -106,8 +107,14 @@ Future<bool> onIosBackground(ServiceInstance service) async {
       }
     }
     if (lastStopAt == null) return true;
-    if (DateTime.now().difference(lastStopAt) > const Duration(minutes: 5)) {
-      message = 'end of the break';
+    {
+      final now = DateTime.now();
+      const pomo = Duration(minutes: 5);
+      final session = now.difference(lastStopAt);
+      if (DateTime.now().difference(lastStopAt) > const Duration(minutes: 5)) {
+        final t = timeago.format(now.subtract(session - pomo));
+        message = 'Your break should have ended $t';
+      }
     }
   } else {
     final DateTime? lastStartAt;
@@ -121,8 +128,14 @@ Future<bool> onIosBackground(ServiceInstance service) async {
       }
     }
     if (lastStartAt == null) return true;
-    if (DateTime.now().difference(lastStartAt) > const Duration(minutes: 20)) {
-      message = 'time for a break';
+    {
+      const pomo = Duration(minutes: 20);
+      final now = DateTime.now();
+      final session = now.difference(lastStartAt);
+      if (session > pomo) {
+        final t = timeago.format(now.subtract(session - pomo));
+        message = 'A break was supposed to start $t';
+      }
     }
   }
 
