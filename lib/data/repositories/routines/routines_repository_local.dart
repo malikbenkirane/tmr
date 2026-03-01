@@ -494,4 +494,9 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   currentSpecialSessionDuration() async {
     return _databaseClient.getCurrentSpecialSessionDuration(DateTime.now());
   }
+
+  @override
+  Future<Result<DateTime?>> firstSession() async {
+    return _databaseClient.firstStart();
+  }
 }

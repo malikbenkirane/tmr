@@ -32,4 +32,5 @@ abstract class RoutinesRepository {
     DateTime day,
   );
   Future<Result<SpecialSessionDuration?>> currentSpecialSessionDuration();
+  Future<Result<DateTime?>> firstSession();
 }
