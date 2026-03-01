@@ -289,6 +289,30 @@ class DatabaseClient {
     }
   }
 
+  Future<Result<DateTime?>> firstStart() async {
+    try {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      final rows = await _database.query(
+        'routines_logs',
+        where: 'state = ? and updated_at > ?',
+        whereArgs: [RoutineState.started.code, today.toIso8601String()],
+        orderBy: 'updated_at ASC',
+        limit: 1,
+      );
+
+      if (rows.isEmpty) {
+        return Result.ok(null);
+      }
+
+      final {'updated_at': t as String} = rows[0];
+      return Result.ok(DateTime.parse(t));
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
   Future<Result<void>> udpateGoal(int routineID, int newGoal) async {
     try {
       final t = DateTime.now().toIso8601String();
