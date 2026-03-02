@@ -1,22 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
-import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
+import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 
 class HeaderEta extends StatefulWidget {
-  const HeaderEta({
-    super.key,
-    required this.routines,
-    required this.specialGoals,
-    required this.specialSessionState,
-  });
+  final HomeViewmodel model;
+
+  const HeaderEta({super.key, required this.model, required this.routines});
 
   final List<RoutineSummary> routines;
-  final SpecialGoals specialGoals;
-  final SpecialSessionDuration specialSessionState;
 
   @override
   createState() => _HeaderEtaSTate();
@@ -28,6 +23,8 @@ class _HeaderEtaSTate extends State<HeaderEta> {
   DateTime _eta = DateTime.now();
   late Timer _timer;
   bool _ticking = false;
+
+  SignalNoiseRatio? signalNoiseRatio;
 
   @override
   initState() {
@@ -42,8 +39,12 @@ class _HeaderEtaSTate extends State<HeaderEta> {
     super.dispose();
   }
 
-  void _refreshEta() {
+  void _refreshEta() async {
     final now = DateTime.now();
+
+    await widget.model.updateSignalNoiseRatio.execute(now);
+    signalNoiseRatio = widget.model.signalNoiseRatio;
+
     var eta = DateTime.now();
     var inPause = true;
     for (final routine in widget.routines) {
@@ -63,22 +64,6 @@ class _HeaderEtaSTate extends State<HeaderEta> {
       }
     }
 
-    if (widget.specialSessionState.current != null) {
-      final sessionLastStartedAt = widget.specialSessionState.current!;
-      eta = eta.add(now.difference(sessionLastStartedAt));
-      inPause = false;
-    }
-
-    for (final goal in [
-      widget.specialGoals.sitBack,
-      widget.specialGoals.startSlow,
-      widget.specialGoals.stoke,
-      widget.specialGoals.slowDown,
-    ]) {
-      eta = eta.add(goal);
-    }
-    eta = eta.subtract(widget.specialSessionState.duration);
-
     setState(() {
       _eta = eta;
     });
@@ -95,44 +80,62 @@ class _HeaderEtaSTate extends State<HeaderEta> {
     }
   }
 
+  List<Widget> buildSignalNoiseRatioWidgets() {
+    if (signalNoiseRatio == null) {
+      return [];
+    }
+    if (!signalNoiseRatio!.meaningful) {
+      return [];
+    }
+    return [
+      Text('${signalNoiseRatio!.signalPercent}'),
+      Text('${signalNoiseRatio!.noisePercent}'),
+    ];
+  }
+
   @override
   build(BuildContext context) {
     _refreshEta();
-    return Column(
-      spacing: 2,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Row(
       children: [
-        Row(
+        ...buildSignalNoiseRatioWidgets(),
+        Column(
           spacing: 2,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              Icons.alarm,
-              size: 22,
-              color: labelColor(
-                context,
-                Label.homeScreenDayETA,
-              ).withValues(alpha: .8),
-            ),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 2,
               children: [
-                Text(
-                  _format(_eta),
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: labelColor(context, Label.homeScreenDayETA),
-                  ),
+                Icon(
+                  Icons.alarm,
+                  size: 22,
+                  color: labelColor(
+                    context,
+                    Label.homeScreenDayETA,
+                  ).withValues(alpha: .8),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: Text(
-                    (_eta.hour >= 12 ? "pm" : "am").toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: labelColor(context, Label.homeScreenDayETA),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 2,
+                  children: [
+                    Text(
+                      _format(_eta),
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: labelColor(context, Label.homeScreenDayETA),
+                      ),
                     ),
-                  ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Text(
+                        (_eta.hour >= 12 ? "pm" : "am").toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: labelColor(context, Label.homeScreenDayETA),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
