@@ -150,7 +150,6 @@ class HomeScreenState extends State<HomeScreen> {
                         builder: (context, _) {
                           final r = widget.homeModel.signalNoiseRatio;
                           final s = r.signalPercent / 100;
-                          final theme = Theme.of(context);
                           return Column(
                             spacing: 4,
                             children: [
@@ -170,7 +169,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     final n =
                                         widget.settingsModel.settings.noise;
                                     return SizedBox(
-                                      height: 2,
+                                      height: 4,
                                       width: 200,
                                       child: Row(
                                         spacing: 5,
@@ -179,8 +178,10 @@ class HomeScreenState extends State<HomeScreen> {
                                             child: FractionallySizedBox(
                                               widthFactor: 1 - n,
                                               child: Container(
-                                                color:
-                                                    theme.colorScheme.onPrimary,
+                                                color: labelColor(
+                                                  context,
+                                                  Label.signalBar,
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -188,8 +189,10 @@ class HomeScreenState extends State<HomeScreen> {
                                             child: FractionallySizedBox(
                                               widthFactor: n,
                                               child: Container(
-                                                color:
-                                                    theme.colorScheme.secondary,
+                                                color: labelColor(
+                                                  context,
+                                                  Label.noiseBar,
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -200,7 +203,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               SizedBox(
-                                height: 10,
+                                height: 8,
                                 width: 200,
                                 child: Row(
                                   spacing: 5,
@@ -209,7 +212,10 @@ class HomeScreenState extends State<HomeScreen> {
                                       child: FractionallySizedBox(
                                         widthFactor: s,
                                         child: Container(
-                                          color: theme.colorScheme.onPrimary,
+                                          color: labelColor(
+                                            context,
+                                            Label.signalBar,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -217,7 +223,10 @@ class HomeScreenState extends State<HomeScreen> {
                                       child: FractionallySizedBox(
                                         widthFactor: 1 - s,
                                         child: Container(
-                                          color: theme.colorScheme.secondary,
+                                          color: labelColor(
+                                            context,
+                                            Label.noiseBar,
+                                          ),
                                         ),
                                       ),
                                     ),

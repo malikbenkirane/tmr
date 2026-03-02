@@ -10,6 +10,8 @@ enum Label {
   homeScreenSettingsWheel,
   appBarForeground,
   appBarBackground,
+  noiseBar,
+  signalBar,
 }
 
 Color labelColor(BuildContext context, Label label) {
@@ -23,7 +25,12 @@ Color labelColor(BuildContext context, Label label) {
     case Label.homeScreenGoalTotal:
     case Label.homeScreenSettingsWheel:
     case Label.appBarForeground:
+    case Label.signalBar:
       return darkMode ? colorScheme.primary : colorScheme.surface;
+    case Label.noiseBar:
+      return darkMode
+          ? colorScheme.secondary.withValues(alpha: .6)
+          : colorScheme.secondary;
     case Label.homeAppBarBackground:
     case Label.appBarBackground:
       return darkMode ? colorScheme.onPrimary : colorScheme.onSurface;
