@@ -1,14 +1,11 @@
-import 'package:intl/intl.dart';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
-import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
-import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
@@ -16,8 +13,6 @@ import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
-import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
-import 'package:too_many_tabs/ui/home/widgets/header_eta.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
@@ -94,126 +89,150 @@ class HomeScreenState extends State<HomeScreen> {
         backgroundColor: labelColor(context, Label.homeAppBarBackground),
         title: Padding(
           padding: EdgeInsets.all(0),
-          child: ListenableBuilder(
-            listenable: widget.homeModel,
-            builder: (context, _) {
-              final specialSession = widget.homeModel.runningSpecialSession;
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
                 children: [
-                  ListenableBuilder(
-                    listenable: widget.settingsModel.load,
-                    builder: (context, child) {
-                      return Loader(
-                        error: widget.settingsModel.load.error,
-                        running: widget.settingsModel.load.running,
-                        onError: widget.settingsModel.load.execute,
-                        child: child!,
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return Scaffold(
+                            backgroundColor: Colors.black.withValues(alpha: 0),
+                            body: TapRegion(
+                              onTapOutside: (_) {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                }
+                              },
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                spacing: 10,
+                                children: [
+                                  _Button(
+                                    dialogContext: context,
+                                    label: 'End Pomodoro',
+                                    icon: Symbols.timer_off,
+                                    onTap: () async {
+                                      //TODO
+                                    },
+                                  ),
+                                  _Button(
+                                    dialogContext: context,
+                                    label: 'Cancel Notifications',
+                                    icon: Symbols.cancel,
+                                    onTap: () async {
+                                      //TODO
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ), // Center
+                          );
+                        },
                       );
                     },
                     child: ListenableBuilder(
-                      listenable: widget.settingsModel,
-                      builder: (context, _) {
-                        return Row(
-                          spacing: 6,
-                          children: [
-                            ..._buildAppTitle(
-                              context: context,
-                              session: specialSession,
-                              settings:
-                                  widget.settingsModel.settings.specialGoals,
-                              state: widget
-                                  .homeModel
-                                  .specialSessionAllStatum[specialSession],
-                            ),
-                          ],
+                      listenable: widget.homeModel.load,
+                      builder: (context, child) {
+                        return Loader(
+                          error: widget.homeModel.load.error,
+                          running: widget.homeModel.load.running,
+                          onError: widget.homeModel.load.execute,
+                          child: child!,
                         );
                       },
-                    ),
-                  ),
-                  ListenableBuilder(
-                    listenable: widget.settingsModel.load,
-                    builder: (context, child) {
-                      final running = widget.settingsModel.load.running,
-                          error = widget.settingsModel.load.error;
-                      return Loader(
-                        error: error,
-                        running: running,
-                        onError: widget.settingsModel.load.execute,
-                        child: child!,
-                      );
-                    },
-                    child: ListenableBuilder(
-                      listenable: widget.settingsModel,
-                      builder: (context, _) {
-                        return Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return Scaffold(
-                                      backgroundColor: Colors.black.withValues(
-                                        alpha: 0,
+                      child: ListenableBuilder(
+                        listenable: widget.homeModel,
+                        builder: (context, _) {
+                          final r = widget.homeModel.signalNoiseRatio;
+                          final s = r.signalPercent / 100;
+                          final theme = Theme.of(context);
+                          return Column(
+                            spacing: 4,
+                            children: [
+                              ListenableBuilder(
+                                listenable: widget.settingsModel.load,
+                                builder: (context, child) {
+                                  return Loader(
+                                    error: widget.settingsModel.load.error,
+                                    running: widget.settingsModel.load.running,
+                                    onError: widget.settingsModel.load.execute,
+                                    child: child!,
+                                  );
+                                },
+                                child: ListenableBuilder(
+                                  listenable: widget.settingsModel,
+                                  builder: (context, _) {
+                                    final n =
+                                        widget.settingsModel.settings.noise;
+                                    return SizedBox(
+                                      height: 2,
+                                      width: 200,
+                                      child: Row(
+                                        spacing: 5,
+                                        children: [
+                                          Flexible(
+                                            child: FractionallySizedBox(
+                                              widthFactor: 1 - n,
+                                              child: Container(
+                                                color:
+                                                    theme.colorScheme.onPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          Flexible(
+                                            child: FractionallySizedBox(
+                                              widthFactor: n,
+                                              child: Container(
+                                                color:
+                                                    theme.colorScheme.secondary,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      body: TapRegion(
-                                        onTapOutside: (_) {
-                                          if (Navigator.canPop(context)) {
-                                            Navigator.pop(context);
-                                          }
-                                        },
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          spacing: 10,
-                                          children: [
-                                            _Button(
-                                              dialogContext: context,
-                                              label: 'End Pomodoro',
-                                              icon: Symbols.timer_off,
-                                              onTap: () async {
-                                                //TODO
-                                              },
-                                            ),
-                                            _Button(
-                                              dialogContext: context,
-                                              label: 'Cancel Notifications',
-                                              icon: Symbols.cancel,
-                                              onTap: () async {
-                                                //TODO
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ), // Center
                                     );
                                   },
-                                );
-                              },
-                              child: HeaderEta(
-                                routines: widget.homeModel.routines
-                                    .map((rs) => rs.$1)
-                                    .toList(),
-                                specialGoals:
-                                    widget.settingsModel.settings.specialGoals,
-                                specialSessionState:
-                                    widget.homeModel.specialSessionStatus ??
-                                    SpecialSessionDuration(
-                                      current: null,
-                                      duration: Duration(),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                                width: 200,
+                                child: Row(
+                                  spacing: 5,
+                                  children: [
+                                    Flexible(
+                                      child: FractionallySizedBox(
+                                        widthFactor: s,
+                                        child: Container(
+                                          color: theme.colorScheme.onPrimary,
+                                        ),
+                                      ),
                                     ),
-                              ), // HeaderETA
-                            ), // GestureDetector
-                          ],
-                        );
-                      },
+                                    Flexible(
+                                      child: FractionallySizedBox(
+                                        widthFactor: 1 - s,
+                                        child: Container(
+                                          color: theme.colorScheme.secondary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
-              );
-            },
+              ),
+            ],
           ),
         ),
         actions: [
