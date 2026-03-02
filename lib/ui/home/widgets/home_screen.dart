@@ -45,6 +45,7 @@ class HomeScreenState extends State<HomeScreen> {
   RoutineSummary? tappedRoutine;
 
   late final AppLifecycleListener _listener;
+  late final Timer t;
 
   @override
   void initState() {
@@ -54,6 +55,15 @@ class HomeScreenState extends State<HomeScreen> {
         await widget.homeModel.load.execute();
       },
     );
+
+    t = Timer.periodic(const Duration(seconds: 1), (_) async {
+      final now = DateTime.now();
+      await widget.homeModel.updateSignalNoiseRatio.execute(now);
+      if (widget.homeModel.updateSignalNoiseRatio.error) {
+        debugPrint('updateSpecialSessionStatus error');
+        return;
+      }
+    });
 
     _requestPermission();
     _isAndroidPermissionGranted();
@@ -68,6 +78,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _listener.dispose();
+    t.cancel();
     super.dispose();
   }
 
