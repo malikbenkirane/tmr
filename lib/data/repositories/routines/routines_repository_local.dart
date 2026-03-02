@@ -130,9 +130,6 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
         );
         return Result.error(resultCurrentSpecialSession.error);
       case Ok<SpecialGoalSession?>():
-        _log.fine(
-          '_dailyCheck: getCurrentSpecialGoalSession: ${resultCurrentSpecialSession.value}',
-        );
     }
 
     if (resultCurrentSpecialSession.value != null &&
