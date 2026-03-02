@@ -124,52 +124,60 @@ class HomeViewmodel extends ChangeNotifier {
   }
 
   Future<Result> _updateSignalNoiseRatio(DateTime at) async {
-    final DateTime? firstSessionStartedAt;
-    {
-      final result = await _routinesRepository.firstSession();
-      switch (result) {
-        case Error<DateTime?>():
-          return Result.error(result.error);
-        case Ok<DateTime?>():
-          firstSessionStartedAt = result.value;
+    try {
+      final DateTime? firstSessionStartedAt;
+      {
+        final result = await _routinesRepository.firstSession();
+        switch (result) {
+          case Error<DateTime?>():
+            return Result.error(result.error);
+          case Ok<DateTime?>():
+            firstSessionStartedAt = result.value;
+        }
       }
-    }
-    if (firstSessionStartedAt == null) {
-      return Result.ok(null);
-    }
-    final List<RoutineSummary> routines;
-    {
-      final result = await _routinesRepository.getRoutinesList(
-        RoutineBin.today,
-      );
-      switch (result) {
-        case Error<List<RoutineSummary>>():
-          return Result.error(result.error);
-        case Ok<List<RoutineSummary>>():
-          routines = result.value;
+      if (firstSessionStartedAt == null) {
+        return Result.ok(null);
       }
-    }
-    final Duration signal;
-    {
-      var s = Duration.zero;
-      for (final routine in routines) {
-        final spent = routine.spentAt(at);
-        s += spent > routine.goal ? routine.goal : spent;
+      final List<RoutineSummary> routines;
+      {
+        final result = await _routinesRepository.getRoutinesList(
+          RoutineBin.today,
+        );
+        switch (result) {
+          case Error<List<RoutineSummary>>():
+            return Result.error(result.error);
+          case Ok<List<RoutineSummary>>():
+            routines = result.value;
+        }
       }
-      signal = s;
-    }
-    if (signal == Duration.zero) {
-      _signalNoiseRatio = null;
+      final Duration signal;
+      {
+        var s = Duration.zero;
+        for (final routine in routines) {
+          final spent = routine.spentAt(at);
+          s += spent > routine.goal ? routine.goal : spent;
+        }
+        signal = s;
+      }
+      if (signal == Duration.zero) {
+        _signalNoiseRatio = null;
+        return Result.ok(null);
+      }
+      final d = at.difference(firstSessionStartedAt);
+      if (d == Duration.zero) {
+        _signalNoiseRatio = null;
+        return Result.ok(null);
+      }
+      final q = d.inSeconds / signal.inSeconds;
+      if (q == 1) {
+        _signalNoiseRatio = null;
+        return Result.ok(null);
+      }
+      _signalNoiseRatio = 1 / (q - 1);
       return Result.ok(null);
+    } finally {
+      notifyListeners();
     }
-    final d = at.difference(firstSessionStartedAt);
-    if (d == Duration.zero) {
-      _signalNoiseRatio = null;
-      return Result.ok(null);
-    }
-    final q = d.inSeconds / signal.inSeconds;
-    _signalNoiseRatio = 1 / (q - 1);
-    return Result.ok(null);
   }
 
   Future<Result<void>> _archiveOrBinRoutine(
