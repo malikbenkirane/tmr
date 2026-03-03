@@ -168,6 +168,39 @@ class HomeScreenState extends State<HomeScreen> {
                           return Column(
                             spacing: 4,
                             children: [
+                              r.meaningful
+                                  ? SizedBox(
+                                      height: 8,
+                                      width: 200,
+                                      child: Row(
+                                        spacing: 5,
+                                        children: [
+                                          Flexible(
+                                            child: FractionallySizedBox(
+                                              widthFactor: s,
+                                              child: Container(
+                                                color: labelColor(
+                                                  context,
+                                                  Label.signalBar,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Flexible(
+                                            child: FractionallySizedBox(
+                                              widthFactor: 1 - s,
+                                              child: Container(
+                                                color: labelColor(
+                                                  context,
+                                                  Label.noiseBar,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : SizedBox.shrink(),
                               ListenableBuilder(
                                 listenable: widget.settingsModel.load,
                                 builder: (context, child) {
@@ -217,39 +250,6 @@ class HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                               ),
-                              r.meaningful
-                                  ? SizedBox(
-                                      height: 8,
-                                      width: 200,
-                                      child: Row(
-                                        spacing: 5,
-                                        children: [
-                                          Flexible(
-                                            child: FractionallySizedBox(
-                                              widthFactor: s,
-                                              child: Container(
-                                                color: labelColor(
-                                                  context,
-                                                  Label.signalBar,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Flexible(
-                                            child: FractionallySizedBox(
-                                              widthFactor: 1 - s,
-                                              child: Container(
-                                                color: labelColor(
-                                                  context,
-                                                  Label.noiseBar,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : SizedBox.shrink(),
                             ],
                           );
                         },
