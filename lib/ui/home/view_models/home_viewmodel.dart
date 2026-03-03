@@ -204,6 +204,8 @@ class HomeViewmodel extends ChangeNotifier {
           );
       }
 
+      await _load();
+
       return Result.ok(null);
     } on Exception catch (e) {
       _log.warning('_archiveOrBinRoutine: $e');

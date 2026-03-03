@@ -33,6 +33,7 @@ class Routine extends StatelessWidget {
       direction: DismissDirection.startToEnd,
       onDismissed: (direction) {
         archive();
+        debugPrint('archive ${routine.id} ${routine.name}');
       },
       background: Container(
         color: dismissibleColors.background,
