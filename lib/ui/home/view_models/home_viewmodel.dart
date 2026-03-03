@@ -120,24 +120,20 @@ class HomeViewmodel extends ChangeNotifier {
       if (firstSessionStartedAt == null) {
         return Result.ok(null);
       }
-      final List<RoutineSummary> routines;
-      {
-        final result = await _routinesRepository.getRoutinesList(
-          RoutineBin.today,
-        );
-        switch (result) {
-          case Error<List<RoutineSummary>>():
-            return Result.error(result.error);
-          case Ok<List<RoutineSummary>>():
-            routines = result.value;
-        }
-      }
       final Duration signal;
       {
         var s = Duration.zero;
-        for (final routine in routines) {
-          final spent = routine.spentAt(at);
-          s += spent > routine.goal ? routine.goal : spent;
+        for (final bin in RoutineBin.values) {
+          final result = await _routinesRepository.getRoutinesList(bin);
+          switch (result) {
+            case Error<List<RoutineSummary>>():
+              return Result.error(result.error);
+            case Ok<List<RoutineSummary>>():
+              for (final routine in result.value) {
+                final spent = routine.spentAt(at);
+                s += spent > routine.goal ? routine.goal : spent;
+              }
+          }
         }
         signal = s;
       }
