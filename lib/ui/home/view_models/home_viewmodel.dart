@@ -13,7 +13,6 @@ import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
-import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -47,7 +46,7 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, int> trashRoutine;
   late Command1<void, DateTime> updateSpecialSessionStatus;
   late Command1<void, SpecialGoal> toggleSpecialSession;
-  late Command1<void, DateTime> updateSignalNoiseRatio;
+  late Command1<double?, DateTime> updateSignalNoiseRatio;
 
   List<(RoutineSummary, RoutineState)> get routines => _routines;
 
@@ -60,23 +59,6 @@ class HomeViewmodel extends ChangeNotifier {
 
   bool _newDay = true;
   bool get newDay => _newDay;
-
-  double? _signalNoiseRatio;
-  SignalNoiseRatio get signalNoiseRatio => () {
-    if (_signalNoiseRatio == null) {
-      return SignalNoiseRatio(
-        signalPercent: 0,
-        noisePercent: 0,
-        meaningful: false,
-      );
-    }
-    final n = (100 / (1 + _signalNoiseRatio!)).toInt();
-    return SignalNoiseRatio(
-      signalPercent: 100 - n,
-      noisePercent: n,
-      meaningful: true,
-    );
-  }();
 
   final SettingsRepository _settingsRepository;
 
@@ -123,7 +105,7 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result> _updateSignalNoiseRatio(DateTime at) async {
+  Future<Result<double?>> _updateSignalNoiseRatio(DateTime at) async {
     try {
       final DateTime? firstSessionStartedAt;
       {
@@ -159,22 +141,15 @@ class HomeViewmodel extends ChangeNotifier {
         }
         signal = s;
       }
-      if (signal == Duration.zero) {
-        _signalNoiseRatio = null;
-        return Result.ok(null);
-      }
       final d = at.difference(firstSessionStartedAt);
-      if (d == Duration.zero) {
-        _signalNoiseRatio = null;
+      if (d.inSeconds == 0) {
         return Result.ok(null);
       }
       final q = d.inSeconds / signal.inSeconds;
       if (q == 1) {
-        _signalNoiseRatio = null;
-        return Result.ok(null);
+        Result.ok(1);
       }
-      _signalNoiseRatio = 1 / (q - 1);
-      return Result.ok(null);
+      return Result.ok(1 / (q - 1));
     } finally {
       notifyListeners();
     }

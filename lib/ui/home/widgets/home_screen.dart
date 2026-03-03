@@ -13,10 +13,12 @@ import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:too_many_tabs/utils/result.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -38,6 +40,7 @@ class HomeScreenState extends State<HomeScreen> {
   bool isSomePopupShown = false;
   bool showNewRoutinePopup = false;
   RoutineSummary? tappedRoutine;
+  SignalNoiseRatio? signalNoiseRatio;
 
   late final AppLifecycleListener _listener;
   late final Timer t;
@@ -54,6 +57,18 @@ class HomeScreenState extends State<HomeScreen> {
     t = Timer.periodic(const Duration(seconds: 1), (_) async {
       final now = DateTime.now();
       await widget.homeModel.updateSignalNoiseRatio.execute(now);
+      {
+        final result =
+            widget.homeModel.updateSignalNoiseRatio.result as Result<double?>;
+        switch (result) {
+          case Error<double?>():
+            setState(() => signalNoiseRatio = null);
+          case Ok<double?>():
+            setState(
+              () => signalNoiseRatio = SignalNoiseRatio(ratio: result.value),
+            );
+        }
+      }
       if (widget.homeModel.updateSignalNoiseRatio.error) {
         debugPrint('updateSpecialSessionStatus error');
         return;
@@ -148,8 +163,8 @@ class HomeScreenState extends State<HomeScreen> {
                       child: ListenableBuilder(
                         listenable: widget.homeModel,
                         builder: (context, _) {
-                          final r = widget.homeModel.signalNoiseRatio;
-                          final s = r.signalPercent / 100;
+                          final r = signalNoiseRatio ?? SignalNoiseRatio();
+                          final s = 1.0 - (r.noise ?? 0);
                           return Column(
                             spacing: 4,
                             children: [
@@ -202,37 +217,39 @@ class HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                               ),
-                              SizedBox(
-                                height: 8,
-                                width: 200,
-                                child: Row(
-                                  spacing: 5,
-                                  children: [
-                                    Flexible(
-                                      child: FractionallySizedBox(
-                                        widthFactor: s,
-                                        child: Container(
-                                          color: labelColor(
-                                            context,
-                                            Label.signalBar,
+                              r.meaningful
+                                  ? SizedBox(
+                                      height: 8,
+                                      width: 200,
+                                      child: Row(
+                                        spacing: 5,
+                                        children: [
+                                          Flexible(
+                                            child: FractionallySizedBox(
+                                              widthFactor: s,
+                                              child: Container(
+                                                color: labelColor(
+                                                  context,
+                                                  Label.signalBar,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                    Flexible(
-                                      child: FractionallySizedBox(
-                                        widthFactor: 1 - s,
-                                        child: Container(
-                                          color: labelColor(
-                                            context,
-                                            Label.noiseBar,
+                                          Flexible(
+                                            child: FractionallySizedBox(
+                                              widthFactor: 1 - s,
+                                              child: Container(
+                                                color: labelColor(
+                                                  context,
+                                                  Label.noiseBar,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                    )
+                                  : SizedBox.shrink(),
                             ],
                           );
                         },

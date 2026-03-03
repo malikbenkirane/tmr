@@ -1,9 +1,8 @@
 class SignalNoiseRatio {
-  final int signalPercent, noisePercent;
-  final bool meaningful;
-  const SignalNoiseRatio({
-    required this.signalPercent,
-    required this.noisePercent,
-    required this.meaningful,
-  });
+  final double? ratio;
+  const SignalNoiseRatio({this.ratio});
+  double? get noise => () {
+    return ratio == null ? null : 1 / (1 + ratio!);
+  }();
+  bool get meaningful => ratio != null;
 }
