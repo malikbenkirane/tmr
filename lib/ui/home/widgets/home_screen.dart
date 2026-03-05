@@ -54,29 +54,9 @@ class HomeScreenState extends State<HomeScreen> {
       },
     );
 
-    t = Timer.periodic(const Duration(seconds: 1), (_) async {
-      final now = DateTime.now();
-      await widget.homeModel.updateSignalNoiseRatio.execute(now);
-      {
-        final result =
-            widget.homeModel.updateSignalNoiseRatio.result as Result<double?>;
-        switch (result) {
-          case Error<double?>():
-            setState(() => signalNoiseRatio = null);
-          case Ok<double?>():
-            setState(
-              () => signalNoiseRatio = SignalNoiseRatio(ratio: result.value),
-            );
-        }
-      }
-      if (widget.homeModel.updateSignalNoiseRatio.error) {
-        debugPrint('updateSpecialSessionStatus error');
-        return;
-      }
-    });
-
     _requestPermission();
     _isAndroidPermissionGranted();
+    _initSNR();
 
     const MethodChannel(
       'com.example.tooManyTabs/settings',
@@ -90,6 +70,34 @@ class HomeScreenState extends State<HomeScreen> {
     _listener.dispose();
     t.cancel();
     super.dispose();
+  }
+
+  void _updateSNR() async {
+    final now = DateTime.now();
+    await widget.homeModel.updateSignalNoiseRatio.execute(now);
+    {
+      final result =
+          widget.homeModel.updateSignalNoiseRatio.result as Result<double?>;
+      switch (result) {
+        case Error<double?>():
+          setState(() => signalNoiseRatio = null);
+        case Ok<double?>():
+          setState(
+            () => signalNoiseRatio = SignalNoiseRatio(ratio: result.value),
+          );
+      }
+    }
+    if (widget.homeModel.updateSignalNoiseRatio.error) {
+      debugPrint('updateSpecialSessionStatus error');
+      return;
+    }
+  }
+
+  void _initSNR() {
+    _updateSNR();
+    t = Timer.periodic(const Duration(seconds: 1), (_) async {
+      _updateSNR();
+    });
   }
 
   @override
