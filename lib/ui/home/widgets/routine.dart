@@ -4,7 +4,7 @@ import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
-import 'package:too_many_tabs/ui/home/widgets/routine_goal_label.dart';
+import 'package:too_many_tabs/ui/home/widgets/routine_progress_bar.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
 
 class Routine extends StatelessWidget {
@@ -47,10 +47,7 @@ class Routine extends StatelessWidget {
         ),
       ), // Container
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: routine.running ? 4 : 0,
-          vertical: 10,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 10),
         child: Stack(
           children: [
             Positioned.fill(
@@ -138,22 +135,9 @@ class Routine extends StatelessWidget {
                     ), // SizedBox
                     Padding(
                       padding: EdgeInsets.only(left: 20),
-                      child: routine.running
-                          ? RoutineGoalDynamicLabel(
-                              restorationId:
-                                  'routine_goal_dynamic_label_${routine.id}',
-                              key: ValueKey(routine.id),
-                              spent: routine.spent,
-                              goal: routine.goal,
-                              state: state,
-                              lastStarted: routine.lastStarted!,
-                            ) // RoutineGoalDynamicLabel
-                          : RoutineGoalLabel(
-                              spent: routine.spent,
-                              goal: routine.goal,
-                              state: state,
-                              lastStarted: routine.lastStarted,
-                            ), // RoutineGoalLabel
+                      child: RoutineProgressBar(
+                        routine: routine,
+                      ), // RoutineGoalDynamicLabel
                     ), // Padding
                   ],
                 ), // Row

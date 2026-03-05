@@ -401,23 +401,7 @@ class HomeViewmodel extends ChangeNotifier {
     final List<RoutineSummary> inProgress = [];
     final now = DateTime.now();
     for (final routine in routines) {
-      final RoutineState state;
-      if (routine.running) {
-        if (routine.goal <= routine.spentAt(now)) {
-          state = RoutineState.overRun;
-        } else {
-          state = RoutineState.isRunning;
-        }
-      } else if (routine.goal == Duration.zero) {
-        state = RoutineState.noPlannedGoal;
-      } else if (!routine.running &&
-          routine.spentAt(now) <= Duration(minutes: 5)) {
-        state = RoutineState.notStarted;
-      } else if (routine.goal <= routine.spentAt(now)) {
-        state = RoutineState.goalReached;
-      } else {
-        state = RoutineState.inProgress;
-      }
+      final state = routine.state(now);
       switch (state) {
         case RoutineState.isRunning:
         case RoutineState.overRun:

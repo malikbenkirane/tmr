@@ -12,6 +12,8 @@ enum Label {
   appBarBackground,
   noiseBar,
   signalBar,
+  routineToGoalBar,
+  routineSignalBar,
 }
 
 Color labelColor(BuildContext context, Label label) {
@@ -27,7 +29,10 @@ Color labelColor(BuildContext context, Label label) {
     case Label.appBarForeground:
     case Label.signalBar:
       return darkMode ? colorScheme.primary : colorScheme.surface;
+    case Label.routineSignalBar:
+      return colorScheme.tertiary.withValues(alpha: .5);
     case Label.noiseBar:
+    case Label.routineToGoalBar:
       return darkMode
           ? colorScheme.secondary.withValues(alpha: .6)
           : colorScheme.secondary;

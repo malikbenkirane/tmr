@@ -1,4 +1,5 @@
 import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
+import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 
 class RoutineSummary {
   RoutineSummary({
@@ -37,6 +38,26 @@ class RoutineSummary {
       return _spent;
     }
     return DateTime.now().difference(_lastStarted) + _spent;
+  }
+
+  RoutineState state(DateTime at) {
+    final spent = spentAt(at);
+    if (running) {
+      if (spent >= goal) {
+        return RoutineState.overRun;
+      }
+      return RoutineState.isRunning;
+    }
+    if (goal == Duration.zero) {
+      return RoutineState.noPlannedGoal;
+    }
+    if (spent <= Duration(minutes: 5)) {
+      return RoutineState.notStarted;
+    }
+    if (spent >= goal) {
+      return RoutineState.goalReached;
+    }
+    return RoutineState.inProgress;
   }
 
   @override
