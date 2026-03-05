@@ -9,7 +9,6 @@ import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
-import 'package:too_many_tabs/ui/core/ui/header_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
@@ -111,9 +110,9 @@ class HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: labelColor(context, Label.homeAppBarBackground),
         title: Padding(
-          padding: EdgeInsets.all(0),
+          padding: EdgeInsets.only(top: 20),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Row(
@@ -173,13 +172,15 @@ class HomeScreenState extends State<HomeScreen> {
                         builder: (context, _) {
                           final r = signalNoiseRatio ?? SignalNoiseRatio();
                           final s = 100 - (r.noise ?? 0);
+                          final width = MediaQuery.of(context).size.width * .9;
+                          final radius = 8.0;
                           return Column(
-                            spacing: 3,
+                            spacing: 4,
                             children: [
                               r.meaningful
                                   ? SizedBox(
                                       height: 8,
-                                      width: 200,
+                                      width: width,
                                       child: Row(
                                         spacing: 5,
                                         children: [
@@ -192,7 +193,9 @@ class HomeScreenState extends State<HomeScreen> {
                                                   Label.signalBar,
                                                 ),
                                                 borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(4),
+                                                  topLeft: Radius.circular(
+                                                    radius,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -206,7 +209,9 @@ class HomeScreenState extends State<HomeScreen> {
                                                   Label.noiseBar,
                                                 ),
                                                 borderRadius: BorderRadius.only(
-                                                  topRight: Radius.circular(4),
+                                                  topRight: Radius.circular(
+                                                    radius,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -231,8 +236,8 @@ class HomeScreenState extends State<HomeScreen> {
                                     final n =
                                         widget.settingsModel.settings.noise;
                                     return SizedBox(
-                                      height: 4,
-                                      width: 200,
+                                      height: 2,
+                                      width: width,
                                       child: Row(
                                         spacing: 5,
                                         children: [
@@ -246,7 +251,7 @@ class HomeScreenState extends State<HomeScreen> {
                                                 ),
                                                 borderRadius: BorderRadius.only(
                                                   bottomLeft: Radius.circular(
-                                                    4,
+                                                    radius,
                                                   ),
                                                 ),
                                               ),
@@ -262,7 +267,7 @@ class HomeScreenState extends State<HomeScreen> {
                                                 ),
                                                 borderRadius: BorderRadius.only(
                                                   bottomRight: Radius.circular(
-                                                    4,
+                                                    radius,
                                                   ),
                                                 ),
                                               ),
@@ -285,12 +290,6 @@ class HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        actions: [
-          HeaderAction(
-            icon: Icons.settings,
-            onPressed: () => context.go(Routes.settings),
-          ),
-        ],
       ),
       body: SafeArea(
         bottom: false,
