@@ -76,14 +76,13 @@ class HomeScreenState extends State<HomeScreen> {
     await widget.homeModel.updateSignalNoiseRatio.execute(now);
     {
       final result =
-          widget.homeModel.updateSignalNoiseRatio.result as Result<double?>;
+          widget.homeModel.updateSignalNoiseRatio.result
+              as Result<SignalNoiseRatio?>;
       switch (result) {
-        case Error<double?>():
+        case Error<SignalNoiseRatio?>():
           setState(() => signalNoiseRatio = null);
-        case Ok<double?>():
-          setState(
-            () => signalNoiseRatio = SignalNoiseRatio(ratio: result.value),
-          );
+        case Ok<SignalNoiseRatio?>():
+          setState(() => signalNoiseRatio = result.value);
       }
     }
     if (widget.homeModel.updateSignalNoiseRatio.error) {
@@ -110,7 +109,7 @@ class HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: labelColor(context, Label.homeAppBarBackground),
         title: Padding(
-          padding: EdgeInsets.only(top: 20),
+          padding: EdgeInsets.only(top: 14),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -172,14 +171,15 @@ class HomeScreenState extends State<HomeScreen> {
                         builder: (context, _) {
                           final r = signalNoiseRatio ?? SignalNoiseRatio();
                           final s = 100 - (r.noise ?? 0);
-                          final width = MediaQuery.of(context).size.width * .9;
-                          final radius = 8.0;
+                          final o = 100 - (r.overtime ?? 0);
+                          final width = MediaQuery.of(context).size.width * .5;
+                          final radius = 4.0;
                           return Column(
-                            spacing: 4,
+                            spacing: 3,
                             children: [
                               r.meaningful
                                   ? SizedBox(
-                                      height: 8,
+                                      height: 4,
                                       width: width,
                                       child: Row(
                                         spacing: 5,
@@ -202,18 +202,47 @@ class HomeScreenState extends State<HomeScreen> {
                                           ),
                                           Flexible(
                                             flex: 100 - s,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: labelColor(
-                                                  context,
-                                                  Label.noiseBar,
-                                                ),
-                                                borderRadius: BorderRadius.only(
-                                                  topRight: Radius.circular(
-                                                    radius,
+                                            child: Row(
+                                              spacing: o == 0 ? 0 : 5,
+                                              children: [
+                                                Flexible(
+                                                  flex: o,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: labelColor(
+                                                        context,
+                                                        Label.noiseBar,
+                                                      ),
+                                                      borderRadius: o > 0
+                                                          ? null
+                                                          : BorderRadius.only(
+                                                              topRight:
+                                                                  Radius.circular(
+                                                                    radius,
+                                                                  ),
+                                                            ),
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
+                                                Flexible(
+                                                  flex: 100 - o,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: labelColor(
+                                                        context,
+                                                        Label.noiseBar,
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                            topRight:
+                                                                Radius.circular(
+                                                                  radius,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],

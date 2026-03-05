@@ -13,6 +13,7 @@ import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/ui/home/view_models/destination_bucket.dart';
 import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
+import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
@@ -46,7 +47,7 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, int> trashRoutine;
   late Command1<void, DateTime> updateSpecialSessionStatus;
   late Command1<void, SpecialGoal> toggleSpecialSession;
-  late Command1<double?, DateTime> updateSignalNoiseRatio;
+  late Command1<SignalNoiseRatio?, DateTime> updateSignalNoiseRatio;
 
   List<(RoutineSummary, RoutineState)> get routines => _routines;
 
@@ -105,7 +106,7 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result<double?>> _updateSignalNoiseRatio(DateTime at) async {
+  Future<Result<SignalNoiseRatio?>> _updateSignalNoiseRatio(DateTime at) async {
     try {
       final DateTime? firstSessionStartedAt;
       {
@@ -120,9 +121,10 @@ class HomeViewmodel extends ChangeNotifier {
       if (firstSessionStartedAt == null) {
         return Result.ok(null);
       }
-      final Duration signal;
+      final Duration signal, overtime;
       {
         var s = Duration.zero;
+        var o = Duration.zero;
         for (final bin in RoutineBin.values) {
           final result = await _routinesRepository.getRoutinesList(bin);
           switch (result) {
@@ -132,10 +134,14 @@ class HomeViewmodel extends ChangeNotifier {
               for (final routine in result.value) {
                 final spent = routine.spentAt(at);
                 s += spent > routine.goal ? routine.goal : spent;
+                if (spent > routine.goal) {
+                  o += spent - routine.goal;
+                }
               }
           }
         }
         signal = s;
+        overtime = o;
       }
       final d = at.difference(firstSessionStartedAt);
       if (d.inSeconds == 0) {
@@ -143,9 +149,20 @@ class HomeViewmodel extends ChangeNotifier {
       }
       final q = d.inSeconds / signal.inSeconds;
       if (q == 1) {
-        Result.ok(1);
+        Result.ok(SignalNoiseRatio(ratio: 1));
       }
-      return Result.ok(1 / (q - 1));
+      final ratio = 1 / (q - 1);
+      if (overtime.inSeconds == 0) {
+        return Result.ok(SignalNoiseRatio(ratio: ratio));
+      }
+      final q2 = (d - signal).inSeconds / overtime.inSeconds;
+      if (q2 == 1) {
+        Result.ok(SignalNoiseRatio(ratio: ratio, overtimeRatio: 1));
+      }
+      final overtimeRatio = 1 / (q2 - 1);
+      return Result.ok(
+        SignalNoiseRatio(ratio: ratio, overtimeRatio: overtimeRatio),
+      );
     } finally {
       notifyListeners();
     }
