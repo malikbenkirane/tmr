@@ -17,8 +17,8 @@ class SettingsSummary {
   bool get overwriteDatabase => _overwriteDatabase;
   SpecialGoals get specialGoals => _specialGoals;
   double get signalNoiseRatio => _signalNoiseRatio;
-  double get noise => () {
-    return 1 / (1 + signalNoiseRatio);
+  int get noise => () {
+    return (100 / (1 + signalNoiseRatio)).toInt();
   }();
 
   void set(SpecialGoal setting, Duration goal) {

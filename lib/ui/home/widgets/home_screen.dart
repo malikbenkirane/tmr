@@ -172,9 +172,9 @@ class HomeScreenState extends State<HomeScreen> {
                         listenable: widget.homeModel,
                         builder: (context, _) {
                           final r = signalNoiseRatio ?? SignalNoiseRatio();
-                          final s = 1.0 - (r.noise ?? 0);
+                          final s = 100 - (r.noise ?? 0);
                           return Column(
-                            spacing: 4,
+                            spacing: 3,
                             children: [
                               r.meaningful
                                   ? SizedBox(
@@ -184,23 +184,29 @@ class HomeScreenState extends State<HomeScreen> {
                                         spacing: 5,
                                         children: [
                                           Flexible(
-                                            child: FractionallySizedBox(
-                                              widthFactor: s,
-                                              child: Container(
+                                            flex: s,
+                                            child: Container(
+                                              decoration: BoxDecoration(
                                                 color: labelColor(
                                                   context,
                                                   Label.signalBar,
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(4),
                                                 ),
                                               ),
                                             ),
                                           ),
                                           Flexible(
-                                            child: FractionallySizedBox(
-                                              widthFactor: 1 - s,
-                                              child: Container(
+                                            flex: 100 - s,
+                                            child: Container(
+                                              decoration: BoxDecoration(
                                                 color: labelColor(
                                                   context,
                                                   Label.noiseBar,
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  topRight: Radius.circular(4),
                                                 ),
                                               ),
                                             ),
@@ -231,23 +237,33 @@ class HomeScreenState extends State<HomeScreen> {
                                         spacing: 5,
                                         children: [
                                           Flexible(
-                                            child: FractionallySizedBox(
-                                              widthFactor: 1 - n,
-                                              child: Container(
+                                            flex: 100 - n,
+                                            child: Container(
+                                              decoration: BoxDecoration(
                                                 color: labelColor(
                                                   context,
                                                   Label.signalBar,
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  bottomLeft: Radius.circular(
+                                                    4,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                           Flexible(
-                                            child: FractionallySizedBox(
-                                              widthFactor: n,
-                                              child: Container(
+                                            flex: n,
+                                            child: Container(
+                                              decoration: BoxDecoration(
                                                 color: labelColor(
                                                   context,
                                                   Label.noiseBar,
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  bottomRight: Radius.circular(
+                                                    4,
+                                                  ),
                                                 ),
                                               ),
                                             ),
