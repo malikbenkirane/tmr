@@ -254,15 +254,18 @@ class HomeScreenState extends State<HomeScreen> {
           builder: (context, _) {
             final r = signalNoiseRatio ?? SignalNoiseRatio();
             // final width = MediaQuery.of(context).size.width * .3;
-            const radius = 0.0;
+            const radius = 10.0;
             const height = 8.0;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              spacing: height / 3,
-              children: [
-                _topBar(radius: radius, height: height),
-                _bottomBar(radius: radius, height: height, r: r),
-              ],
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: height / 2,
+                children: [
+                  _topBar(radius: radius, height: height),
+                  _bottomBar(radius: radius, height: height, r: r),
+                ],
+              ),
             );
           },
         ),
@@ -293,10 +296,7 @@ class HomeScreenState extends State<HomeScreen> {
               },
               child: Column(
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 10, bottom: 5),
-                    child: _bar(context),
-                  ),
+                  Padding(padding: EdgeInsets.only(), child: _bar(context)),
                   Expanded(
                     child: RoutinesList(
                       homeModel: widget.homeModel,
