@@ -165,7 +165,7 @@ class HomeScreenState extends State<HomeScreen> {
                                       height: 4,
                                       width: width,
                                       child: Row(
-                                        spacing: 5,
+                                        spacing: s >= 98 ? 0 : 5,
                                         children: [
                                           Flexible(
                                             flex: s,
@@ -179,6 +179,9 @@ class HomeScreenState extends State<HomeScreen> {
                                                   topLeft: Radius.circular(
                                                     radius,
                                                   ),
+                                                  topRight: s >= 98
+                                                      ? Radius.circular(radius)
+                                                      : Radius.zero,
                                                 ),
                                               ),
                                             ),
@@ -186,7 +189,9 @@ class HomeScreenState extends State<HomeScreen> {
                                           Flexible(
                                             flex: 100 - s,
                                             child: Row(
-                                              spacing: o == 0 ? 0 : 5,
+                                              spacing: (s >= 98 || o <= 2)
+                                                  ? 0
+                                                  : 5,
                                               children: [
                                                 Flexible(
                                                   flex: o,
