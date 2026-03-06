@@ -97,7 +97,7 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Widget _bottomBar({
+  Widget _topBar({
     required SignalNoiseRatio r,
     required double height,
     required double radius,
@@ -118,8 +118,8 @@ class HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: labelColor(context, Label.signalBar),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(radius),
-                  bottomRight: s >= 98 ? Radius.circular(radius) : Radius.zero,
+                  topLeft: Radius.circular(radius),
+                  topRight: s >= 98 ? Radius.circular(radius) : Radius.zero,
                 ),
               ),
             ),
@@ -137,7 +137,7 @@ class HomeScreenState extends State<HomeScreen> {
                       borderRadius: o > 0
                           ? null
                           : BorderRadius.only(
-                              bottomRight: Radius.circular(radius),
+                              topRight: Radius.circular(radius),
                             ),
                     ),
                   ),
@@ -148,7 +148,7 @@ class HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: labelColor(context, Label.noiseBar),
                       borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(radius),
+                        topRight: Radius.circular(radius),
                       ),
                     ),
                   ),
@@ -161,7 +161,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _topBar({required double radius, required double height}) {
+  Widget _bottomBar({required double radius, required double height}) {
     return ListenableBuilder(
       listenable: widget.settingsModel.load,
       builder: (context, child) {
@@ -187,7 +187,7 @@ class HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: labelColor(context, Label.signalBar),
                       borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(radius),
+                        bottomLeft: Radius.circular(radius),
                       ),
                     ),
                   ),
@@ -198,7 +198,7 @@ class HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: labelColor(context, Label.noiseBar),
                       borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(radius),
+                        bottomRight: Radius.circular(radius),
                       ),
                     ),
                   ),
@@ -262,8 +262,8 @@ class HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 spacing: height / 2,
                 children: [
-                  _topBar(radius: radius, height: height),
-                  _bottomBar(radius: radius, height: height, r: r),
+                  _topBar(radius: radius, height: height, r: r),
+                  _bottomBar(radius: radius, height: height),
                 ],
               ),
             );
