@@ -213,55 +213,72 @@ class _NotesScreenState extends State<NotesScreen> {
                       ],
                     ), // Row
             ),
-            body: Stack(
-              children: [
-                ShaderMask(
-                  shaderCallback: (bounds) {
-                    return LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0, .8, 1],
-                      colors: [Colors.black, Colors.black, Colors.transparent],
-                    ).createShader(bounds);
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: ScrollablePositionedList.builder(
-                    itemCount: count,
-                    padding: EdgeInsets.only(bottom: 140),
-                    itemBuilder: (_, index) {
-                      final note = widget.notesViewmodel.notes[index];
-                      return InkWell(
-                        onTap: () async {
-                          await FlutterClipboard.copy(note.text);
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                spacing: 2,
-                                children: [
-                                  Icon(Symbols.assignment),
-                                  const Text(
-                                    'Your note’s now on the clipboard',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        child: Note(
-                          count: count,
-                          index: index,
-                          note: note,
-                          onDismiss: () {
-                            widget.notesViewmodel.dismissNote.execute(note.id!);
-                          },
-                        ),
-                      );
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  ShaderMask(
+                    shaderCallback: (bounds) {
+                      return LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0, .8, 1],
+                        colors: [
+                          Colors.black,
+                          Colors.black,
+                          Colors.transparent,
+                        ],
+                      ).createShader(bounds);
                     },
+                    blendMode: BlendMode.dstIn,
+                    child: ScrollablePositionedList.builder(
+                      itemCount: count,
+                      padding: EdgeInsets.only(bottom: 140),
+                      itemBuilder: (_, index) {
+                        final note = widget.notesViewmodel.notes[index];
+                        return InkWell(
+                          onTap: () async {
+                            await FlutterClipboard.copy(note.text);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  spacing: 2,
+                                  children: [
+                                    Icon(Symbols.assignment),
+                                    const Text(
+                                      'Your note’s now on the clipboard',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                          child: Note(
+                            count: count,
+                            index: index,
+                            note: note,
+                            onDismiss: () {
+                              widget.notesViewmodel.dismissNote.execute(
+                                note.id!,
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                ..._actionButtons(context),
-              ],
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [..._actionButtons(context)],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -286,26 +303,30 @@ class _NotesScreenState extends State<NotesScreen> {
         ? [
             Align(
               alignment: Alignment.bottomRight,
-              child: FloatingAction(
-                onPressed: _notePopup,
-                icon: Icons.add,
-                colorComposition: colorCompositionFromAction(
-                  context,
-                  ApplicationAction.addNote,
+              child: Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: FloatingAction(
+                  onPressed: _notePopup,
+                  icon: Icons.add,
+                  colorComposition: colorCompositionFromAction(
+                    context,
+                    ApplicationAction.addNote,
+                  ),
                 ),
-                verticalOffset: 40,
               ),
             ),
             Align(
               alignment: Alignment.bottomLeft,
-              child: FloatingAction(
-                onPressed: () => context.go(Routes.home),
-                icon: Icons.home,
-                colorComposition: colorCompositionFromAction(
-                  context,
-                  ApplicationAction.toHome,
+              child: Padding(
+                padding: EdgeInsets.only(right: 20),
+                child: FloatingAction(
+                  onPressed: () => context.go(Routes.home),
+                  icon: Icons.home,
+                  colorComposition: colorCompositionFromAction(
+                    context,
+                    ApplicationAction.toHome,
+                  ),
                 ),
-                verticalOffset: 40,
               ),
             ),
           ]

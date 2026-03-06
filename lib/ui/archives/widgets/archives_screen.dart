@@ -7,7 +7,6 @@ import 'package:too_many_tabs/ui/archives/widgets/routine.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
-import 'package:too_many_tabs/ui/core/ui/label.dart';
 
 class ArchivesScreen extends StatefulWidget {
   const ArchivesScreen({super.key, required this.viewModel});
@@ -45,25 +44,6 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
   @override
   build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: labelColor(context, Label.appBarBackground),
-        title: Padding(
-          padding: EdgeInsets.only(left: 5),
-          child: Row(
-            children: [
-              Text(
-                'Backlog',
-                style: TextStyle(
-                  fontWeight: FontWeight.w300,
-                  fontSize: 18,
-                  color: labelColor(context, Label.appBarForeground),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [],
-      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -123,27 +103,32 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                 },
               ),
             ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: FloatingAction(
-                onPressed: () {
-                  context.go(Routes.bin);
-                },
-                icon: Icons.archive,
-                colorComposition: colorCompositionFromAction(
-                  context,
-                  ApplicationAction.archiveRoutine,
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: FloatingAction(
-                onPressed: () => context.go(Routes.home),
-                icon: Icons.home,
-                colorComposition: colorCompositionFromAction(
-                  context,
-                  ApplicationAction.toHome,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 30),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    FloatingAction(
+                      onPressed: () {
+                        context.go(Routes.bin);
+                      },
+                      icon: Icons.archive,
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.archiveRoutine,
+                      ),
+                    ),
+                    FloatingAction(
+                      onPressed: () => context.go(Routes.home),
+                      icon: Icons.home,
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.toHome,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

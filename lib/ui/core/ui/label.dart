@@ -27,18 +27,15 @@ Color labelColor(BuildContext context, Label label) {
     case Label.homeScreenGoalTotal:
     case Label.homeScreenSettingsWheel:
     case Label.appBarForeground:
-    case Label.signalBar:
       return darkMode ? colorScheme.primary : colorScheme.surface;
+    case Label.noiseBar:
     case Label.routineSignalBar:
       return darkMode
           ? colorScheme.tertiary.withValues(alpha: .2)
           : colorScheme.tertiary.withValues(alpha: .5);
+    case Label.signalBar:
     case Label.routineToGoalBar:
       return darkMode ? colorScheme.secondary : colorScheme.secondary;
-    case Label.noiseBar:
-      return darkMode
-          ? colorScheme.secondary.withValues(alpha: .6)
-          : colorScheme.secondary;
     case Label.homeAppBarBackground:
     case Label.appBarBackground:
       return darkMode ? colorScheme.onPrimary : colorScheme.onSurface;

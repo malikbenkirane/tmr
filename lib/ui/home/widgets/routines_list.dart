@@ -65,7 +65,7 @@ class _RoutinesListState extends State<RoutinesList> {
             child: Stack(
               children: [
                 ScrollablePositionedList.builder(
-                  padding: EdgeInsets.only(bottom: 50, top: 20),
+                  padding: EdgeInsets.only(bottom: 50, top: 0),
                   itemCount: widget.homeModel.routines.length,
                   itemScrollController: itemScrollController,
                   scrollOffsetController: scrollOffsetController,

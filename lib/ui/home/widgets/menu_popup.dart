@@ -160,14 +160,16 @@ class _PopupAction extends StatelessWidget {
   build(BuildContext context) {
     return Align(
       alignment: alignment,
-      child: FloatingAction(
-        onPressed: action,
-        icon: icon,
-        colorComposition: colorCompositionFromAction(
-          context,
-          applicationAction,
+      child: Padding(
+        padding: EdgeInsets.only(left: 20),
+        child: FloatingAction(
+          onPressed: action,
+          icon: icon,
+          colorComposition: colorCompositionFromAction(
+            context,
+            applicationAction,
+          ),
         ),
-        verticalOffset: 0,
       ), // FloatingAction
     ); // Align
   }

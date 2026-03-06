@@ -8,7 +8,9 @@ class Loader extends StatelessWidget {
     required this.running,
     required this.onError,
     required this.child,
+    this.hide,
   });
+  final bool? hide;
   final bool error, running;
   final void Function() onError;
   final Widget child;
@@ -16,6 +18,9 @@ class Loader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (running) {
+      if (hide ?? false) {
+        return const SizedBox.shrink();
+      }
       return const Center(child: CircularProgressIndicator());
     }
 

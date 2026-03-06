@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_progress_bar.dart';
 import 'package:too_many_tabs/ui/home/widgets/routine_spent_dynamic_label.dart';
@@ -23,7 +24,6 @@ class Routine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
     final dismissibleColors = colorCompositionFromAction(
       context,
       ApplicationAction.toBacklog,
@@ -83,17 +83,16 @@ class Routine extends StatelessWidget {
                           Padding(
                             padding: EdgeInsets.only(right: 5),
                             child: Container(
-                              width: 5,
-                              height: 30,
+                              width: 2,
+                              height: 32,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(7),
+                                // borderRadius: BorderRadius.circular(4),
                                 color: routine.running
-                                    ? (darkMode
-                                          ? colorScheme.primary
-                                          : colorScheme.primary)
-                                    : (darkMode
-                                          ? colorScheme.primaryContainer
-                                          : colorScheme.primaryFixed),
+                                    ? labelColor(context, Label.signalBar)
+                                    : labelColor(
+                                        context,
+                                        Label.noiseBar,
+                                      ).withValues(alpha: .2),
                               ), // BoxDecoration
                             ), // Container
                           ), // Padding

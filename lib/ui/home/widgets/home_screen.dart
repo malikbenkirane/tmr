@@ -97,218 +97,186 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Widget _bottomBar({
+    required SignalNoiseRatio r,
+    required double height,
+    required double radius,
+  }) {
+    final s = 100 - (r.noise ?? 0);
+    final o = 100 - (r.overtime ?? 0);
+    if (!r.meaningful) {
+      return SizedBox.shrink();
+    }
+    return SizedBox(
+      height: height * 1.61,
+      child: Row(
+        spacing: s >= 98 ? 0 : 5,
+        children: [
+          Flexible(
+            flex: s,
+            child: Container(
+              decoration: BoxDecoration(
+                color: labelColor(context, Label.signalBar),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(radius),
+                  bottomRight: s >= 98 ? Radius.circular(radius) : Radius.zero,
+                ),
+              ),
+            ),
+          ),
+          Flexible(
+            flex: 100 - s,
+            child: Row(
+              spacing: (s >= 98 || o <= 2) ? 0 : 5,
+              children: [
+                Flexible(
+                  flex: o,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: labelColor(context, Label.noiseBar),
+                      borderRadius: o > 0
+                          ? null
+                          : BorderRadius.only(
+                              bottomRight: Radius.circular(radius),
+                            ),
+                    ),
+                  ),
+                ),
+                Flexible(
+                  flex: 100 - o,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: labelColor(context, Label.noiseBar),
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(radius),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _topBar({required double radius, required double height}) {
+    return ListenableBuilder(
+      listenable: widget.settingsModel.load,
+      builder: (context, child) {
+        return Loader(
+          error: widget.settingsModel.load.error,
+          running: widget.settingsModel.load.running,
+          onError: widget.settingsModel.load.execute,
+          child: child!,
+        );
+      },
+      child: ListenableBuilder(
+        listenable: widget.settingsModel,
+        builder: (context, _) {
+          final n = widget.settingsModel.settings.noise;
+          return SizedBox(
+            height: height,
+            child: Row(
+              spacing: 5,
+              children: [
+                Flexible(
+                  flex: 100 - n,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: labelColor(context, Label.signalBar),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(radius),
+                      ),
+                    ),
+                  ),
+                ),
+                Flexible(
+                  flex: n,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: labelColor(context, Label.noiseBar),
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(radius),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _bar(BuildContext context) {
+    if (isSomePopupShown || showNewRoutinePopup) {
+      return SizedBox.shrink();
+    }
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return Scaffold(
+              backgroundColor: Colors.black.withValues(alpha: 0),
+              body: TapRegion(
+                onTapOutside: (_) {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 10,
+                  children: [],
+                ),
+              ), // Center
+            );
+          },
+        );
+      },
+      child: ListenableBuilder(
+        listenable: widget.homeModel.load,
+        builder: (context, child) {
+          return Loader(
+            error: widget.homeModel.load.error,
+            running: widget.homeModel.load.running,
+            onError: widget.homeModel.load.execute,
+            hide: true,
+            child: child!,
+          );
+        },
+        child: ListenableBuilder(
+          listenable: widget.homeModel,
+          builder: (context, _) {
+            final r = signalNoiseRatio ?? SignalNoiseRatio();
+            // final width = MediaQuery.of(context).size.width * .3;
+            const radius = 0.0;
+            const height = 8.0;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: height / 3,
+              children: [
+                _topBar(radius: radius, height: height),
+                _bottomBar(radius: radius, height: height, r: r),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final darkMode = Theme.of(context).brightness == Brightness.dark;
 
-    const double actionVerticalOffset = 40;
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: labelColor(context, Label.homeAppBarBackground),
-        title: Padding(
-          padding: EdgeInsets.only(top: 14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return Scaffold(
-                            backgroundColor: Colors.black.withValues(alpha: 0),
-                            body: TapRegion(
-                              onTapOutside: (_) {
-                                if (Navigator.canPop(context)) {
-                                  Navigator.pop(context);
-                                }
-                              },
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                spacing: 10,
-                                children: [],
-                              ),
-                            ), // Center
-                          );
-                        },
-                      );
-                    },
-                    child: ListenableBuilder(
-                      listenable: widget.homeModel.load,
-                      builder: (context, child) {
-                        return Loader(
-                          error: widget.homeModel.load.error,
-                          running: widget.homeModel.load.running,
-                          onError: widget.homeModel.load.execute,
-                          child: child!,
-                        );
-                      },
-                      child: ListenableBuilder(
-                        listenable: widget.homeModel,
-                        builder: (context, _) {
-                          final r = signalNoiseRatio ?? SignalNoiseRatio();
-                          final s = 100 - (r.noise ?? 0);
-                          final o = 100 - (r.overtime ?? 0);
-                          final width = MediaQuery.of(context).size.width * .5;
-                          final radius = 4.0;
-                          return Column(
-                            spacing: 3,
-                            children: [
-                              r.meaningful
-                                  ? SizedBox(
-                                      height: 4,
-                                      width: width,
-                                      child: Row(
-                                        spacing: s >= 98 ? 0 : 5,
-                                        children: [
-                                          Flexible(
-                                            flex: s,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: labelColor(
-                                                  context,
-                                                  Label.signalBar,
-                                                ),
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(
-                                                    radius,
-                                                  ),
-                                                  topRight: s >= 98
-                                                      ? Radius.circular(radius)
-                                                      : Radius.zero,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Flexible(
-                                            flex: 100 - s,
-                                            child: Row(
-                                              spacing: (s >= 98 || o <= 2)
-                                                  ? 0
-                                                  : 5,
-                                              children: [
-                                                Flexible(
-                                                  flex: o,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: labelColor(
-                                                        context,
-                                                        Label.noiseBar,
-                                                      ),
-                                                      borderRadius: o > 0
-                                                          ? null
-                                                          : BorderRadius.only(
-                                                              topRight:
-                                                                  Radius.circular(
-                                                                    radius,
-                                                                  ),
-                                                            ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Flexible(
-                                                  flex: 100 - o,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: labelColor(
-                                                        context,
-                                                        Label.noiseBar,
-                                                      ),
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                            topRight:
-                                                                Radius.circular(
-                                                                  radius,
-                                                                ),
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : SizedBox.shrink(),
-                              ListenableBuilder(
-                                listenable: widget.settingsModel.load,
-                                builder: (context, child) {
-                                  return Loader(
-                                    error: widget.settingsModel.load.error,
-                                    running: widget.settingsModel.load.running,
-                                    onError: widget.settingsModel.load.execute,
-                                    child: child!,
-                                  );
-                                },
-                                child: ListenableBuilder(
-                                  listenable: widget.settingsModel,
-                                  builder: (context, _) {
-                                    final n =
-                                        widget.settingsModel.settings.noise;
-                                    return SizedBox(
-                                      height: 2,
-                                      width: width,
-                                      child: Row(
-                                        spacing: 5,
-                                        children: [
-                                          Flexible(
-                                            flex: 100 - n,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: labelColor(
-                                                  context,
-                                                  Label.signalBar,
-                                                ),
-                                                borderRadius: BorderRadius.only(
-                                                  bottomLeft: Radius.circular(
-                                                    radius,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Flexible(
-                                            flex: n,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: labelColor(
-                                                  context,
-                                                  Label.noiseBar,
-                                                ),
-                                                borderRadius: BorderRadius.only(
-                                                  bottomRight: Radius.circular(
-                                                    radius,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
       body: SafeArea(
-        bottom: false,
         child: Stack(
           children: [
             ListenableBuilder(
@@ -323,9 +291,19 @@ class HomeScreenState extends State<HomeScreen> {
                   child: child!,
                 );
               },
-              child: RoutinesList(
-                homeModel: widget.homeModel,
-                notesModel: widget.notesModel,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 10, bottom: 5),
+                    child: _bar(context),
+                  ),
+                  Expanded(
+                    child: RoutinesList(
+                      homeModel: widget.homeModel,
+                      notesModel: widget.notesModel,
+                    ),
+                  ),
+                ],
               ),
             ),
             showNewRoutinePopup
@@ -377,40 +355,43 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : Container(),
-            isSomePopupShown || showNewRoutinePopup
-                ? SizedBox.shrink()
-                : Align(
-                    alignment: Alignment.bottomRight,
-                    child: FloatingAction(
-                      onPressed: () {
-                        setState(() {
-                          showNewRoutinePopup = true;
-                        });
-                      },
-                      icon: Icons.add,
-                      colorComposition: colorCompositionFromAction(
-                        context,
-                        ApplicationAction.addRoutine,
-                      ),
-                      verticalOffset: actionVerticalOffset,
-                    ),
-                  ),
-            isSomePopupShown || showNewRoutinePopup
-                ? Container()
-                : Align(
-                    alignment: Alignment.bottomLeft,
-                    child: FloatingAction(
-                      icon: Icons.menu,
-                      onPressed: () {
-                        context.go(Routes.archives);
-                      },
-                      colorComposition: colorCompositionFromAction(
-                        context,
-                        ApplicationAction.backlogRoutine,
-                      ),
-                      verticalOffset: actionVerticalOffset,
-                    ),
-                  ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 30),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    isSomePopupShown || showNewRoutinePopup
+                        ? SizedBox.shrink()
+                        : FloatingAction(
+                            onPressed: () {
+                              setState(() {
+                                showNewRoutinePopup = true;
+                              });
+                            },
+                            icon: Icons.add,
+                            colorComposition: colorCompositionFromAction(
+                              context,
+                              ApplicationAction.addRoutine,
+                            ),
+                          ),
+                    isSomePopupShown || showNewRoutinePopup
+                        ? SizedBox.shrink()
+                        : FloatingAction(
+                            icon: Icons.menu,
+                            onPressed: () {
+                              context.go(Routes.archives);
+                            },
+                            colorComposition: colorCompositionFromAction(
+                              context,
+                              ApplicationAction.backlogRoutine,
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
