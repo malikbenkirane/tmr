@@ -108,7 +108,7 @@ class HomeScreenState extends State<HomeScreen> {
       return SizedBox.shrink();
     }
     return SizedBox(
-      height: height * 1.61,
+      height: height,
       child: Row(
         spacing: s >= 98 ? 0 : 5,
         children: [
@@ -211,7 +211,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _bar(BuildContext context) {
+  Widget _bar() {
     if (isSomePopupShown || showNewRoutinePopup) {
       return SizedBox.shrink();
     }
@@ -294,16 +294,9 @@ class HomeScreenState extends State<HomeScreen> {
                   child: child!,
                 );
               },
-              child: Column(
-                children: [
-                  Padding(padding: EdgeInsets.only(), child: _bar(context)),
-                  Expanded(
-                    child: RoutinesList(
-                      homeModel: widget.homeModel,
-                      notesModel: widget.notesModel,
-                    ),
-                  ),
-                ],
+              child: RoutinesList(
+                homeModel: widget.homeModel,
+                notesModel: widget.notesModel,
               ),
             ),
             showNewRoutinePopup
@@ -376,6 +369,7 @@ class HomeScreenState extends State<HomeScreen> {
                               ApplicationAction.addRoutine,
                             ),
                           ),
+                    Expanded(child: _bar()),
                     isSomePopupShown || showNewRoutinePopup
                         ? SizedBox.shrink()
                         : FloatingAction(
