@@ -8,6 +8,7 @@ import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/domain/models/settings/special_goals.dart';
+import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class DatabaseClient {
@@ -637,6 +638,45 @@ class DatabaseClient {
         );
       }
       return Result.ok(sessions);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> logSignalRatio({
+    required DateTime at,
+    required SignalRatio r,
+  }) async {
+    try {
+      await _database.insert('signal_noise_ratio_log', {
+        'overtimeNoiseRatio': r.overtime ?? 0,
+        'ratio': 100 - (r.noise ?? 0),
+        'logged_at': at.toIso8601String(),
+      });
+      return Result.ok(null);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<SignalRatio?>> signalRatioAt(DateTime at) async {
+    try {
+      final today = DateTime(at.year, at.month, at.day);
+      final tomorrow = today.add(Duration(days: 1));
+      final rows = await _database.query(
+        'signal_noise_ratio_log',
+        where: 'logged_at < ? AND logged_at > ?',
+        whereArgs: [tomorrow.toIso8601String(), today.toIso8601String()],
+      );
+      if (rows.isEmpty) {
+        return Result.ok(null);
+      }
+      final {
+        'logged_at': t as String,
+        'ratio': sr as int,
+        'overtimeNoiseRatio': or as int,
+      } = rows[0];
+      return Result.ok(SignalRatio.fromIntegerRatios(signal: sr, overtime: or));
     } on Exception catch (e) {
       return Result.error(e);
     }

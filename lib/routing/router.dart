@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository_local.dart';
 import 'package:too_many_tabs/data/repositories/settings/settings_repository_sqlite.dart';
+import 'package:too_many_tabs/data/repositories/signal_ratio/signal_ratio_repository_local.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/archives/view_models/archives_viewmodel.dart';
@@ -70,7 +71,11 @@ GoRouter router() => GoRouter(
             databaseClient: result.value,
           );
           final settingsRepository = SettingsRepositorySqlite(db: result.value);
+          final signalRatioRepository = SignalRatioRepositoryLocal(
+            databaseClient: result.value,
+          );
           final homeViewmodel = HomeViewmodel(
+            signalRatioRepository: signalRatioRepository,
             routinesRepository: routinesRepository,
             settingsRepository: settingsRepository,
           );
@@ -179,7 +184,11 @@ GoRouter router() => GoRouter(
             repo: routinesRepository,
             routineId: int.parse(routineId),
           );
+          final signalRatioRepository = SignalRatioRepositoryLocal(
+            databaseClient: result.value,
+          );
           final homeViewmodel = HomeViewmodel(
+            signalRatioRepository: signalRatioRepository,
             routinesRepository: routinesRepository,
             settingsRepository: settingsRepository,
           );

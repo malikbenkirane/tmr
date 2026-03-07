@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/data/repositories/settings/settings_repository.dart';
+import 'package:too_many_tabs/data/repositories/signal_ratio/signal_ratio_repository.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/domain/models/settings/settings_summary.dart';
@@ -21,8 +22,10 @@ class HomeViewmodel extends ChangeNotifier {
   HomeViewmodel({
     required RoutinesRepository routinesRepository,
     required SettingsRepository settingsRepository,
+    required SignalRatioRepository signalRatioRepository,
   }) : _routinesRepository = routinesRepository,
-       _settingsRepository = settingsRepository {
+       _settingsRepository = settingsRepository,
+       _signalRatioRepository = signalRatioRepository {
     load = Command0(_load)..execute();
     startOrStopRoutine = Command1(_startOrStopRoutine);
     updateRoutineGoal = Command1(_updateRoutineGoal);
@@ -31,7 +34,10 @@ class HomeViewmodel extends ChangeNotifier {
     updateSpecialSessionStatus = Command1(_updateSpecialSessionStatus);
     toggleSpecialSession = Command1(_toggleSpecialSession);
     updateSignalNoiseRatio = Command1(_updateSignalNoiseRatio);
+    lockSignalRatio = Command0(_lockSignalRatio);
   }
+
+  final SignalRatioRepository _signalRatioRepository;
 
   final RoutinesRepository _routinesRepository;
   final _log = Logger('HomeViewmodel');
@@ -39,7 +45,7 @@ class HomeViewmodel extends ChangeNotifier {
   RoutineSummary? _pinnedRoutine;
   int? _lastCreatedRoutineID;
 
-  late Command0 load;
+  late Command0<void> load;
   late Command1<void, int> startOrStopRoutine;
   late Command1<void, GoalUpdate> updateRoutineGoal;
   late Command1<void, String> addRoutine;
@@ -47,7 +53,8 @@ class HomeViewmodel extends ChangeNotifier {
   late Command1<void, int> trashRoutine;
   late Command1<void, DateTime> updateSpecialSessionStatus;
   late Command1<void, SpecialGoal> toggleSpecialSession;
-  late Command1<SignalNoiseRatio?, DateTime> updateSignalNoiseRatio;
+  late Command1<SignalRatio?, DateTime> updateSignalNoiseRatio;
+  late Command0<void> lockSignalRatio;
 
   List<(RoutineSummary, RoutineState)> get routines => _routines;
 
@@ -106,8 +113,24 @@ class HomeViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<Result<SignalNoiseRatio?>> _updateSignalNoiseRatio(DateTime at) async {
+  SignalRatio? _signalRatio;
+  SignalRatio? get signalRatio => _signalRatio;
+
+  Future<Result<SignalRatio?>> _updateSignalNoiseRatio(DateTime at) async {
     try {
+      {
+        final result = await _signalRatioRepository.signalRatioAt(at);
+        switch (result) {
+          case Error<SignalRatio?>():
+            return Result.error(result.error);
+          case Ok<SignalRatio?>():
+            if (result.value != null) {
+              _isSignalRatioLocked = true;
+              _signalRatio = result.value;
+              return Result.ok(result.value);
+            }
+        }
+      }
       final DateTime? firstSessionStartedAt;
       {
         final result = await _routinesRepository.firstSession();
@@ -134,6 +157,7 @@ class HomeViewmodel extends ChangeNotifier {
               for (final routine in result.value) {
                 final spent = routine.spentAt(at);
                 s += spent > routine.goal ? routine.goal : spent;
+                debugPrint('[D] $routine $s $spent');
                 if (spent > routine.goal) {
                   o += spent - routine.goal;
                 }
@@ -143,25 +167,36 @@ class HomeViewmodel extends ChangeNotifier {
         signal = s;
         overtime = o;
       }
-      final d = at.difference(firstSessionStartedAt);
-      if (d.inSeconds == 0) {
-        return Result.ok(null);
-      }
-      final q = d.inSeconds / signal.inSeconds;
-      if (q == 1) {
-        Result.ok(SignalNoiseRatio(ratio: 1));
-      }
-      final ratio = 1 / (q - 1);
-      if (overtime.inSeconds == 0) {
-        return Result.ok(SignalNoiseRatio(ratio: ratio));
-      }
-      final overtimeRatio = overtime.inSeconds / (d - signal).inSeconds;
-      return Result.ok(
-        SignalNoiseRatio(ratio: ratio, overtimeRatio: overtimeRatio),
+      final snr = _snr(
+        overtime: overtime,
+        signal: signal,
+        at: at,
+        firstSessionStartedAt: firstSessionStartedAt,
       );
+      debugPrint('$snr signal_sec=${signal.inSeconds}');
+      _signalRatio = snr;
+      return Result.ok(snr);
     } finally {
       notifyListeners();
     }
+  }
+
+  SignalRatio? _snr({
+    required DateTime firstSessionStartedAt,
+    required DateTime at,
+    required Duration signal,
+    required Duration overtime,
+  }) {
+    final d = at.difference(firstSessionStartedAt);
+    if (d.inSeconds == 0) {
+      return null;
+    }
+    final ratio = signal.inSeconds / d.inSeconds;
+    if (overtime.inSeconds == 0) {
+      return SignalRatio(ratio: ratio, overtimeRatio: 0);
+    }
+    final overtimeRatio = overtime.inSeconds / (d - signal).inSeconds;
+    return SignalRatio(ratio: ratio, overtimeRatio: overtimeRatio);
   }
 
   Future<Result<void>> _archiveOrBinRoutine(
@@ -397,7 +432,8 @@ class HomeViewmodel extends ChangeNotifier {
         _lastPinnedRoutine = routine;
       }
 
-      await _updateSpecialSessionStatus(DateTime.now());
+      await _updateSpecialSessionStatus(now);
+      await _updateSignalNoiseRatio(now);
       return await _updateRunningRoutine();
     } finally {
       notifyListeners();
@@ -590,6 +626,46 @@ class HomeViewmodel extends ChangeNotifier {
           '_toggleSpecialSession: ${goal.column} started: refresh _lastPinnedRoutine then _startOrStopRoutine($id)',
         );
       }
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  bool _isSignalRatioLocked = false;
+  bool get isSignalRatioLocked => _isSignalRatioLocked;
+
+  Future<Result<void>> _lockSignalRatio() async {
+    if (_isSignalRatioLocked) {
+      return Result.error(Exception('already locked'));
+    }
+    try {
+      final SignalRatio r;
+      final now = DateTime.now();
+      {
+        final result = await _updateSignalNoiseRatio(now);
+        switch (result) {
+          case Error<SignalRatio?>():
+            return Result.error(result.error);
+          case Ok<SignalRatio?>():
+            if (result.value == null) {
+              return Result.error(Exception('null signal ratio'));
+            }
+            r = result.value!;
+        }
+      }
+      {
+        final result = await _signalRatioRepository.logSignalRatio(
+          r: r,
+          at: now,
+        );
+        switch (result) {
+          case Error<void>():
+            return Result.error(result.error);
+          case Ok<void>():
+        }
+      }
+      _isSignalRatioLocked = true;
       return Result.ok(null);
     } finally {
       notifyListeners();

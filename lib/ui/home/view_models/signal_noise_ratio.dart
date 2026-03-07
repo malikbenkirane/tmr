@@ -1,21 +1,28 @@
-class SignalNoiseRatio {
+class SignalRatio {
   final double? ratio;
   final double? overtimeRatio;
 
-  const SignalNoiseRatio({this.ratio, this.overtimeRatio});
+  const SignalRatio({this.ratio, this.overtimeRatio});
 
   int? get noise => () {
-    return ratio == null ? null : (100 / (1 + ratio!)).toInt();
+    return ratio == null ? null : (100 * (1 - ratio!)).toInt();
   }();
 
   int? get overtime => () {
-    return overtimeRatio == null ? null : (100 / (1 + overtimeRatio!)).toInt();
+    return overtimeRatio == null ? null : (100 * overtimeRatio!).toInt();
   }();
 
   bool get meaningful => ratio != null;
 
+  static SignalRatio fromIntegerRatios({
+    required int signal,
+    required int overtime,
+  }) {
+    return SignalRatio(ratio: signal / 100, overtimeRatio: overtime / 100);
+  }
+
   @override
   String toString() {
-    return 'SignalNoiseRatio(noise: $noise, overtime: $overtime)';
+    return 'SignalNoiseRatio(noise: $noise, overtime: $overtime) [sr=$ratio or=$overtimeRatio]';
   }
 }

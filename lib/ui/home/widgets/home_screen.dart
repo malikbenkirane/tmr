@@ -41,7 +41,6 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   RoutineSummary? tappedRoutine;
-  SignalNoiseRatio? signalNoiseRatio;
   bool isPopup = false;
 
   late final AppLifecycleListener _listener;
@@ -80,17 +79,12 @@ class HomeScreenState extends State<HomeScreen> {
     {
       final result =
           widget.homeModel.updateSignalNoiseRatio.result
-              as Result<SignalNoiseRatio?>;
+              as Result<SignalRatio?>;
       switch (result) {
-        case Error<SignalNoiseRatio?>():
-          setState(() => signalNoiseRatio = null);
-        case Ok<SignalNoiseRatio?>():
-          setState(() => signalNoiseRatio = result.value);
+        case Error<SignalRatio?>():
+          debugPrint('[ERROR] updateSpecialSessionStatus: ${result.error}');
+        default:
       }
-    }
-    if (widget.homeModel.updateSignalNoiseRatio.error) {
-      debugPrint('updateSpecialSessionStatus error');
-      return;
     }
   }
 
@@ -102,7 +96,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _topBar({
-    required SignalNoiseRatio r,
+    required SignalRatio r,
     required double height,
     required double radius,
   }) {
@@ -136,15 +130,15 @@ class HomeScreenState extends State<HomeScreen> {
                     spacing: (o == 100 || o == 0) ? 0 : 5,
                     children: [
                       Flexible(
-                        flex: o,
+                        flex: 100 - o,
                         child: Container(
                           decoration: BoxDecoration(
                             color: labelColor(context, Label.noiseBar),
                             borderRadius: BorderRadius.only(
-                              topLeft: o > 0 && s == 0
+                              topLeft: o >= 0 && s == 0
                                   ? Radius.circular(radius)
                                   : Radius.zero,
-                              topRight: o == 100
+                              topRight: o == 0
                                   ? Radius.circular(radius)
                                   : Radius.zero,
                             ),
@@ -152,7 +146,7 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Flexible(
-                        flex: 100 - o,
+                        flex: o,
                         child: Container(
                           decoration: BoxDecoration(
                             color: labelColor(context, Label.noiseBar),
@@ -325,27 +319,54 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 17),
-              child: Material(
-                color: theme.colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(18),
-                child: InkWell(
-                  onTap: () {},
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(16),
-                        child: const Text(
-                          'Lock Signal-Ratio',
-                          style: TextStyle(fontSize: 16),
+            ListenableBuilder(
+              listenable: widget.homeModel,
+              builder: (context, _) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 17),
+                  child: widget.homeModel.isSignalRatioLocked
+                      ? null
+                      : Material(
+                          color: theme.colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(18),
+                          child: InkWell(
+                            onTap: () async {
+                              await widget.homeModel.lockSignalRatio.execute();
+                              if (widget.homeModel.lockSignalRatio.error) {
+                                final result =
+                                    widget.homeModel.lockSignalRatio.result
+                                        as Result<void>;
+                                switch (result) {
+                                  case Error<void>():
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(result.error.toString()),
+                                      ),
+                                    );
+                                  default:
+                                }
+                              }
+                              if (!context.mounted) return;
+                              Navigator.pop(context);
+                              setState(() => isPopup = false);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: const Text(
+                                    'Lock Signal-Ratio',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -388,7 +409,7 @@ class HomeScreenState extends State<HomeScreen> {
               child: ListenableBuilder(
                 listenable: widget.homeModel,
                 builder: (context, _) {
-                  final r = signalNoiseRatio ?? SignalNoiseRatio();
+                  final r = widget.homeModel.signalRatio ?? SignalRatio();
                   // final width = MediaQuery.of(context).size.width * .3;
                   const radius = 10.0;
                   const height = 8.0;

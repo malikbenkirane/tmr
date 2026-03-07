@@ -37,7 +37,7 @@ class RoutineSummary {
     if (_lastStarted == null || !_running) {
       return _spent;
     }
-    return DateTime.now().difference(_lastStarted) + _spent;
+    return at.difference(_lastStarted) + _spent;
   }
 
   RoutineState state(DateTime at) {
