@@ -10,6 +10,7 @@ enum Label {
   homeScreenSettingsWheel,
   appBarForeground,
   appBarBackground,
+  dialogInputBackground,
   noiseBar,
   signalBar,
   routineToGoalBar,
@@ -20,6 +21,8 @@ Color labelColor(BuildContext context, Label label) {
   final colorScheme = Theme.of(context).colorScheme;
   final darkMode = Theme.of(context).brightness == Brightness.dark;
   switch (label) {
+    case Label.dialogInputBackground:
+      return colorScheme.surface;
     case Label.homeScreenNumberOfPlannedRoutines:
     case Label.homeScreenRoutinesPlannedToday:
     case Label.homeScreenDayETA:

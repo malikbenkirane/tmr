@@ -35,10 +35,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  bool isSomePopupShown = false;
-  bool showNewRoutinePopup = false;
   RoutineSummary? tappedRoutine;
   SignalNoiseRatio? signalNoiseRatio;
+  bool isPopup = false;
 
   late final AppLifecycleListener _listener;
   late final Timer t;
@@ -212,7 +211,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _bar() {
-    if (isSomePopupShown || showNewRoutinePopup) {
+    if (isPopup) {
       return SizedBox.shrink();
     }
     return GestureDetector(
@@ -273,11 +272,33 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _addRoutine(BuildContext context, String name) async {
+    try {
+      await widget.homeModel.addRoutine.execute(name);
+      if (!context.mounted) return;
+      final result = widget.homeModel.addRoutine.result as Result<void>;
+      switch (result) {
+        case Error<void>():
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${result.error}')));
+          return;
+        default:
+      }
+      for (final rs in widget.homeModel.routines) {
+        final r = rs.$1;
+        if (r.id == widget.homeModel.lastCreatedRoutineID!) {
+          tappedRoutine = r;
+        }
+      }
+    } finally {
+      Navigator.pop(context);
+      setState(() => isPopup = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final darkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -299,55 +320,6 @@ class HomeScreenState extends State<HomeScreen> {
                 notesModel: widget.notesModel,
               ),
             ),
-            showNewRoutinePopup
-                ? ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [.01, .7, 1],
-                      colors: [Colors.black, Colors.black, Colors.transparent],
-                    ).createShader(bounds),
-                    blendMode: BlendMode.dstIn,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: [0, .4],
-                          colors: [
-                            colorScheme.surface,
-                            darkMode
-                                ? colorScheme.primaryContainer
-                                : colorScheme.primaryFixed,
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                : SizedBox.shrink(),
-            showNewRoutinePopup
-                ? Center(
-                    child: NewRoutine(
-                      closeCancel: () {
-                        setState(() {
-                          showNewRoutinePopup = false;
-                        });
-                      },
-                      closeCompleted: (id) {
-                        setState(() {
-                          for (final rs in widget.homeModel.routines) {
-                            final routine = rs.$1;
-                            if (routine.id == id) {
-                              tappedRoutine = routine;
-                            }
-                          }
-                          showNewRoutinePopup = false;
-                        });
-                      },
-                      viewModel: widget.homeModel,
-                    ),
-                  )
-                : Container(),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 0, horizontal: 30),
               child: Align(
@@ -355,13 +327,34 @@ class HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    isSomePopupShown || showNewRoutinePopup
+                    isPopup
                         ? SizedBox.shrink()
                         : FloatingAction(
                             onPressed: () {
-                              setState(() {
-                                showNewRoutinePopup = true;
-                              });
+                              setState(() => isPopup = true);
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return Scaffold(
+                                    backgroundColor: Colors.black.withValues(
+                                      alpha: 0,
+                                    ),
+                                    body: Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(40),
+                                        child: NewRoutine(
+                                          onAdd: (name) =>
+                                              _addRoutine(context, name),
+                                          onCancel: () {
+                                            Navigator.pop(context);
+                                            setState(() => isPopup = false);
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
                             },
                             icon: Icons.add,
                             colorComposition: colorCompositionFromAction(
@@ -370,7 +363,7 @@ class HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                     Expanded(child: _bar()),
-                    isSomePopupShown || showNewRoutinePopup
+                    isPopup
                         ? SizedBox.shrink()
                         : FloatingAction(
                             icon: Icons.menu,
