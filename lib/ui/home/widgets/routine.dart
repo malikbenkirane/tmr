@@ -134,9 +134,7 @@ class Routine extends StatelessWidget {
                     ), // SizedBox
                     Padding(
                       padding: EdgeInsets.only(left: 20),
-                      child: RoutineProgressBar(
-                        routine: routine,
-                      ), // RoutineGoalDynamicLabel
+                      child: RoutineProgressBar(routine: routine),
                     ), // Padding
                   ],
                 ), // Row

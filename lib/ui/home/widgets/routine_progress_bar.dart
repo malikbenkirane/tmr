@@ -59,8 +59,7 @@ class _RoutineProgressBarState extends State<RoutineProgressBar> {
     {
       if (r > 100) {
         overtime = (spentInSeconds / goalInSeconds).toInt();
-        ratio = (100 * (goalInSeconds * (overtime - 1)) / spentInSeconds)
-            .toInt();
+        ratio = (100 * (goalInSeconds * (overtime)) / spentInSeconds).toInt();
       } else {
         ratio = r;
         overtime = 0;
