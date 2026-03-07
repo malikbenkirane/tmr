@@ -285,21 +285,20 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _menu() {
+    final theme = Theme.of(context);
     return TapRegion(
-      // onTapOutside: (_) {
-      //   if (Navigator.canPop(context)) {
-      //     Navigator.pop(context);
-      //   }
-      // },
+      onTapOutside: (_) {
+        Navigator.pop(context);
+        setState(() => isPopup = false);
+      },
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 46, vertical: 25),
+        padding: EdgeInsets.symmetric(horizontal: 46, vertical: 0),
         child: Column(
-          spacing: 10,
+          spacing: 8,
           children: [
             Flexible(
               child: Material(
-                elevation: 2,
-                color: Theme.of(context).colorScheme.surfaceContainer,
+                color: theme.colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(37),
                 child: Padding(
                   padding: EdgeInsetsGeometry.only(
@@ -320,6 +319,28 @@ class HomeScreenState extends State<HomeScreen> {
                           Expanded(child: _saveStateMenuButton()),
                           Expanded(child: _restoreStateMenuButton(context)),
                         ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 17),
+              child: Material(
+                color: theme.colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(18),
+                child: InkWell(
+                  onTap: () {},
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(16),
+                        child: const Text(
+                          'Lock Signal-Ratio',
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ),
                     ],
                   ),
@@ -351,6 +372,7 @@ class HomeScreenState extends State<HomeScreen> {
                   );
                 },
               );
+              setState(() => isPopup = true);
             },
             child: ListenableBuilder(
               listenable: widget.homeModel.load,

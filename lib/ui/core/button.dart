@@ -19,7 +19,7 @@ class Button extends StatelessWidget {
   build(BuildContext context) {
     final borderRadius = BorderRadius.all(Radius.circular(17));
     return Material(
-      elevation: 4,
+      elevation: 1,
       borderRadius: borderRadius,
       child: ClipRRect(
         borderRadius: borderRadius,
