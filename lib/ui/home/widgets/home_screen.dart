@@ -1,11 +1,16 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
+import 'package:too_many_tabs/ui/core/button.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
@@ -218,6 +223,115 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _restoreStateMenuButton(BuildContext context) {
+    return Button(
+      layout: ButtonLayout.iconLeft,
+      icon: Symbols.arrow_upward,
+      label: 'Import',
+      onPressed: () async {
+        final PlatformFile platformFile;
+        {
+          final result = await FilePicker.platform.pickFiles();
+          if (result == null) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: const Text('no picked file')));
+            return;
+          }
+          platformFile = result.files.first;
+        }
+        final path = platformFile.path;
+        if (path == null) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: const Text('null path')));
+          return;
+        }
+        final result = await restoreDatabase(path);
+        switch (result) {
+          case Error<void>():
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('restoreDatabase: ${result.error}')),
+            );
+            return;
+          case Ok<void>():
+            exit(0);
+        }
+      },
+    );
+  }
+
+  Widget _saveStateMenuButton() {
+    return Button(
+      layout: ButtonLayout.iconRight,
+      icon: Symbols.arrow_downward,
+      label: "Save",
+      onPressed: () async {
+        final data = await saveDatabase();
+
+        await FilePicker.platform.saveFile(
+          dialogTitle: "Keep state.db safe in a cozy spot!",
+          fileName:
+              "tmr_state.${DateFormat('MMMM.dd.hh_mm_ss_aa').format(DateTime.now())}.db",
+          bytes: data,
+        );
+
+        exit(0);
+      },
+    );
+  }
+
+  Widget _menu() {
+    return TapRegion(
+      // onTapOutside: (_) {
+      //   if (Navigator.canPop(context)) {
+      //     Navigator.pop(context);
+      //   }
+      // },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 46, vertical: 25),
+        child: Column(
+          spacing: 10,
+          children: [
+            Flexible(
+              child: Material(
+                elevation: 2,
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(37),
+                child: Padding(
+                  padding: EdgeInsetsGeometry.only(
+                    bottom: 14,
+                    top: 18,
+                    left: 27,
+                    right: 27,
+                  ),
+                  child: Column(
+                    spacing: 20,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('State File', style: TextStyle(fontSize: 20)),
+                      Row(
+                        spacing: 8,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(child: _saveStateMenuButton()),
+                          Expanded(child: _restoreStateMenuButton(context)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _bar() {
     if (isPopup) {
       return SizedBox.shrink();
@@ -233,18 +347,7 @@ class HomeScreenState extends State<HomeScreen> {
                 builder: (context) {
                   return Scaffold(
                     backgroundColor: Colors.black.withValues(alpha: 0),
-                    body: TapRegion(
-                      onTapOutside: (_) {
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        spacing: 10,
-                        children: [],
-                      ),
-                    ), // Center
+                    body: _menu(), // Center
                   );
                 },
               );

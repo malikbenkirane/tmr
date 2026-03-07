@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:too_many_tabs/routing/routes.dart';
+import 'package:too_many_tabs/ui/core/button.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
-import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -97,7 +97,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _Button(
+                            Button(
+                              layout: ButtonLayout.iconLeft,
                               icon: Icons.settings_backup_restore,
                               label: 'Import state.db',
                               onPressed: () async {
@@ -141,7 +142,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 }
                               },
                             ),
-                            _Button(
+                            Button(
+                              layout: ButtonLayout.iconLeft,
                               icon: Symbols.download_for_offline,
                               label: "Save state.db",
                               onPressed: () async {
@@ -169,58 +171,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           popupWidget ?? SizedBox.shrink(),
         ],
-      ),
-    );
-  }
-}
-
-class _Button extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final void Function() onPressed;
-  const _Button({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-  @override
-  build(BuildContext context) {
-    final fg = colorCompositionFromAction(
-      context,
-      ApplicationAction.downloadBackup,
-    ).foreground;
-
-    final bg = colorCompositionFromAction(
-      context,
-      ApplicationAction.downloadBackup,
-    ).background;
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onPressed,
-          child: SizedBox(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              child: Row(
-                spacing: 10,
-                children: [
-                  Icon(icon, size: 30, color: fg),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(label, style: TextStyle(color: fg, fontSize: 18)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
