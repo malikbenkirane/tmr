@@ -82,7 +82,7 @@ class HomeScreenState extends State<HomeScreen> {
               as Result<SignalRatio?>;
       switch (result) {
         case Error<SignalRatio?>():
-          debugPrint('[ERROR] updateSpecialSessionStatus: ${result.error}');
+        // debugPrint('[ERROR] updateSpecialSessionStatus: ${result.error}');
         default:
       }
     }

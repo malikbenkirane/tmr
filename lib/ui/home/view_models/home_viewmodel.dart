@@ -157,7 +157,7 @@ class HomeViewmodel extends ChangeNotifier {
               for (final routine in result.value) {
                 final spent = routine.spentAt(at);
                 s += spent > routine.goal ? routine.goal : spent;
-                debugPrint('[D] $routine $s $spent');
+                // debugPrint('[D] $routine $s $spent');
                 if (spent > routine.goal) {
                   o += spent - routine.goal;
                 }
@@ -173,7 +173,7 @@ class HomeViewmodel extends ChangeNotifier {
         at: at,
         firstSessionStartedAt: firstSessionStartedAt,
       );
-      debugPrint('$snr signal_sec=${signal.inSeconds}');
+      // debugPrint('$snr signal_sec=${signal.inSeconds}');
       _signalRatio = snr;
       return Result.ok(snr);
     } finally {
