@@ -101,7 +101,7 @@ class _ArchivesScreenState extends State<BinScreen> {
                   children: [
                     FloatingAction(
                       onPressed: () => context.go(Routes.archives),
-                      icon: Icons.menu,
+                      icon: Icon(Icons.menu),
                       colorComposition: colorCompositionFromAction(
                         context,
                         ApplicationAction.backlogRoutine,
@@ -109,7 +109,7 @@ class _ArchivesScreenState extends State<BinScreen> {
                     ),
                     FloatingAction(
                       onPressed: () => context.go(Routes.home),
-                      icon: Icons.home,
+                      icon: Icon(Icons.home),
                       colorComposition: colorCompositionFromAction(
                         context,
                         ApplicationAction.toHome,

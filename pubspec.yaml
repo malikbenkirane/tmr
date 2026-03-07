@@ -58,6 +58,7 @@ dependencies:
   clipboard: ^3.0.14
   flutter_background_service: ^5.1.0
   shared_preferences: ^2.5.4
+  duration: ^4.0.3
 
 dev_dependencies:
   flutter_test:

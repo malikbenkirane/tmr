@@ -521,7 +521,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 },
                               );
                             },
-                            icon: Icons.add,
+                            icon: Icon(Icons.add),
                             colorComposition: colorCompositionFromAction(
                               context,
                               ApplicationAction.addRoutine,
@@ -531,7 +531,7 @@ class HomeScreenState extends State<HomeScreen> {
                     isPopup
                         ? SizedBox.shrink()
                         : FloatingAction(
-                            icon: Icons.menu,
+                            icon: Icon(Icons.menu),
                             onPressed: () {
                               context.go(Routes.archives);
                             },

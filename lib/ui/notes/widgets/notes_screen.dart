@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -17,6 +19,8 @@ import 'package:too_many_tabs/ui/notes/widgets/note.dart';
 import 'package:too_many_tabs/utils/format_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:clipboard/clipboard.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:duration/duration.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({
@@ -37,9 +41,20 @@ class NotesScreen extends StatefulWidget {
 class _NotesScreenState extends State<NotesScreen> {
   bool showActionButtons = true;
 
+  late final Timer _timer;
+
   @override
   void initState() {
     super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override
@@ -138,80 +153,48 @@ class _NotesScreenState extends State<NotesScreen> {
                           ),
                         ),
                         Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              GestureDetector(
-                                onTap: () => widget
-                                    .homeViewmodel
-                                    .startOrStopRoutine
-                                    .execute(routine.id),
-                                child: ListenableBuilder(
-                                  listenable: widget.homeViewmodel,
-                                  builder: (context, _) {
-                                    final routineUpdate = _getRoutine(
-                                      routine.id,
-                                    );
-                                    if (routineUpdate == null) {
-                                      return SizedBox.shrink();
-                                    }
-                                    if (!routineUpdate.running) {
-                                      return Column(
-                                        spacing: 2,
-                                        children: [
-                                          Icon(
-                                            Symbols.play_circle,
-                                            color: foreground,
-                                          ),
-                                          Text(
-                                            'Start',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: foreground,
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    }
-                                    final now = DateTime.now();
-                                    final spent = routineUpdate.spentAt(now);
-                                    final to = now.add(
-                                      routineUpdate.goal - spent,
-                                    );
-                                    return Column(
-                                      spacing: 2,
-                                      children: [
-                                        Icon(
-                                          Symbols.stop_circle,
-                                          color: foreground,
-                                        ),
-                                        spent < routineUpdate.goal
-                                            ? Text(
-                                                'ETA ${DateFormat.jm().format(to)}',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w300,
-                                                  color: foreground,
-                                                ),
-                                              )
-                                            : Text(
-                                                'overtime',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w400,
-                                                  fontSize: 14,
-                                                  color: foreground,
-                                                ),
-                                              ),
-                                      ],
-                                    ); // Column
-                                  },
-                                ), // ListenableBuilder
-                              ), // GestureDetector: toggle routine start/stop
-                            ],
-                          ), // Row: align Start/Stop
+                          child: ListenableBuilder(
+                            listenable: widget.homeViewmodel,
+                            builder: (context, _) {
+                              final r = widget.notesViewmodel.routine;
+                              if (r == null) return SizedBox.shrink();
+                              final u = _getRoutine(r.id);
+                              if (u == null) return SizedBox.shrink();
+                              if (!u.running) {
+                                return Text(
+                                  'total spent: ${routine.spent.pretty(tersity: DurationTersity.minute, abbreviated: true)}',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    color: labelColor(
+                                      context,
+                                      Label.appBarForeground,
+                                    ),
+                                    fontSize: 12,
+                                  ),
+                                );
+                              }
+                              final start = u.lastStarted;
+                              if (start == null) return SizedBox.shrink();
+                              timeago.setLocaleMessages(
+                                'en',
+                                _MyCustomMessages(),
+                              );
+                              return Text(
+                                'started ${timeago.format(start)}',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: labelColor(
+                                    context,
+                                    Label.appBarForeground,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
-                    ), // Row
+                    ),
             ),
             body: SafeArea(
               child: Stack(
@@ -298,34 +281,95 @@ class _NotesScreenState extends State<NotesScreen> {
     return routineUpdate;
   }
 
+  Widget _eta({required RoutineSummary routine, required DateTime at}) {
+    final spent = routine.spentAt(at);
+    if (spent > routine.goal) {
+      return SizedBox.shrink();
+    }
+    final to = at.add(routine.goal - spent);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 2,
+      children: [
+        Icon(Symbols.keyboard_double_arrow_right),
+        Text(DateFormat.jm().format(to)),
+      ],
+    );
+  }
+
   List<Widget> _actionButtons(BuildContext context) {
     return showActionButtons
         ? [
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: EdgeInsets.only(left: 20),
-                child: FloatingAction(
-                  onPressed: _notePopup,
-                  icon: Icons.add,
-                  colorComposition: colorCompositionFromAction(
-                    context,
-                    ApplicationAction.addNote,
+            Padding(
+              padding: EdgeInsets.only(left: 20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 10,
+                children: [
+                  FloatingAction(
+                    onPressed: _notePopup,
+                    icon: Icon(Icons.add),
+                    colorComposition: colorCompositionFromAction(
+                      context,
+                      ApplicationAction.addNote,
+                    ),
                   ),
-                ),
+                  ListenableBuilder(
+                    listenable: widget.homeViewmodel,
+                    builder: (context, _) {
+                      final RoutineSummary routine;
+                      {
+                        final r = widget.notesViewmodel.routine;
+                        if (r == null) {
+                          return SizedBox.shrink();
+                        }
+                        final u = _getRoutine(r.id);
+                        if (u == null) {
+                          return SizedBox.shrink();
+                        }
+                        routine = u;
+                      }
+                      if (routine.running) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FloatingAction(
+                              onPressed: () => widget
+                                  .homeViewmodel
+                                  .startOrStopRoutine
+                                  .execute(routine.id),
+                              icon: Icon(Symbols.pause, fill: 1),
+                              colorComposition: colorCompositionFromAction(
+                                context,
+                                ApplicationAction.stopRoutine,
+                              ),
+                            ),
+                            _eta(routine: routine, at: DateTime.now()),
+                          ],
+                        );
+                      }
+                      return FloatingAction(
+                        onPressed: () => widget.homeViewmodel.startOrStopRoutine
+                            .execute(routine.id),
+                        icon: Icon(Symbols.play_arrow, fill: 1),
+                        colorComposition: colorCompositionFromAction(
+                          context,
+                          ApplicationAction.startRoutine,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: Padding(
-                padding: EdgeInsets.only(right: 20),
-                child: FloatingAction(
-                  onPressed: () => context.go(Routes.home),
-                  icon: Icons.home,
-                  colorComposition: colorCompositionFromAction(
-                    context,
-                    ApplicationAction.toHome,
-                  ),
+            Padding(
+              padding: EdgeInsets.only(right: 20),
+              child: FloatingAction(
+                onPressed: () => context.go(Routes.home),
+                icon: Icon(Icons.home),
+                colorComposition: colorCompositionFromAction(
+                  context,
+                  ApplicationAction.toHome,
                 ),
               ),
             ),
@@ -430,7 +474,7 @@ class _NotesScreenState extends State<NotesScreen> {
                           _toggleActionButtons();
                           Navigator.pop(context);
                         },
-                        icon: Icons.close,
+                        icon: Icon(Icons.close),
                         colorComposition: colorCompositionFromAction(
                           context,
                           ApplicationAction.cancelAddNote,
@@ -443,7 +487,7 @@ class _NotesScreenState extends State<NotesScreen> {
                           _toggleActionButtons();
                           Navigator.pop(context);
                         },
-                        icon: Icons.add,
+                        icon: Icon(Icons.add),
                         colorComposition: colorCompositionFromAction(
                           context,
                           ApplicationAction.addNote,
@@ -459,4 +503,39 @@ class _NotesScreenState extends State<NotesScreen> {
       },
     );
   }
+}
+
+class _MyCustomMessages implements timeago.LookupMessages {
+  @override
+  String prefixAgo() => '';
+  @override
+  String prefixFromNow() => '';
+  @override
+  String suffixAgo() => '';
+  @override
+  String suffixFromNow() => '';
+  @override
+  String lessThanOneMinute(int seconds) => 'now';
+  @override
+  String aboutAMinute(int minutes) => '${minutes}m ago';
+  @override
+  String minutes(int minutes) => '${minutes}m ago';
+  @override
+  String aboutAnHour(int minutes) => '${minutes}m ago';
+  @override
+  String hours(int hours) => '${hours}h ago';
+  @override
+  String aDay(int hours) => '${hours}h ago';
+  @override
+  String days(int days) => '${days}d ago';
+  @override
+  String aboutAMonth(int days) => '${days}d ago';
+  @override
+  String months(int months) => '${months}mo ago';
+  @override
+  String aboutAYear(int year) => '${year}y ago';
+  @override
+  String years(int years) => '${years}y ago';
+  @override
+  String wordSeparator() => ' ';
 }

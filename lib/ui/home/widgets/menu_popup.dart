@@ -164,7 +164,7 @@ class _PopupAction extends StatelessWidget {
         padding: EdgeInsets.only(left: 20),
         child: FloatingAction(
           onPressed: action,
-          icon: icon,
+          icon: Icon(icon),
           colorComposition: colorCompositionFromAction(
             context,
             applicationAction,

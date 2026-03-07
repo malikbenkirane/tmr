@@ -11,7 +11,7 @@ class FloatingAction extends StatelessWidget {
 
   final ColorComposition colorComposition;
   final void Function() onPressed;
-  final IconData icon;
+  final Icon icon;
 
   @override
   build(BuildContext context) {
@@ -21,7 +21,7 @@ class FloatingAction extends StatelessWidget {
       foregroundColor: colorComposition.foreground,
       backgroundColor: colorComposition.background,
       onPressed: onPressed,
-      child: Icon(icon),
+      child: icon,
     );
   }
 }
