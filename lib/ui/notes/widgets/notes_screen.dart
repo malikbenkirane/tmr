@@ -16,7 +16,6 @@ import 'package:too_many_tabs/ui/home/widgets/goal_popup.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
 import 'package:too_many_tabs/ui/notes/widgets/note.dart';
-import 'package:too_many_tabs/utils/format_duration.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -57,6 +56,143 @@ class _NotesScreenState extends State<NotesScreen> {
     super.dispose();
   }
 
+  Widget _goalLabel({
+    required Duration routineGoal,
+    required Duration dayGoal,
+  }) {
+    final foreground = labelColor(context, Label.appBarForeground);
+    final Text routineGoalText;
+    if (routineGoal == Duration.zero) {
+      routineGoalText = Text(
+        'set goal',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w300,
+          color: foreground,
+        ),
+      );
+    } else {
+      routineGoalText = Text(
+        routineGoal.pretty(abbreviated: true, tersity: DurationTersity.minute),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w300,
+          color: foreground,
+        ),
+      );
+    }
+    final Text dayGoalText;
+    if (dayGoal == Duration.zero) {
+      dayGoalText = Text(
+        '/ no goal',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w300,
+          color: foreground,
+        ),
+      );
+    } else {
+      dayGoalText = Text(
+        '/ ${dayGoal.pretty(abbreviated: true, tersity: DurationTersity.minute)}',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w300,
+          color: foreground,
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [routineGoalText, dayGoalText],
+    );
+  }
+
+  Widget _goalSection(RoutineSummary routine) {
+    final foreground = labelColor(context, Label.appBarForeground);
+    return GestureDetector(
+      child: ListenableBuilder(
+        listenable: widget.homeViewmodel,
+        builder: (context, _) {
+          final routineUpdate = _getRoutine(routine.id);
+          var dayGoal = Duration.zero;
+          for (final routine in widget.homeViewmodel.routines) {
+            dayGoal += routine.$1.goal;
+          }
+          if (routineUpdate == null) {
+            return SizedBox.shrink();
+          }
+          final goal = routineUpdate.goal;
+          if (goal == Duration.zero) {
+            return Row(
+              children: [
+                Stack(
+                  alignment: AlignmentGeometry.center,
+                  children: [
+                    Icon(
+                      Symbols.trophy,
+                      size: 30,
+                      color: foreground.withValues(alpha: .4),
+                    ),
+                    Icon(
+                      Symbols.close,
+                      size: 50,
+                      weight: .2,
+                      color: foreground,
+                    ),
+                  ],
+                ),
+                _goalLabel(dayGoal: dayGoal, routineGoal: goal),
+              ],
+            );
+          }
+          return Row(
+            spacing: 2,
+            children: [
+              _goalLabel(dayGoal: dayGoal, routineGoal: goal),
+              Icon(Symbols.trophy, size: 30, color: foreground),
+            ],
+          );
+        },
+      ),
+      onTap: () {
+        _goalPopup();
+      },
+    );
+  }
+
+  Widget _sessionSection(RoutineSummary routine) {
+    return ListenableBuilder(
+      listenable: widget.homeViewmodel,
+      builder: (context, _) {
+        final r = widget.notesViewmodel.routine;
+        if (r == null) return SizedBox.shrink();
+        final u = _getRoutine(r.id);
+        if (u == null) return SizedBox.shrink();
+        if (!u.running) {
+          return Text(
+            'total spent: ${routine.spent.pretty(tersity: DurationTersity.minute, abbreviated: true)}',
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              color: labelColor(context, Label.appBarForeground),
+              fontSize: 12,
+            ),
+          );
+        }
+        final start = u.lastStarted;
+        if (start == null) return SizedBox.shrink();
+        timeago.setLocaleMessages('en', _MyCustomMessages());
+        return Text(
+          'started ${timeago.format(start)}',
+          textAlign: TextAlign.left,
+          style: TextStyle(
+            fontSize: 12,
+            color: labelColor(context, Label.appBarForeground),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   build(BuildContext context) {
     return ListenableBuilder(
@@ -85,66 +221,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Expanded(
-                          child: GestureDetector(
-                            child: ListenableBuilder(
-                              listenable: widget.homeViewmodel,
-                              builder: (context, _) {
-                                final routineUpdate = _getRoutine(routine.id);
-                                var dayGoal = Duration.zero;
-                                for (final routine
-                                    in widget.homeViewmodel.routines) {
-                                  dayGoal += routine.$1.goal;
-                                }
-                                return routineUpdate == null
-                                    ? SizedBox.shrink()
-                                    : Row(
-                                        spacing: 2,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Icon(
-                                            Symbols.trophy,
-                                            size: 30,
-                                            color: foreground,
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                formatUntilGoal(
-                                                  routineUpdate.goal,
-                                                  Duration.zero,
-                                                ),
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w300,
-                                                  color: foreground,
-                                                ),
-                                              ), // Text: routine goal
-                                              Text(
-                                                formatUntilGoal(
-                                                  dayGoal,
-                                                  Duration.zero,
-                                                ),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w300,
-                                                  color: foreground,
-                                                ),
-                                              ),
-                                            ],
-                                          ), // Column
-                                        ],
-                                      ); // Row
-                              },
-                            ),
-                            onTap: () {
-                              _goalPopup();
-                            },
-                          ),
-                        ), // GestureDetector: goal setting
+                        Expanded(child: _sessionSection(routine)),
                         Expanded(
                           child: Text(
                             routine.name,
@@ -153,44 +230,9 @@ class _NotesScreenState extends State<NotesScreen> {
                           ),
                         ),
                         Expanded(
-                          child: ListenableBuilder(
-                            listenable: widget.homeViewmodel,
-                            builder: (context, _) {
-                              final r = widget.notesViewmodel.routine;
-                              if (r == null) return SizedBox.shrink();
-                              final u = _getRoutine(r.id);
-                              if (u == null) return SizedBox.shrink();
-                              if (!u.running) {
-                                return Text(
-                                  'total spent: ${routine.spent.pretty(tersity: DurationTersity.minute, abbreviated: true)}',
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    color: labelColor(
-                                      context,
-                                      Label.appBarForeground,
-                                    ),
-                                    fontSize: 12,
-                                  ),
-                                );
-                              }
-                              final start = u.lastStarted;
-                              if (start == null) return SizedBox.shrink();
-                              timeago.setLocaleMessages(
-                                'en',
-                                _MyCustomMessages(),
-                              );
-                              return Text(
-                                'started ${timeago.format(start)}',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: labelColor(
-                                    context,
-                                    Label.appBarForeground,
-                                  ),
-                                ),
-                              );
-                            },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [_goalSection(routine)],
                           ),
                         ),
                       ],
