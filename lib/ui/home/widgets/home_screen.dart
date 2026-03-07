@@ -109,7 +109,7 @@ class HomeScreenState extends State<HomeScreen> {
     return SizedBox(
       height: height,
       child: Row(
-        spacing: s >= 98 ? 0 : 5,
+        spacing: (s == 0 || s == 100) ? 0 : 5,
         children: [
           Flexible(
             flex: s,
@@ -118,42 +118,50 @@ class HomeScreenState extends State<HomeScreen> {
                 color: labelColor(context, Label.signalBar),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(radius),
-                  topRight: s >= 98 ? Radius.circular(radius) : Radius.zero,
+                  topRight: s == 100 ? Radius.circular(radius) : Radius.zero,
                 ),
               ),
             ),
           ),
           Flexible(
             flex: 100 - s,
-            child: Row(
-              spacing: (s >= 98 || o <= 2) ? 0 : 5,
-              children: [
-                Flexible(
-                  flex: o,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: labelColor(context, Label.noiseBar),
-                      borderRadius: o > 0
-                          ? null
-                          : BorderRadius.only(
+            child: s == 100
+                ? SizedBox.shrink()
+                : Row(
+                    spacing: (o == 100 || o == 0) ? 0 : 5,
+                    children: [
+                      Flexible(
+                        flex: o,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: labelColor(context, Label.noiseBar),
+                            borderRadius: BorderRadius.only(
+                              topLeft: o > 0 && s == 0
+                                  ? Radius.circular(radius)
+                                  : Radius.zero,
+                              topRight: o == 100
+                                  ? Radius.circular(radius)
+                                  : Radius.zero,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Flexible(
+                        flex: 100 - o,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: labelColor(context, Label.noiseBar),
+                            borderRadius: BorderRadius.only(
+                              topLeft: s > 0 || o > 0
+                                  ? Radius.zero
+                                  : Radius.circular(radius),
                               topRight: Radius.circular(radius),
                             ),
-                    ),
-                  ),
-                ),
-                Flexible(
-                  flex: 100 - o,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: labelColor(context, Label.noiseBar),
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(radius),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
@@ -214,61 +222,72 @@ class HomeScreenState extends State<HomeScreen> {
     if (isPopup) {
       return SizedBox.shrink();
     }
-    return GestureDetector(
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return Scaffold(
-              backgroundColor: Colors.black.withValues(alpha: 0),
-              body: TapRegion(
-                onTapOutside: (_) {
-                  if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                  }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return Scaffold(
+                    backgroundColor: Colors.black.withValues(alpha: 0),
+                    body: TapRegion(
+                      onTapOutside: (_) {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 10,
+                        children: [],
+                      ),
+                    ), // Center
+                  );
                 },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 10,
-                  children: [],
-                ),
-              ), // Center
-            );
-          },
+              );
+            },
+            child: ListenableBuilder(
+              listenable: widget.homeModel.load,
+              builder: (context, child) {
+                return Loader(
+                  error: widget.homeModel.load.error,
+                  running: widget.homeModel.load.running,
+                  onError: widget.homeModel.load.execute,
+                  hide: true,
+                  child: child!,
+                );
+              },
+              child: ListenableBuilder(
+                listenable: widget.homeModel,
+                builder: (context, _) {
+                  final r = signalNoiseRatio ?? SignalNoiseRatio();
+                  // final width = MediaQuery.of(context).size.width * .3;
+                  const radius = 10.0;
+                  const height = 8.0;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          spacing: height / 2,
+                          children: [
+                            _topBar(radius: radius, height: height, r: r),
+                            _bottomBar(radius: radius, height: height),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
         );
       },
-      child: ListenableBuilder(
-        listenable: widget.homeModel.load,
-        builder: (context, child) {
-          return Loader(
-            error: widget.homeModel.load.error,
-            running: widget.homeModel.load.running,
-            onError: widget.homeModel.load.execute,
-            hide: true,
-            child: child!,
-          );
-        },
-        child: ListenableBuilder(
-          listenable: widget.homeModel,
-          builder: (context, _) {
-            final r = signalNoiseRatio ?? SignalNoiseRatio();
-            // final width = MediaQuery.of(context).size.width * .3;
-            const radius = 10.0;
-            const height = 8.0;
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: height / 2,
-                children: [
-                  _topBar(radius: radius, height: height, r: r),
-                  _bottomBar(radius: radius, height: height),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
     );
   }
 

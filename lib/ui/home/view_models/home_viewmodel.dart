@@ -155,11 +155,7 @@ class HomeViewmodel extends ChangeNotifier {
       if (overtime.inSeconds == 0) {
         return Result.ok(SignalNoiseRatio(ratio: ratio));
       }
-      final q2 = (d - signal).inSeconds / overtime.inSeconds;
-      if (q2 == 1) {
-        Result.ok(SignalNoiseRatio(ratio: ratio, overtimeRatio: 1));
-      }
-      final overtimeRatio = 1 / (q2 - 1);
+      final overtimeRatio = overtime.inSeconds / (d - signal).inSeconds;
       return Result.ok(
         SignalNoiseRatio(ratio: ratio, overtimeRatio: overtimeRatio),
       );
