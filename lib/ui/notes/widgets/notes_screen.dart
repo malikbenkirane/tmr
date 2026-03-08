@@ -332,6 +332,9 @@ class _NotesScreenState extends State<NotesScreen> {
         if (eta == null) {
           return SizedBox.shrink();
         }
+        if (eta.isBefore(DateTime.now())) {
+          return SizedBox.shrink();
+        }
         return GestureDetector(
           onTap: () {
             final ref = widget.notesViewmodel.etaRef;
