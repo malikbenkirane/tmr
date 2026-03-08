@@ -173,7 +173,7 @@ GoRouter router() => GoRouter(
               return ErrorScreen();
             case Ok<DatabaseClient>():
           }
-          debugPrint('${state.pathParameters}');
+          // debugPrint('${state.pathParameters}');
           final routineId = state.pathParameters['routineId']!;
 
           final routinesRepository = RoutinesRepositoryLocal(

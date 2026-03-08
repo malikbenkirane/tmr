@@ -215,6 +215,7 @@ class _NotesScreenState extends State<NotesScreen> {
           final foreground = labelColor(context, Label.appBarForeground);
           return Scaffold(
             appBar: AppBar(
+              automaticallyImplyLeading: false,
               backgroundColor: labelColor(context, Label.appBarBackground),
               title: routine == null
                   ? SizedBox.shrink()
@@ -323,20 +324,38 @@ class _NotesScreenState extends State<NotesScreen> {
     return routineUpdate;
   }
 
-  Widget _eta({required RoutineSummary routine, required DateTime at}) {
-    final spent = routine.spentAt(at);
-    if (spent > routine.goal) {
-      return SizedBox.shrink();
-    }
-    final to = at.add(routine.goal - spent);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 2,
-      children: [
-        Icon(Symbols.keyboard_double_arrow_right),
-        Text(DateFormat.jm().format(to)),
-      ],
+  Widget _etaWidget() {
+    return ListenableBuilder(
+      listenable: widget.notesViewmodel,
+      builder: (context, _) {
+        final eta = widget.notesViewmodel.eta;
+        if (eta == null) {
+          return SizedBox.shrink();
+        }
+        return GestureDetector(
+          onTap: () {
+            final ref = widget.notesViewmodel.etaRef;
+            if (ref == null) return;
+            context.push('/notes/${ref.id}');
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 2,
+            children: [
+              Icon(Symbols.keyboard_double_arrow_right),
+              Text(DateFormat.jm().format(eta)),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  void _startOrStopRoutine() async {
+    final routine = widget.notesViewmodel.routine;
+    if (routine == null) return;
+    await widget.homeViewmodel.startOrStopRoutine.execute(routine.id);
+    await widget.notesViewmodel.updatePomoEta.execute(DateTime.now());
   }
 
   List<Widget> _actionButtons(BuildContext context) {
@@ -371,33 +390,26 @@ class _NotesScreenState extends State<NotesScreen> {
                         }
                         routine = u;
                       }
-                      if (routine.running) {
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FloatingAction(
-                              onPressed: () => widget
-                                  .homeViewmodel
-                                  .startOrStopRoutine
-                                  .execute(routine.id),
-                              icon: Icon(Symbols.pause, fill: 1),
-                              colorComposition: colorCompositionFromAction(
-                                context,
-                                ApplicationAction.stopRoutine,
-                              ),
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FloatingAction(
+                            onPressed: _startOrStopRoutine,
+                            icon: Icon(
+                              routine.running
+                                  ? Symbols.pause
+                                  : Symbols.play_arrow,
+                              fill: 1,
                             ),
-                            _eta(routine: routine, at: DateTime.now()),
-                          ],
-                        );
-                      }
-                      return FloatingAction(
-                        onPressed: () => widget.homeViewmodel.startOrStopRoutine
-                            .execute(routine.id),
-                        icon: Icon(Symbols.play_arrow, fill: 1),
-                        colorComposition: colorCompositionFromAction(
-                          context,
-                          ApplicationAction.startRoutine,
-                        ),
+                            colorComposition: colorCompositionFromAction(
+                              context,
+                              routine.running
+                                  ? ApplicationAction.stopRoutine
+                                  : ApplicationAction.startRoutine,
+                            ),
+                          ),
+                          _etaWidget(),
+                        ],
                       );
                     },
                   ),

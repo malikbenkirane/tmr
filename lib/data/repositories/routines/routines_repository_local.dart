@@ -496,4 +496,9 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   Future<Result<DateTime?>> firstSession() async {
     return _databaseClient.firstStart();
   }
+
+  @override
+  Future<Result<(int, DateTime)?>> endOfLastSession() {
+    return _databaseClient.lastStop();
+  }
 }

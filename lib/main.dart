@@ -168,14 +168,14 @@ void main() async {
 
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
-    debugPrint(
-      [
-        'level=${record.level}',
-        'time=${record.time}',
-        'logger=${record.loggerName}',
-        'msg=${record.message}',
-      ].join(' '),
-    );
+    // debugPrint(
+    //   [
+    //     'level=${record.level}',
+    //     'time=${record.time}',
+    //     'logger=${record.loggerName}',
+    //     'msg=${record.message}',
+    //   ].join(' '),
+    // );
   });
 
   await SystemChrome.setPreferredOrientations([

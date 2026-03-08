@@ -290,6 +290,25 @@ class DatabaseClient {
     }
   }
 
+  Future<Result<(int, DateTime)?>> lastStop() async {
+    try {
+      final rows = await _database.query(
+        'routines_logs',
+        where: 'state = ?',
+        whereArgs: [RoutineState.stopped.code],
+        orderBy: 'updated_at DESC',
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        return Result.ok(null);
+      }
+      final {'routine_id': id as int, 'updated_at': t as String} = rows[0];
+      return Result.ok((id, DateTime.parse(t)));
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
   Future<Result<DateTime?>> firstStart() async {
     try {
       final now = DateTime.now();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
+import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/utils/command.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -13,6 +14,7 @@ class NotesViewmodel extends ChangeNotifier {
     load = Command0(_load)..execute();
     addNote = Command1(_addNote);
     dismissNote = Command1(_dismissNote);
+    updatePomoEta = Command1(_updatePomoEta);
   }
 
   final RoutinesRepository _repo;
@@ -22,6 +24,7 @@ class NotesViewmodel extends ChangeNotifier {
   late Command0 load;
   late Command1<void, NoteSummary> addNote;
   late Command1<void, int> dismissNote;
+  late Command1<void, DateTime> updatePomoEta;
 
   RoutineSummary? _routine;
   List<NoteSummary> _notes = [];
@@ -67,6 +70,7 @@ class NotesViewmodel extends ChangeNotifier {
           _log.fine('_load: ${_notes.length} notes');
           _notes.addAll(dismissed);
       }
+      await _updatePomoEta(DateTime.now());
       return resultRoutineSummary;
     } finally {
       notifyListeners();
@@ -107,5 +111,124 @@ class NotesViewmodel extends ChangeNotifier {
     } finally {
       notifyListeners();
     }
+  }
+
+  DateTime? _eta;
+  DateTime? get eta => _eta;
+
+  Future<Result<(int, DateTime)?>> _endOfLastSession() async {
+    try {
+      final result = await _repo.endOfLastSession();
+      final (int, DateTime)? stop;
+
+      switch (result) {
+        case Error<(int, DateTime)?>():
+          return Result.error(result.error);
+        case Ok<(int, DateTime)?>():
+          stop = result.value;
+      }
+      return Result.ok(stop);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  RoutineSummary? _running, _stopped;
+  RoutineSummary? get etaRef => () {
+    // debugPrint('''
+    //   running=$_running
+    //   stopped=$_stopped
+    // ''');
+    return _running ?? _stopped;
+  }();
+
+  Future<Result<void>> _updatePomoEta(DateTime at) async {
+    try {
+      if (routine == null) {
+        _eta = null;
+        return Result.ok(null);
+      }
+
+      _running = null;
+      _stopped = null;
+
+      final List<RoutineSummary> routines = [];
+      {
+        for (final bin in RoutineBin.values) {
+          final result = await _repo.getRoutinesList(bin);
+          switch (result) {
+            case Error<List<RoutineSummary>>():
+              return Result.error(result.error);
+            case Ok<List<RoutineSummary>>():
+              for (final routine in result.value) {
+                routines.add(routine);
+                if (routine.running) {
+                  _running = routine;
+                }
+              }
+          }
+        }
+      }
+
+      // debugPrint('_running=$_running');
+
+      final DateTime stop;
+      {
+        final result = await _endOfLastSession();
+        switch (result) {
+          case Error<(int, DateTime)?>():
+            // debugPrint('_endOfLastSession: ${result.error}');
+            return Result.error(result.error);
+          case Ok<(int, DateTime)?>():
+            final value = result.value;
+            if (value == null) {
+              _eta = null;
+              return Result.ok(null);
+            }
+            stop = value.$2;
+            {
+              final result = await _repo.getRoutineSummary(value.$1);
+              switch (result) {
+                case Error<RoutineSummary>():
+                  return Result.error(result.error);
+                case Ok<RoutineSummary>():
+                  _stopped = result.value;
+              }
+            }
+        }
+      }
+
+      final now = DateTime.now();
+
+      if (_running != null) {
+        _eta = _etaRunningRoutine(routine: _running!, at: now);
+        return Result.ok(null);
+      }
+
+      _eta = stop.add(const Duration(minutes: 5));
+      if (_eta!.isBefore(now)) {
+        _eta = null;
+      }
+      return Result.ok(null);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  DateTime? _etaRunningRoutine({
+    required RoutineSummary routine,
+    required DateTime at,
+  }) {
+    final spent = routine.spentAt(at);
+    final start = routine.lastStarted!;
+    const pomo = Duration(minutes: 20);
+    if (spent > routine.goal) {
+      return start.add(pomo);
+    }
+    final left = routine.goal - spent;
+    if (left < pomo) {
+      return start.add(left);
+    }
+    return start.add(pomo);
   }
 }
