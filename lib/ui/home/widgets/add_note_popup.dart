@@ -1,68 +1,71 @@
 import 'package:flutter/material.dart';
-import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
-import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 
+@immutable
 class AddNotePopup extends StatefulWidget {
-  AddNotePopup({
-    super.key,
-    required this.onClose,
-    required this.viewModel,
-    required this.routineId,
-  });
+  final void Function() onCancel;
+  final void Function(String) onAdd;
 
-  final void Function() onClose;
-  final NotesViewmodel viewModel;
-  final int routineId;
-
-  // Expose a method that forwards the call to the State via a GlobalKey.
-  // This follows the Flutter best‑practice of keeping the State private
-  // while still allowing the widget to be interacted with from the outside.
-  final GlobalKey<AddNotePopupState> _stateKey = GlobalKey<AddNotePopupState>();
-
-  void commitNote() => _stateKey.currentState?.commitNote();
-  void cancelNote() => _stateKey.currentState?.cancelNote();
+  const AddNotePopup({super.key, required this.onCancel, required this.onAdd});
 
   @override
   State<AddNotePopup> createState() => AddNotePopupState();
-
-  // Provide the key to the State when it is created.
-  @override
-  GlobalKey<AddNotePopupState> get key => _stateKey;
 }
 
 class AddNotePopupState extends State<AddNotePopup> {
-  final noteTextController = TextEditingController();
+  final textController = TextEditingController();
 
-  void commitNote() {
-    final trimmed = noteTextController.text.trim();
-    if (trimmed.isEmpty) return;
-    widget.viewModel.addNote.execute(
-      NoteSummary(
-        note: noteTextController.text,
-        createdAt: DateTime.now(),
-        routineId: widget.routineId,
-        dismissed: false,
-      ),
-    );
-    widget.onClose();
-  }
+  // void commitNote() {
+  //   final trimmed = textController.text.trim();
+  //   if (trimmed.isEmpty) return;
+  //   widget.onClose();
+  // }
 
-  void cancelNote() {
-    widget.onClose();
-  }
+  // void cancelNote() {
+  //   widget.onClose();
+  // }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return TextField(
-      controller: noteTextController,
-      maxLines: null,
-      decoration: InputDecoration(
-        hintText: "Add note... 🖊️",
-        filled: true,
-        fillColor: theme.colorScheme.surfaceContainer,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-      ),
+  build(BuildContext context) {
+    return Column(
+      spacing: 18,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+            fillColor: labelColor(context, Label.dialogInputBackground),
+            filled: true,
+            hintText: "Type it...",
+          ),
+          maxLines: 5,
+          controller: textController,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                onPressed: widget.onCancel,
+                child: const Text('Never mind'),
+              ),
+            ),
+            SizedBox(
+              height: 50,
+              width: 125.9,
+              child: ElevatedButton(
+                onPressed: () => widget.onAdd(textController.text.trim()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: labelColor(context, Label.appBarBackground),
+                  foregroundColor: labelColor(context, Label.appBarForeground),
+                ),
+                child: const Text('Add'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

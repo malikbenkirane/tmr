@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
@@ -507,11 +508,6 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   void _notePopup() {
-    final popup = AddNotePopup(
-      onClose: () {},
-      viewModel: widget.notesViewmodel,
-      routineId: widget.notesViewmodel.routine!.id,
-    );
     _toggleActionButtons();
     showDialog(
       context: context,
@@ -525,35 +521,27 @@ class _NotesScreenState extends State<NotesScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 spacing: 20,
                 children: [
-                  popup,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      FloatingAction(
-                        onPressed: () {
-                          _toggleActionButtons();
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(Icons.close),
-                        colorComposition: colorCompositionFromAction(
-                          context,
-                          ApplicationAction.cancelAddNote,
+                  AddNotePopup(
+                    onCancel: () {
+                      Navigator.pop(context);
+                      setState(() => showActionButtons = true);
+                    },
+                    onAdd: (note) async {
+                      final routine = widget.notesViewmodel.routine;
+                      if (routine == null) return;
+                      await widget.notesViewmodel.addNote.execute(
+                        NoteSummary(
+                          note: note,
+                          createdAt: DateTime.now(),
+                          routineId: routine.id,
+                          dismissed: false,
                         ),
-                      ),
-                      FloatingAction(
-                        onPressed: () {
-                          popup.commitNote();
-                          widget.notesViewmodel.load.execute();
-                          _toggleActionButtons();
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(Icons.add),
-                        colorComposition: colorCompositionFromAction(
-                          context,
-                          ApplicationAction.addNote,
-                        ),
-                      ),
-                    ],
+                      );
+                      await widget.notesViewmodel.load.execute();
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                      setState(() => showActionButtons = true);
+                    },
                   ),
                 ],
               ),
