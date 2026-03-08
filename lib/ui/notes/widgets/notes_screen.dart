@@ -350,7 +350,10 @@ class _NotesScreenState extends State<NotesScreen> {
             spacing: 2,
             children: [
               Icon(Symbols.keyboard_double_arrow_right),
-              Text(DateFormat.jm().format(eta)),
+              Text(
+                DateFormat.jm().format(eta),
+                style: TextStyle(color: labelColor(context, Label.etaPomodoro)),
+              ),
             ],
           ),
         );

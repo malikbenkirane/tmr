@@ -21,6 +21,7 @@ enum Label {
   searchChipForeground,
   searchResultBackground,
   searchPopupBackground,
+  etaPomodoro,
 }
 
 Color labelColor(BuildContext context, Label label) {
@@ -60,5 +61,7 @@ Color labelColor(BuildContext context, Label label) {
       return colorScheme.surfaceContainerLow;
     case Label.searchPopupBackground:
       return colorScheme.surface;
+    case Label.etaPomodoro:
+      return darkMode ? colorScheme.onSurface : colorScheme.secondary;
   }
 }
