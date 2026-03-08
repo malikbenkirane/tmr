@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -262,23 +263,25 @@ class _NotesScreenState extends State<NotesScreen> {
                       itemBuilder: (_, index) {
                         final note = widget.notesViewmodel.notes[index];
                         return InkWell(
-                          onTap: () async {
-                            await FlutterClipboard.copy(note.text);
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  spacing: 2,
-                                  children: [
-                                    Icon(Symbols.assignment),
-                                    const Text(
-                                      'Your note’s now on the clipboard',
+                          onTap: (Platform.isIOS || Platform.isAndroid)
+                              ? null
+                              : () async {
+                                  await FlutterClipboard.copy(note.text);
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Row(
+                                        spacing: 2,
+                                        children: [
+                                          Icon(Symbols.assignment),
+                                          const Text(
+                                            'Your note’s now on the clipboard',
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                                  );
+                                },
                           child: Note(
                             count: count,
                             index: index,
