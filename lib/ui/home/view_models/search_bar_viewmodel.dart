@@ -64,9 +64,9 @@ class SearchBarViewmodel extends ChangeNotifier {
       for (final result in results) {
         _routineResults.add(result.choice);
       }
-      debugPrint(
-        '_searchRoutine: text=$text results=${results.length} routines=${_routines.length}',
-      );
+      // debugPrint(
+      //   '_searchRoutine: text=$text results=${results.length} routines=${_routines.length}',
+      // );
       return Result.ok(null);
     } finally {
       notifyListeners();
