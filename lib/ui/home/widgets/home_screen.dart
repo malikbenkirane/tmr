@@ -489,6 +489,7 @@ class HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           SafeArea(
+            bottom: false,
             child: ListenableBuilder(
               listenable: widget.homeModel.load,
               builder: (context, child) {
