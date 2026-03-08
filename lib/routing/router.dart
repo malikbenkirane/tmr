@@ -11,6 +11,7 @@ import 'package:too_many_tabs/ui/archives/widgets/archives_screen.dart';
 import 'package:too_many_tabs/ui/bin/view_models/bin_viewmodel.dart';
 import 'package:too_many_tabs/ui/bin/widgets/bin_screen.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/view_models/search_bar_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
 import 'package:too_many_tabs/ui/load/widgets/error_screen.dart';
 import 'package:too_many_tabs/ui/load/widgets/load_screen.dart';
@@ -83,10 +84,14 @@ GoRouter router() => GoRouter(
           final settingsViewmodel = SettingsViewmodel(
             repository: settingsRepository,
           );
+          final searchBarViewmodel = SearchBarViewmodel(
+            routinesRepository: routinesRepository,
+          );
           return HomeScreen(
             homeModel: homeViewmodel,
             notesModel: notesViewmodel,
             settingsModel: settingsViewmodel,
+            searchModel: searchBarViewmodel,
           );
         },
       ),

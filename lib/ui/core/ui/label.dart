@@ -11,10 +11,16 @@ enum Label {
   appBarForeground,
   appBarBackground,
   dialogInputBackground,
+  searchBarBackground,
   noiseBar,
   signalBar,
   routineToGoalBar,
   routineSignalBar,
+  verticalRoutineBar,
+  searchChipBackground,
+  searchChipForeground,
+  searchResultBackground,
+  searchPopupBackground,
 }
 
 Color labelColor(BuildContext context, Label label) {
@@ -42,5 +48,17 @@ Color labelColor(BuildContext context, Label label) {
     case Label.homeAppBarBackground:
     case Label.appBarBackground:
       return darkMode ? colorScheme.onPrimary : colorScheme.onSurface;
+    case Label.searchBarBackground:
+      return colorScheme.surfaceContainer;
+    case Label.verticalRoutineBar:
+      return colorScheme.primary;
+    case Label.searchChipBackground:
+      return colorScheme.surfaceContainer;
+    case Label.searchChipForeground:
+      return colorScheme.primary.withValues(alpha: .7);
+    case Label.searchResultBackground:
+      return colorScheme.surfaceContainerLow;
+    case Label.searchPopupBackground:
+      return colorScheme.surface;
   }
 }

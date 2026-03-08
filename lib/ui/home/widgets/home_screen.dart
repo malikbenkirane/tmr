@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -16,9 +17,11 @@ import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
 import 'package:too_many_tabs/ui/home/view_models/home_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/view_models/search_bar_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/ui/home/widgets/new_routine.dart';
 import 'package:too_many_tabs/ui/home/widgets/routines_list.dart';
+import 'package:too_many_tabs/ui/home/widgets/search_bar_widget.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/utils/result.dart';
@@ -29,11 +32,13 @@ class HomeScreen extends StatefulWidget {
     required this.homeModel,
     required this.notesModel,
     required this.settingsModel,
+    required this.searchModel,
   });
 
   final HomeViewmodel homeModel;
   final NotesViewmodel notesModel;
   final SettingsViewmodel settingsModel;
+  final SearchBarViewmodel searchModel;
 
   @override
   createState() => HomeScreenState();
@@ -465,10 +470,10 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            ListenableBuilder(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: ListenableBuilder(
               listenable: widget.homeModel.load,
               builder: (context, child) {
                 final running = widget.homeModel.load.running,
@@ -480,12 +485,37 @@ class HomeScreenState extends State<HomeScreen> {
                   child: child!,
                 );
               },
-              child: RoutinesList(
-                homeModel: widget.homeModel,
-                notesModel: widget.notesModel,
+              child: Padding(
+                padding: EdgeInsets.only(top: 69),
+                child: RoutinesList(
+                  homeModel: widget.homeModel,
+                  notesModel: widget.notesModel,
+                ),
               ),
             ),
-            Padding(
+          ),
+          ListenableBuilder(
+            listenable: widget.searchModel,
+            builder: (context, _) {
+              if (widget.searchModel.routines.isEmpty) return SizedBox.shrink();
+              return Animate(
+                effects: [FadeEffect()],
+                child: Container(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerLowest.withValues(alpha: .8),
+                ),
+              );
+            },
+          ),
+          SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 9, horizontal: 30),
+              child: SearchBarWidget(searchBarViewmodel: widget.searchModel),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
               padding: EdgeInsets.symmetric(vertical: 0, horizontal: 30),
               child: Align(
                 alignment: Alignment.bottomCenter,
@@ -544,8 +574,8 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
