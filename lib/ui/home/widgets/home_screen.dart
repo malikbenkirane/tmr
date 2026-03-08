@@ -290,90 +290,106 @@ class HomeScreenState extends State<HomeScreen> {
         Navigator.pop(context);
         setState(() => isPopup = false);
       },
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 46, vertical: 0),
-        child: Column(
-          spacing: 8,
-          children: [
-            Flexible(
-              child: Material(
-                color: theme.colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(37),
-                child: Padding(
-                  padding: EdgeInsetsGeometry.only(
-                    bottom: 14,
-                    top: 18,
-                    left: 27,
-                    right: 27,
-                  ),
-                  child: Column(
-                    spacing: 20,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('State File', style: TextStyle(fontSize: 20)),
-                      Row(
-                        spacing: 8,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Expanded(child: _saveStateMenuButton()),
-                          Expanded(child: _restoreStateMenuButton(context)),
-                        ],
-                      ),
-                    ],
+      child: Animate(
+        effects: [
+          ScaleEffect(
+            alignment: Alignment.topCenter,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 46, vertical: 0),
+          child: Column(
+            spacing: 8,
+            children: [
+              Flexible(
+                child: Material(
+                  color: theme.colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(37),
+                  child: Padding(
+                    padding: EdgeInsetsGeometry.only(
+                      bottom: 14,
+                      top: 18,
+                      left: 27,
+                      right: 27,
+                    ),
+                    child: Column(
+                      spacing: 20,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'State File',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Row(
+                          spacing: 8,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(child: _saveStateMenuButton()),
+                            Expanded(child: _restoreStateMenuButton(context)),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            ListenableBuilder(
-              listenable: widget.homeModel,
-              builder: (context, _) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 17),
-                  child: widget.homeModel.isSignalRatioLocked
-                      ? null
-                      : Material(
-                          color: theme.colorScheme.surfaceContainer,
-                          borderRadius: BorderRadius.circular(18),
-                          child: InkWell(
-                            onTap: () async {
-                              await widget.homeModel.lockSignalRatio.execute();
-                              if (widget.homeModel.lockSignalRatio.error) {
-                                final result =
-                                    widget.homeModel.lockSignalRatio.result
-                                        as Result<void>;
-                                switch (result) {
-                                  case Error<void>():
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(result.error.toString()),
-                                      ),
-                                    );
-                                  default:
+              ListenableBuilder(
+                listenable: widget.homeModel,
+                builder: (context, _) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 17),
+                    child: widget.homeModel.isSignalRatioLocked
+                        ? null
+                        : Material(
+                            color: theme.colorScheme.surfaceContainer,
+                            borderRadius: BorderRadius.circular(18),
+                            child: InkWell(
+                              onTap: () async {
+                                await widget.homeModel.lockSignalRatio
+                                    .execute();
+                                if (widget.homeModel.lockSignalRatio.error) {
+                                  final result =
+                                      widget.homeModel.lockSignalRatio.result
+                                          as Result<void>;
+                                  switch (result) {
+                                    case Error<void>():
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            result.error.toString(),
+                                          ),
+                                        ),
+                                      );
+                                    default:
+                                  }
                                 }
-                              }
-                              if (!context.mounted) return;
-                              Navigator.pop(context);
-                              setState(() => isPopup = false);
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: const Text(
-                                    'Lock Signal-Ratio',
-                                    style: TextStyle(fontSize: 16),
+                                if (!context.mounted) return;
+                                Navigator.pop(context);
+                                setState(() => isPopup = false);
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: const Text(
+                                      'Lock Signal-Ratio',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
