@@ -515,7 +515,9 @@ class HomeScreenState extends State<HomeScreen> {
           ListenableBuilder(
             listenable: widget.searchModel,
             builder: (context, _) {
-              if (widget.searchModel.results.isEmpty) return SizedBox.shrink();
+              if (widget.searchModel.results.isEmpty) {
+                return SizedBox.shrink();
+              }
               return Animate(
                 effects: [FadeEffect()],
                 child: Container(
@@ -529,7 +531,16 @@ class HomeScreenState extends State<HomeScreen> {
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 9, horizontal: 30),
-              child: SearchBarWidget(searchBarViewmodel: widget.searchModel),
+              child: SearchBarWidget(
+                searchBarViewmodel: widget.searchModel,
+                onQueryChange: (text) {
+                  if (text.isNotEmpty) {
+                    setState(() => isPopup = true);
+                    return;
+                  }
+                  setState(() => isPopup = false);
+                },
+              ),
             ),
           ),
           SafeArea(

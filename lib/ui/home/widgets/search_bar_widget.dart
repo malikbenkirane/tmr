@@ -10,12 +10,18 @@ import 'package:too_many_tabs/ui/home/view_models/search_bar_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/search_result.dart';
 import 'package:too_many_tabs/ui/home/widgets/result_item.dart';
 import 'package:too_many_tabs/ui/notes/widgets/note_widget.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 @immutable
 class SearchBarWidget extends StatefulWidget {
   final SearchBarViewmodel searchBarViewmodel;
+  final Function(String) onQueryChange;
 
-  const SearchBarWidget({super.key, required this.searchBarViewmodel});
+  const SearchBarWidget({
+    super.key,
+    required this.searchBarViewmodel,
+    required this.onQueryChange,
+  });
 
   @override
   State<StatefulWidget> createState() => _SearchBarText();
@@ -45,6 +51,7 @@ class _SearchBarText extends State<SearchBarWidget> {
                 ),
                 onChanged: (text) {
                   widget.searchBarViewmodel.searchRoutine.execute(text);
+                  widget.onQueryChange(text);
                   setState(() {});
                 },
                 controller: _controller,
@@ -52,27 +59,29 @@ class _SearchBarText extends State<SearchBarWidget> {
             ),
           ],
         ),
-        ListenableBuilder(
-          listenable: widget.searchBarViewmodel.load,
-          builder: (context, child) {
-            return Loader(
-              hide: true,
-              error: widget.searchBarViewmodel.load.error,
-              running: widget.searchBarViewmodel.load.running,
-              onError: widget.searchBarViewmodel.load.execute,
-              child: child!,
-            );
-          },
+        Expanded(
           child: ListenableBuilder(
-            listenable: widget.searchBarViewmodel,
-            builder: (context, _) {
-              return Animate(
-                effects: [FadeEffect()],
-                child: Row(
-                  children: _results(widget.searchBarViewmodel.results),
-                ),
+            listenable: widget.searchBarViewmodel.load,
+            builder: (context, child) {
+              return Loader(
+                hide: true,
+                error: widget.searchBarViewmodel.load.error,
+                running: widget.searchBarViewmodel.load.running,
+                onError: widget.searchBarViewmodel.load.execute,
+                child: child!,
               );
             },
+            child: ListenableBuilder(
+              listenable: widget.searchBarViewmodel,
+              builder: (context, _) {
+                return Animate(
+                  effects: [FadeEffect()],
+                  child: Row(
+                    children: _results(widget.searchBarViewmodel.results),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -99,9 +108,13 @@ class _SearchBarText extends State<SearchBarWidget> {
             borderRadius: BorderRadius.circular(15),
             child: Padding(
               padding: EdgeInsets.all(10),
-              child: Column(
-                spacing: 6,
-                children: [...results.map((routine) => _ResultWidget(routine))],
+              child: SingleChildScrollView(
+                child: Column(
+                  spacing: 6,
+                  children: [
+                    ...results.map((routine) => _ResultWidget(routine)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -122,8 +135,8 @@ class _ResultWidget extends StatefulWidget {
 }
 
 class _ResultWidgetState extends State<_ResultWidget> {
-  GlobalKey _resultNameTextKey = GlobalKey();
-  Size? _resultNameTextSize;
+  GlobalKey _resultWidgetKey = GlobalKey();
+  Size? _resultWidgetSize;
 
   @override
   void initState() {
@@ -139,18 +152,18 @@ class _ResultWidgetState extends State<_ResultWidget> {
 
   void _updateResultNameTextSize() {
     final renderBox =
-        _resultNameTextKey.currentContext?.findRenderObject() as RenderBox?;
+        _resultWidgetKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
     setState(() {
-      _resultNameTextSize = renderBox.size;
-      _resultNameTextKey = GlobalKey();
+      _resultWidgetSize = renderBox.size;
+      _resultWidgetKey = GlobalKey();
     });
   }
 
   double _barHeight() {
     final double textHeight;
-    if (_resultNameTextSize == null) return 0;
-    textHeight = _resultNameTextSize!.height;
+    if (_resultWidgetSize == null) return 0;
+    textHeight = _resultWidgetSize!.height;
     final r = textHeight - 16;
     const double minHeight = 24;
     return r < minHeight ? minHeight : r;
@@ -158,34 +171,47 @@ class _ResultWidgetState extends State<_ResultWidget> {
 
   @override
   build(BuildContext context) {
-    final Widget resultWidget;
+    final chipTextStyle = TextStyle(
+      color: labelColor(context, Label.searchChipForeground),
+      fontSize: 11,
+    );
+    final Color barColor;
+    final Widget resultWidget, chipWidget;
+
     switch (widget.result.item) {
       case ResultItem.routine:
-        resultWidget = Text(
-          widget.result.routine!.name,
-          key: _resultNameTextKey,
-        );
+        final routine = widget.result.routine!;
+        resultWidget = Text(routine.name, key: _resultWidgetKey);
+        final String chipText;
+        {
+          var label = "pending";
+          if (routine.lastStarted != null) {
+            label = timeago.format(routine.lastStarted!, locale: 'en_short');
+            label = '$label ago';
+          }
+          chipText = label;
+        }
+        chipWidget = Text(chipText, style: chipTextStyle);
+        barColor = labelColor(
+          context,
+          Label.verticalRoutineBar,
+        ).withValues(alpha: .9);
       case ResultItem.note:
-        resultWidget = NoteWidget(note: widget.result.note!.$2);
-    }
-    final Widget chipWidget;
-    switch (widget.result.item) {
-      case ResultItem.routine:
-        chipWidget = Text(
-          'routine',
-          style: TextStyle(
-            color: labelColor(context, Label.searchChipForeground),
-            fontSize: 11,
-          ),
+        resultWidget = NoteWidget(
+          key: _resultWidgetKey,
+          note: widget.result.note!.$2,
         );
-      case ResultItem.note:
         final routine = widget.result.note!.$1;
         chipWidget = GestureDetector(
           onTap: () {
             context.go('${Routes.notes}/${routine.id}');
           },
-          child: Text(routine.name),
+          child: Text(routine.name, style: chipTextStyle),
         );
+        barColor = labelColor(
+          context,
+          Label.verticalRoutineBar,
+        ).withValues(alpha: .1);
     }
     return Material(
       color: labelColor(context, Label.searchResultBackground),
@@ -211,14 +237,7 @@ class _ResultWidgetState extends State<_ResultWidget> {
                   spacing: 10,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 2,
-                      height: _barHeight(),
-                      color: labelColor(
-                        context,
-                        Label.verticalRoutineBar,
-                      ).withValues(alpha: .9),
-                    ),
+                    Container(width: 2, height: _barHeight(), color: barColor),
                     Expanded(child: resultWidget),
                   ],
                 ),
