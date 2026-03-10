@@ -71,7 +71,7 @@ class NotesViewmodel extends ChangeNotifier {
           _log.fine('_load: ${_notes.length} notes');
           _notes.addAll(dismissed);
       }
-      await _updatePomoEta(DateTime.now());
+      _updatePomoEta(DateTime.now());
       return resultRoutineSummary;
     } finally {
       debugPrint(
