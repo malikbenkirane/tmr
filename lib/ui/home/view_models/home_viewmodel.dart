@@ -70,9 +70,10 @@ class HomeViewmodel extends ChangeNotifier {
 
   final SettingsRepository _settingsRepository;
 
-  Future<Result> _load() async {
+  Future<Result<void>> _load() async {
     try {
       final now = DateTime.now();
+      final trace = now;
       final today = DateTime(now.year, now.month, now.day);
 
       for (final bin in [
@@ -107,7 +108,12 @@ class HomeViewmodel extends ChangeNotifier {
 
       await _updateSignalNoiseRatio(DateTime.now());
 
-      return await _updateRunningRoutine();
+      await _updateRunningRoutine();
+
+      debugPrint(
+        '[trace] homeViewmodel: _load: ${DateTime.now().difference(trace)}',
+      );
+      return Result.ok(null);
     } finally {
       notifyListeners();
     }
@@ -117,6 +123,7 @@ class HomeViewmodel extends ChangeNotifier {
   SignalRatio? get signalRatio => _signalRatio;
 
   Future<Result<SignalRatio?>> _updateSignalNoiseRatio(DateTime at) async {
+    // final trace = DateTime.now();
     try {
       {
         final result = await _signalRatioRepository.signalRatioAt(at);
@@ -177,6 +184,9 @@ class HomeViewmodel extends ChangeNotifier {
       _signalRatio = snr;
       return Result.ok(snr);
     } finally {
+      // debugPrint(
+      //   '[trace]: homeViewmodel: _updateSignalNoiseRatio: ${DateTime.now().difference(trace)}',
+      // );
       notifyListeners();
     }
   }
@@ -340,6 +350,7 @@ class HomeViewmodel extends ChangeNotifier {
   }
 
   Future<Result<RoutineSummary?>> _updateRunningRoutine() async {
+    final trace = DateTime.now();
     try {
       final resultRunning = await _routinesRepository.getRunningRoutine();
       switch (resultRunning) {
@@ -350,6 +361,9 @@ class HomeViewmodel extends ChangeNotifier {
       }
       return resultRunning;
     } finally {
+      debugPrint(
+        '[trace] homeViewmodel: _updateRunningRoutine: ${DateTime.now().difference(trace)}',
+      );
       notifyListeners();
     }
   }
@@ -443,6 +457,7 @@ class HomeViewmodel extends ChangeNotifier {
   List<(RoutineSummary, RoutineState)> _listRoutines(
     List<RoutineSummary> routines,
   ) {
+    final trace = DateTime.now();
     final List<(RoutineSummary, RoutineState)> sorted = [];
     final List<RoutineSummary> completed = [];
     final List<RoutineSummary> noGoal = [];
@@ -502,6 +517,9 @@ class HomeViewmodel extends ChangeNotifier {
     //   debugPrint('${rs.$2} ${rs.$1}');
     // }
 
+    debugPrint(
+      '[trace] homeViewmodel: _listRoutines: ${DateTime.now().difference(trace)}',
+    );
     return sorted;
   }
 
@@ -513,6 +531,7 @@ class HomeViewmodel extends ChangeNotifier {
       _specialSessionAllStatum;
 
   Future<Result<void>> _updateSpecialSessionStatus(DateTime day) async {
+    final trace = DateTime.now();
     try {
       final resultCurrent = await _routinesRepository.currentSpecialSession();
       switch (resultCurrent) {
@@ -571,6 +590,9 @@ class HomeViewmodel extends ChangeNotifier {
 
       return Result.ok(null);
     } finally {
+      debugPrint(
+        '[trace] homeViewmodel: _updateSpecialSessionStatus: ${DateTime.now().difference(trace)}',
+      );
       notifyListeners();
     }
   }
