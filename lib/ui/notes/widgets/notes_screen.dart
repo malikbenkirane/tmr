@@ -266,8 +266,14 @@ class _NotesScreenState extends State<NotesScreen> {
                       ).createShader(bounds);
                     },
                     blendMode: BlendMode.dstIn,
-                    child: ScrollablePositionedList.builder(
+                    child: ScrollablePositionedList.separated(
                       itemCount: count,
+                      separatorBuilder: (context, i) {
+                        return Container(
+                          color: Theme.of(context).colorScheme.primary,
+                          height: .2,
+                        );
+                      },
                       padding: EdgeInsets.only(bottom: 140),
                       itemBuilder: (_, index) {
                         final note = widget.notesViewmodel.notes[index];

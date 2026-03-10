@@ -16,47 +16,35 @@ class Note extends StatelessWidget {
   final void Function() onDismiss;
   @override
   build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final base = 10 ^ (math.log(count) / math.ln10).ceil();
     final uid = base + note.id!;
     // debugPrint(
     //   'note ${note.id} dismissed=${note.dismissed} idx=$index uid=$uid',
     // );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        note.dismissed
-            ? _PaddedNote(note: note, top: index == 0)
-            : Dismissible(
-                key: ValueKey(uid),
-                direction: DismissDirection.endToStart,
-                background: Padding(
-                  padding: EdgeInsets.only(right: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [Icon(Icons.layers_clear)],
-                  ),
-                ),
-                onDismissed: (_) async {
-                  onDismiss();
-                },
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _PaddedNote(note: note, top: index == 0),
-                    ),
-                  ],
-                ),
+    return note.dismissed
+        ? _PaddedNote(note: note, top: index == 0)
+        : Dismissible(
+            key: ValueKey(uid),
+            direction: DismissDirection.endToStart,
+            background: Padding(
+              padding: EdgeInsets.only(right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [Icon(Icons.layers_clear)],
               ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: index + 1 == count
-              ? SizedBox.shrink()
-              : Container(color: cs.primary, height: .2),
-        ),
-      ],
-    );
+            ),
+            onDismissed: (_) async {
+              onDismiss();
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: _PaddedNote(note: note, top: index == 0),
+                ),
+              ],
+            ),
+          );
   }
 }
 
