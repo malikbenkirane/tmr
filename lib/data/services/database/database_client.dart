@@ -79,7 +79,7 @@ class DatabaseClient {
   }) async {
     final List<Map<String, Object?>> rows;
     final String spentCondition;
-    final whereArgs = [archived ? 1 : 0, binned ? 1 : 0, minSpentSeconds];
+    final whereArgs = [archived ? 1 : 0, binned ? 1 : 0];
     if (minSpentSeconds == null) {
       spentCondition = '';
     } else {
