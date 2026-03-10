@@ -24,7 +24,8 @@ import 'package:too_many_tabs/utils/result.dart';
 import 'package:too_many_tabs/data/services/database/database_prepare.dart';
 import 'package:logging/logging.dart';
 
-Future<Result<DatabaseClient>> prepareDatabaseClient() async {
+Future<Result<(DatabaseClient, Duration)>> prepareDatabaseClient() async {
+  final trace = DateTime.now();
   final result = await prepareDatabase();
   final Database db;
   switch (result) {
@@ -46,7 +47,7 @@ Future<Result<DatabaseClient>> prepareDatabaseClient() async {
       );
     }
   });
-  return Result.ok(client);
+  return Result.ok((client, DateTime.now().difference(trace)));
 }
 
 GoRouter router() => GoRouter(
@@ -56,45 +57,52 @@ GoRouter router() => GoRouter(
   routes: [
     GoRoute(
       path: Routes.home,
-      builder: (context, state) => FutureBuilder<Result<DatabaseClient>>(
-        future: prepareDatabaseClient(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return LoadScreen();
-          }
-          final result = snapshot.data!;
-          switch (result) {
-            case Error<DatabaseClient>():
-              return ErrorScreen();
-            case Ok<DatabaseClient>():
-          }
-          final routinesRepository = RoutinesRepositoryLocal(
-            databaseClient: result.value,
-          );
-          final settingsRepository = SettingsRepositorySqlite(db: result.value);
-          final signalRatioRepository = SignalRatioRepositoryLocal(
-            databaseClient: result.value,
-          );
-          final homeViewmodel = HomeViewmodel(
-            signalRatioRepository: signalRatioRepository,
-            routinesRepository: routinesRepository,
-            settingsRepository: settingsRepository,
-          );
-          final notesViewmodel = NotesViewmodel(repo: routinesRepository);
-          final settingsViewmodel = SettingsViewmodel(
-            repository: settingsRepository,
-          );
-          final searchBarViewmodel = SearchBarViewmodel(
-            routinesRepository: routinesRepository,
-          );
-          return HomeScreen(
-            homeModel: homeViewmodel,
-            notesModel: notesViewmodel,
-            settingsModel: settingsViewmodel,
-            searchModel: searchBarViewmodel,
-          );
-        },
-      ),
+      builder: (context, state) =>
+          FutureBuilder<Result<(DatabaseClient, Duration)>>(
+            future: prepareDatabaseClient(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return LoadScreen();
+              }
+              final result = snapshot.data!;
+              switch (result) {
+                case Error<(DatabaseClient, Duration)>():
+                  return ErrorScreen();
+                case Ok<(DatabaseClient, Duration)>():
+                  debugPrint(
+                    '[trace] prepareDatabaseClient: ${result.value.$2}',
+                  );
+              }
+              final databaseClient = result.value.$1;
+              final routinesRepository = RoutinesRepositoryLocal(
+                databaseClient: databaseClient,
+              );
+              final settingsRepository = SettingsRepositorySqlite(
+                db: databaseClient,
+              );
+              final signalRatioRepository = SignalRatioRepositoryLocal(
+                databaseClient: result.value.$1,
+              );
+              final homeViewmodel = HomeViewmodel(
+                signalRatioRepository: signalRatioRepository,
+                routinesRepository: routinesRepository,
+                settingsRepository: settingsRepository,
+              );
+              final notesViewmodel = NotesViewmodel(repo: routinesRepository);
+              final settingsViewmodel = SettingsViewmodel(
+                repository: settingsRepository,
+              );
+              final searchBarViewmodel = SearchBarViewmodel(
+                routinesRepository: routinesRepository,
+              );
+              return HomeScreen(
+                homeModel: homeViewmodel,
+                notesModel: notesViewmodel,
+                settingsModel: settingsViewmodel,
+                searchModel: searchBarViewmodel,
+              );
+            },
+          ),
     ),
     GoRoute(
       path: Routes.archives,
@@ -106,12 +114,14 @@ GoRouter router() => GoRouter(
           }
           final result = snapshot.data!;
           switch (result) {
-            case Error<DatabaseClient>():
+            case Error<(DatabaseClient, Duration)>():
               return ErrorScreen();
-            case Ok<DatabaseClient>():
+            case Ok<(DatabaseClient, Duration)>():
+              debugPrint('[trace] prepareDatabaseClient: ${result.value.$2}');
           }
+          final databaseClient = result.value.$1;
           final routinesRepository = RoutinesRepositoryLocal(
-            databaseClient: result.value,
+            databaseClient: databaseClient,
           );
           final viewModel = ArchivesViewmodel(
             routinesRepository: routinesRepository,
@@ -130,12 +140,14 @@ GoRouter router() => GoRouter(
           }
           final result = snapshot.data!;
           switch (result) {
-            case Error<DatabaseClient>():
+            case Error<(DatabaseClient, Duration)>():
               return ErrorScreen();
-            case Ok<DatabaseClient>():
+            case Ok<(DatabaseClient, Duration)>():
+              debugPrint('[trace]: prepareDatabaseClient: ${result.value.$2}');
           }
+          final databaseClient = result.value.$1;
           final routinesRepository = RoutinesRepositoryLocal(
-            databaseClient: result.value,
+            databaseClient: databaseClient,
           );
           final viewModel = BinViewmodel(
             routinesRepository: routinesRepository,
@@ -154,11 +166,15 @@ GoRouter router() => GoRouter(
           }
           final result = snapshot.data!;
           switch (result) {
-            case Error<DatabaseClient>():
+            case Error<(DatabaseClient, Duration)>():
               return ErrorScreen();
-            case Ok<DatabaseClient>():
+            case Ok<(DatabaseClient, Duration)>():
+              debugPrint('[trace] prepareDatabaseClient: ${result.value.$2}');
           }
-          final settingsRepository = SettingsRepositorySqlite(db: result.value);
+          final databaseClient = result.value.$1;
+          final settingsRepository = SettingsRepositorySqlite(
+            db: databaseClient,
+          );
           final viewModel = SettingsViewmodel(repository: settingsRepository);
           return SettingsScreen(viewModel: viewModel);
         },
@@ -174,23 +190,27 @@ GoRouter router() => GoRouter(
           }
           final result = snapshot.data!;
           switch (result) {
-            case Error<DatabaseClient>():
+            case Error<(DatabaseClient, Duration)>():
               return ErrorScreen();
-            case Ok<DatabaseClient>():
+            case Ok<(DatabaseClient, Duration)>():
+              debugPrint('[trace] prepareDatabaseClient: ${result.value.$2}');
           }
+          final databaseClient = result.value.$1;
           // debugPrint('${state.pathParameters}');
           final routineId = state.pathParameters['routineId']!;
 
           final routinesRepository = RoutinesRepositoryLocal(
-            databaseClient: result.value,
+            databaseClient: databaseClient,
           );
-          final settingsRepository = SettingsRepositorySqlite(db: result.value);
+          final settingsRepository = SettingsRepositorySqlite(
+            db: databaseClient,
+          );
           final viewModel = NotesViewmodel(
             repo: routinesRepository,
             routineId: int.parse(routineId),
           );
           final signalRatioRepository = SignalRatioRepositoryLocal(
-            databaseClient: result.value,
+            databaseClient: databaseClient,
           );
           final homeViewmodel = HomeViewmodel(
             signalRatioRepository: signalRatioRepository,

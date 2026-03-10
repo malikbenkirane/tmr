@@ -61,10 +61,10 @@ Future<bool> onIosBackground(ServiceInstance service) async {
   {
     final result = await prepareDatabaseClient();
     switch (result) {
-      case Error<DatabaseClient>():
+      case Error<(DatabaseClient, Duration)>():
         return true;
-      case Ok<DatabaseClient>():
-        conn = result.value;
+      case Ok<(DatabaseClient, Duration)>():
+        conn = result.value.$1;
     }
   }
 
