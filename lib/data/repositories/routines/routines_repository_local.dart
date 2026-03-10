@@ -405,6 +405,11 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
+  Future<Result<NoteSummary>> getNote(int noteId) {
+    return _databaseClient.getNote(noteId);
+  }
+
+  @override
   Future<Result<void>> addNote({
     required String note,
     required DateTime createdAt,

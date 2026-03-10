@@ -15,8 +15,10 @@ import 'package:too_many_tabs/ui/home/view_models/search_bar_viewmodel.dart';
 import 'package:too_many_tabs/ui/home/widgets/home_screen.dart';
 import 'package:too_many_tabs/ui/load/widgets/error_screen.dart';
 import 'package:too_many_tabs/ui/load/widgets/load_screen.dart';
+import 'package:too_many_tabs/ui/notes/view_models/note_viewmodel.dart';
 import 'package:too_many_tabs/ui/notes/view_models/notes_viewmodel.dart';
 import 'package:too_many_tabs/ui/notes/view_models/pomodoro_payload.dart';
+import 'package:too_many_tabs/ui/notes/widgets/note_screen.dart';
 import 'package:too_many_tabs/ui/notes/widgets/notes_screen.dart';
 import 'package:too_many_tabs/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:too_many_tabs/ui/settings/widgets/settings_screen.dart';
@@ -103,6 +105,33 @@ GoRouter router() => GoRouter(
               );
             },
           ),
+    ),
+    GoRoute(
+      path: '${Routes.note}/:noteId',
+      builder: (context, state) => FutureBuilder(
+        future: prepareDatabaseClient(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return LoadScreen();
+          }
+          final result = snapshot.data!;
+          switch (result) {
+            case Error<(DatabaseClient, Duration)>():
+              return ErrorScreen();
+            case Ok<(DatabaseClient, Duration)>():
+          }
+          final databaseClient = result.value.$1;
+          final routinesRepository = RoutinesRepositoryLocal(
+            databaseClient: databaseClient,
+          );
+          final noteId = int.parse(state.pathParameters['noteId']!);
+          final noteViewmodel = NoteViewmodel(
+            routinesRespository: routinesRepository,
+            noteId: noteId,
+          );
+          return NoteScreen(viewModel: noteViewmodel);
+        },
+      ),
     ),
     GoRoute(
       path: Routes.archives,

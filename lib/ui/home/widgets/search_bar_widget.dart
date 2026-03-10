@@ -199,81 +199,48 @@ class _ResultWidgetState extends State<_ResultWidget> {
     required Widget chipWidget,
     required Color barColor,
   }) {
-    switch (itemKind) {
-      case ResultItem.note:
-        return Padding(
-          padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
-          child: Row(
-            spacing: 20,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: Row(
-                  spacing: 10,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(width: 2, height: _barHeight(), color: barColor),
-                    Expanded(child: resultWidget),
-                  ],
-                ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () {
+        switch (itemKind) {
+          case ResultItem.routine:
+            context.go('${Routes.notes}/${widget.result.routine!.id}');
+          case ResultItem.note:
+            context.go('${Routes.note}/${widget.result.note!.$2.id}');
+        }
+      },
+      child: Padding(
+        padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
+        child: Row(
+          spacing: 20,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Expanded(
+              child: Row(
+                spacing: 10,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(width: 2, height: _barHeight(), color: barColor),
+                  Expanded(child: resultWidget),
+                ],
               ),
-              Material(
-                elevation: 1,
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: EdgeInsetsGeometry.symmetric(
-                    horizontal: 10,
-                    vertical: 2,
-                  ),
-                  child: chipWidget,
-                ),
-              ),
-            ],
-          ),
-        );
-      case ResultItem.routine:
-        return InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () =>
-              context.go('${Routes.notes}/${widget.result.routine!.id}'),
-          child: Padding(
-            padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
-            child: Row(
-              spacing: 20,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Expanded(
-                  child: Row(
-                    spacing: 10,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 2,
-                        height: _barHeight(),
-                        color: barColor,
-                      ),
-                      Expanded(child: resultWidget),
-                    ],
-                  ),
-                ),
-                Material(
-                  elevation: 1,
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: EdgeInsetsGeometry.symmetric(
-                      horizontal: 10,
-                      vertical: 2,
-                    ),
-                    child: chipWidget,
-                  ),
-                ),
-              ],
             ),
-          ),
-        );
-    }
+            Material(
+              elevation: 1,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: EdgeInsetsGeometry.symmetric(
+                  horizontal: 10,
+                  vertical: 2,
+                ),
+                child: chipWidget,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

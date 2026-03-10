@@ -442,6 +442,40 @@ class DatabaseClient {
     }
   }
 
+  Future<Result<NoteSummary>> getNote(int noteId) async {
+    try {
+      final rows = await _database.query(
+        'notes',
+        where: 'id = ?',
+        whereArgs: [noteId],
+      );
+      if (rows.isEmpty) {
+        return Result.error(Exception('note not found'));
+      }
+      final {
+        'id': id as int,
+        'created_at': createdAt as String,
+        'note': note as String?,
+        'routine_id': routineId as int,
+        'dismissed': dismissed as int,
+      } = rows[0];
+      if (note == null) {
+        return Result.error(Exception('null note'));
+      }
+      return Result.ok(
+        NoteSummary(
+          routineId: routineId,
+          createdAt: DateTime.parse(createdAt),
+          id: id,
+          note: note,
+          dismissed: dismissed == 1,
+        ),
+      );
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
   Future<Result<List<NoteSummary>>> getNotes(int routineId) async {
     try {
       final rows = await _database.query(

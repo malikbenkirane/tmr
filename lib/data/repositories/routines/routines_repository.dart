@@ -22,6 +22,7 @@ abstract class RoutinesRepository {
   Future<Result<void>> restoreRoutine(int id);
   Future<Result<void>> binRoutine(int id);
   Future<Result<List<NoteSummary>>> getNotes(int routineId);
+  Future<Result<NoteSummary>> getNote(int noteId);
   Future<Result<void>> addNote({
     required String note,
     required DateTime createdAt,
