@@ -39,19 +39,18 @@ class NoteWidget extends StatelessWidget {
     return Material(
       borderRadius: BorderRadius.circular(5),
       elevation: .2,
-      child: InkWell(
-        onTap: () {
+      child: TapRegion(
+        onTapInside: (_) {
           _launchInBrowser(context, text);
         },
-        borderRadius: BorderRadius.circular(5),
-
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
+          padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
           child: Text(
             text,
             style: TextStyle(
               color: labelColor(context, Label.noteLink),
               fontWeight: note.dismissed ? FontWeight.w400 : null,
+              fontSize: 12,
             ),
           ),
         ),
