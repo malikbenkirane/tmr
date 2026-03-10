@@ -75,15 +75,23 @@ class DatabaseClient {
   Future<Result<List<RoutineSummary>>> getRoutines({
     required bool archived,
     required bool binned,
+    int? minSpentSeconds,
   }) async {
     final List<Map<String, Object?>> rows;
-
+    final String spentCondition;
+    final whereArgs = [archived ? 1 : 0, binned ? 1 : 0, minSpentSeconds];
+    if (minSpentSeconds == null) {
+      spentCondition = '';
+    } else {
+      spentCondition = 'AND (spent_1s >= ? OR running = 1)';
+      whereArgs.add(minSpentSeconds);
+    }
     try {
       rows = await _database.query(
         'routines',
         orderBy: 'name',
-        where: 'archived = ? AND binned = ?',
-        whereArgs: [archived ? 1 : 0, binned ? 1 : 0],
+        where: 'archived = ? AND binned = ? $spentCondition',
+        whereArgs: whereArgs,
       );
     } on Exception catch (e) {
       _log.warning('query routines', e.toString());

@@ -28,7 +28,7 @@ class ArchivesViewmodel extends ChangeNotifier {
     try {
       _routines = [];
       final resultGet = await _routinesRepository.getRoutinesList(
-        RoutineBin.backlog,
+        bin: RoutineBin.backlog,
       );
       switch (resultGet) {
         case Error<List<RoutineSummary>>():

@@ -7,7 +7,10 @@ import 'package:too_many_tabs/domain/models/settings/special_goal_session.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 abstract class RoutinesRepository {
-  Future<Result<List<RoutineSummary>>> getRoutinesList(RoutineBin bin);
+  Future<Result<List<RoutineSummary>>> getRoutinesList({
+    required RoutineBin bin,
+    int? minSpentSeconds,
+  });
   Future<Result<RoutineSummary>> getRoutineSummary(int id);
   Future<Result<RoutineSummary?>> getRunningRoutine();
   Future<Result<void>> logStart(int routineID, DateTime time);

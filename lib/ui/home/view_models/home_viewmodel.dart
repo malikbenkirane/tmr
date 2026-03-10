@@ -76,37 +76,25 @@ class HomeViewmodel extends ChangeNotifier {
       final trace = now;
       final today = DateTime(now.year, now.month, now.day);
 
-      for (final bin in [
-        RoutineBin.today,
-        RoutineBin.archives,
-        RoutineBin.backlog,
-      ]) {
-        final result = await _routinesRepository.getRoutinesList(bin);
-        switch (result) {
-          case Error<List<RoutineSummary>>():
-            _log.warning(
-              '_load: getRoutinesList(${bin.toStringValue()}) ${result.error}',
-            );
-            return result;
-          case Ok<List<RoutineSummary>>():
-            for (final routine in result.value) {
-              if (routine.lastStarted != null &&
-                  routine.lastStarted!.isAfter(today)) {
-                _newDay = false;
-              }
+      final result = await _routinesRepository.getRoutinesList(
+        bin: RoutineBin.today,
+      );
+      switch (result) {
+        case Error<List<RoutineSummary>>():
+          return Result.error(result.error);
+        case Ok<List<RoutineSummary>>():
+          for (final routine in result.value) {
+            if (routine.lastStarted != null &&
+                routine.lastStarted!.isAfter(today)) {
+              _newDay = false;
             }
-            _log.fine(
-              '_load: getRoutinesList(${bin.toStringValue()}): ${result.value.length} routines loaded',
-            );
-            if (bin == RoutineBin.today) {
-              _routines = _listRoutines(result.value);
-            }
-        }
+          }
+          _routines = _listRoutines(result.value);
       }
 
       await _updateSpecialSessionStatus(DateTime.now());
 
-      await _updateSignalNoiseRatio(DateTime.now());
+      _updateSignalNoiseRatio(DateTime.now());
 
       await _updateRunningRoutine();
 
@@ -156,7 +144,10 @@ class HomeViewmodel extends ChangeNotifier {
         var s = Duration.zero;
         var o = Duration.zero;
         for (final bin in RoutineBin.values) {
-          final result = await _routinesRepository.getRoutinesList(bin);
+          final result = await _routinesRepository.getRoutinesList(
+            bin: bin,
+            minSpentSeconds: 1,
+          );
           switch (result) {
             case Error<List<RoutineSummary>>():
               return Result.error(result.error);
@@ -429,7 +420,7 @@ class HomeViewmodel extends ChangeNotifier {
       // Can't do this as repository getRoutinesList does more than listing routines
       // especially "daily check".
       final resultList = await _routinesRepository.getRoutinesList(
-        RoutineBin.today,
+        bin: RoutineBin.today,
       );
       switch (resultList) {
         case Error<List<RoutineSummary>>():

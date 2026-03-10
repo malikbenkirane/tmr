@@ -26,7 +26,7 @@ class BinViewmodel extends ChangeNotifier {
   Future<Result> _load() async {
     try {
       final resultGet = await _routinesRepository.getRoutinesList(
-        RoutineBin.archives,
+        bin: RoutineBin.archives,
       );
       switch (resultGet) {
         case Error<List<RoutineSummary>>():

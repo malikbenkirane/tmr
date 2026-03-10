@@ -107,12 +107,16 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
-  Future<Result<List<RoutineSummary>>> getRoutinesList(RoutineBin bin) async {
+  Future<Result<List<RoutineSummary>>> getRoutinesList({
+    required RoutineBin bin,
+    int? minSpentSeconds,
+  }) async {
     final trace = DateTime.now();
     try {
       final resultGet = await _databaseClient.getRoutines(
         archived: bin == RoutineBin.backlog,
         binned: bin == RoutineBin.archives,
+        minSpentSeconds: minSpentSeconds,
       );
       switch (resultGet) {
         case Error<List<RoutineSummary>>():

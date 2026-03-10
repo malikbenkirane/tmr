@@ -23,7 +23,7 @@ class SearchBarViewmodel extends ChangeNotifier {
       _routines = [];
       {
         for (final bin in RoutineBin.values) {
-          final result = await routinesRepository.getRoutinesList(bin);
+          final result = await routinesRepository.getRoutinesList(bin: bin);
           switch (result) {
             case Error<List<RoutineSummary>>():
               return Result.error(result.error);
