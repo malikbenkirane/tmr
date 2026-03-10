@@ -73,6 +73,7 @@ class _SearchBarText extends State<SearchBarWidget> {
                       await widget.searchBarViewmodel.searchRoutine.execute(
                         text,
                       );
+                      if (!context.mounted) return;
                       setState(() {});
                     },
                   );
