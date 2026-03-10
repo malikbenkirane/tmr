@@ -177,6 +177,7 @@ class HomeScreenState extends State<HomeScreen> {
       listenable: widget.settingsModel.load,
       builder: (context, child) {
         return Loader(
+          hide: true,
           error: widget.settingsModel.load.error,
           running: widget.settingsModel.load.running,
           onError: widget.settingsModel.load.execute,
@@ -420,10 +421,10 @@ class HomeScreenState extends State<HomeScreen> {
               listenable: widget.homeModel.load,
               builder: (context, child) {
                 return Loader(
+                  hide: true,
                   error: widget.homeModel.load.error,
                   running: widget.homeModel.load.running,
                   onError: widget.homeModel.load.execute,
-                  hide: true,
                   child: child!,
                 );
               },
