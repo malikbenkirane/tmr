@@ -57,6 +57,13 @@ class _SearchBarText extends State<SearchBarWidget> {
                   filled: true,
                   hintText: 'Search...',
                   prefixIcon: Icon(Symbols.manage_search_sharp),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      _searchTextController.text = '';
+                      widget.onQueryChange('');
+                    },
+                    icon: Icon(Symbols.cancel_rounded),
+                  ),
                 ),
                 onChanged: (text) {
                   _searchDebouncer?.cancel();
