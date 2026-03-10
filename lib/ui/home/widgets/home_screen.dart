@@ -515,7 +515,7 @@ class HomeScreenState extends State<HomeScreen> {
           ListenableBuilder(
             listenable: widget.searchModel,
             builder: (context, _) {
-              if (widget.searchModel.routines.isEmpty) return SizedBox.shrink();
+              if (widget.searchModel.results.isEmpty) return SizedBox.shrink();
               return Animate(
                 effects: [FadeEffect()],
                 child: Container(

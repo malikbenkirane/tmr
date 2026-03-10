@@ -61,6 +61,14 @@ class RoutineSummary {
   }
 
   @override
+  int get hashCode => id;
+
+  @override
+  bool operator ==(Object other) {
+    return (other as RoutineSummary).id == id;
+  }
+
+  @override
   String toString() {
     return [
       'RoutineSummary(',

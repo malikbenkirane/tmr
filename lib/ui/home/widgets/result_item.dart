@@ -1,0 +1,1 @@
+enum ResultItem { routine, note }

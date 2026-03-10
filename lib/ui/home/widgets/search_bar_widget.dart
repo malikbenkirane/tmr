@@ -3,10 +3,13 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
+import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:too_many_tabs/ui/home/view_models/search_bar_viewmodel.dart';
+import 'package:too_many_tabs/ui/home/widgets/search_result.dart';
+import 'package:too_many_tabs/ui/home/widgets/result_item.dart';
+import 'package:too_many_tabs/ui/notes/widgets/note_widget.dart';
 
 @immutable
 class SearchBarWidget extends StatefulWidget {
@@ -66,7 +69,7 @@ class _SearchBarText extends State<SearchBarWidget> {
               return Animate(
                 effects: [FadeEffect()],
                 child: Row(
-                  children: _results(widget.searchBarViewmodel.routines),
+                  children: _results(widget.searchBarViewmodel.results),
                 ),
               );
             },
@@ -76,7 +79,7 @@ class _SearchBarText extends State<SearchBarWidget> {
     );
   }
 
-  List<Widget> _results(List<RoutineSummary> results) {
+  List<Widget> _results(List<SearchResult> results) {
     if (_controller.text.isEmpty || results.isEmpty) {
       return [];
     }
@@ -98,9 +101,7 @@ class _SearchBarText extends State<SearchBarWidget> {
               padding: EdgeInsets.all(10),
               child: Column(
                 spacing: 6,
-                children: [
-                  ...results.map((routine) => _RoutineResultWidget(routine)),
-                ],
+                children: [...results.map((routine) => _ResultWidget(routine))],
               ),
             ),
           ),
@@ -111,45 +112,45 @@ class _SearchBarText extends State<SearchBarWidget> {
 }
 
 @immutable
-class _RoutineResultWidget extends StatefulWidget {
-  final RoutineSummary routine;
+class _ResultWidget extends StatefulWidget {
+  final SearchResult result;
 
-  const _RoutineResultWidget(this.routine);
+  const _ResultWidget(this.result);
 
   @override
-  createState() => _RoutineResultWidgetState();
+  createState() => _ResultWidgetState();
 }
 
-class _RoutineResultWidgetState extends State<_RoutineResultWidget> {
-  GlobalKey _routineNameTextKey = GlobalKey();
-  Size? _routineNameTextSize;
+class _ResultWidgetState extends State<_ResultWidget> {
+  GlobalKey _resultNameTextKey = GlobalKey();
+  Size? _resultNameTextSize;
 
   @override
   void initState() {
     super.initState();
     SchedulerBinding.instance.addPostFrameCallback(
-      (_) => _updateRoutineNameTextSize(),
+      (_) => _updateResultNameTextSize(),
     );
 
     SchedulerBinding.instance.addPersistentFrameCallback(
-      (_) => _updateRoutineNameTextSize(),
+      (_) => _updateResultNameTextSize(),
     );
   }
 
-  void _updateRoutineNameTextSize() {
+  void _updateResultNameTextSize() {
     final renderBox =
-        _routineNameTextKey.currentContext?.findRenderObject() as RenderBox?;
+        _resultNameTextKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
     setState(() {
-      _routineNameTextSize = renderBox.size;
-      _routineNameTextKey = GlobalKey();
+      _resultNameTextSize = renderBox.size;
+      _resultNameTextKey = GlobalKey();
     });
   }
 
   double _barHeight() {
     final double textHeight;
-    if (_routineNameTextSize == null) return 0;
-    textHeight = _routineNameTextSize!.height;
+    if (_resultNameTextSize == null) return 0;
+    textHeight = _resultNameTextSize!.height;
     final r = textHeight - 16;
     const double minHeight = 24;
     return r < minHeight ? minHeight : r;
@@ -157,13 +158,46 @@ class _RoutineResultWidgetState extends State<_RoutineResultWidget> {
 
   @override
   build(BuildContext context) {
+    final Widget resultWidget;
+    switch (widget.result.item) {
+      case ResultItem.routine:
+        resultWidget = Text(
+          widget.result.routine!.name,
+          key: _resultNameTextKey,
+        );
+      case ResultItem.note:
+        resultWidget = NoteWidget(note: widget.result.note!.$2);
+    }
+    final Widget chipWidget;
+    switch (widget.result.item) {
+      case ResultItem.routine:
+        chipWidget = Text(
+          'routine',
+          style: TextStyle(
+            color: labelColor(context, Label.searchChipForeground),
+            fontSize: 11,
+          ),
+        );
+      case ResultItem.note:
+        final routine = widget.result.note!.$1;
+        chipWidget = GestureDetector(
+          onTap: () {
+            context.go('${Routes.notes}/${routine.id}');
+          },
+          child: Text(routine.name),
+        );
+    }
     return Material(
       color: labelColor(context, Label.searchResultBackground),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: () {
-          context.go('/notes/${widget.routine.id}');
+          switch (widget.result.item) {
+            case ResultItem.routine:
+              context.go('/notes/${widget.result.routine!.id}');
+            default:
+          }
         },
         child: Padding(
           padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
@@ -185,12 +219,7 @@ class _RoutineResultWidgetState extends State<_RoutineResultWidget> {
                         Label.verticalRoutineBar,
                       ).withValues(alpha: .9),
                     ),
-                    Expanded(
-                      child: Text(
-                        widget.routine.name,
-                        key: _routineNameTextKey,
-                      ),
-                    ),
+                    Expanded(child: resultWidget),
                   ],
                 ),
               ),
@@ -202,13 +231,7 @@ class _RoutineResultWidgetState extends State<_RoutineResultWidget> {
                     horizontal: 10,
                     vertical: 2,
                   ),
-                  child: Text(
-                    'routine',
-                    style: TextStyle(
-                      color: labelColor(context, Label.searchChipForeground),
-                      fontSize: 11,
-                    ),
-                  ),
+                  child: chipWidget,
                 ),
               ),
             ],
