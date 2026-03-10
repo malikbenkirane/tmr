@@ -160,7 +160,10 @@ class NotesViewmodel extends ChangeNotifier {
       final List<RoutineSummary> routines = [];
       {
         for (final bin in RoutineBin.values) {
-          final result = await _repo.getRoutinesList(bin: bin);
+          final result = await _repo.getRoutinesList(
+            bin: bin,
+            minSpentSeconds: 1,
+          );
           switch (result) {
             case Error<List<RoutineSummary>>():
               return Result.error(result.error);
