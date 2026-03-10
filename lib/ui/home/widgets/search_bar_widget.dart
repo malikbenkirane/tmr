@@ -53,6 +53,7 @@ class _SearchBarText extends State<SearchBarWidget> {
           listenable: widget.searchBarViewmodel.load,
           builder: (context, child) {
             return Loader(
+              hide: true,
               error: widget.searchBarViewmodel.load.error,
               running: widget.searchBarViewmodel.load.running,
               onError: widget.searchBarViewmodel.load.execute,
