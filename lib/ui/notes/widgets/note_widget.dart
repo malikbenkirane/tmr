@@ -1,34 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
+import 'package:too_many_tabs/ui/core/ui/label.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 @immutable
 class NoteWidget extends StatelessWidget {
-  const NoteWidget({super.key, required this.note});
   final NoteSummary note;
+
+  const NoteWidget({super.key, required this.note});
+
   @override
   build(BuildContext context) {
-    final theme = Theme.of(context);
     return Wrap(
       spacing: 4,
       children: [
         ...note.fragments.map(
-          (fragment) => GestureDetector(
-            onTap: fragment.$2
-                ? () async {
-                    await _launchInBrowser(context, fragment.$1);
-                  }
-                : null,
-            child: Text(
-              fragment.$1,
-              style: TextStyle(
-                fontWeight: note.dismissed ? FontWeight.w200 : null,
-                color: fragment.$2 ? theme.colorScheme.primary : null,
-              ),
-            ),
+          (fragment) => _fragment(
+            context,
+            providesLaunch: fragment.$2,
+            text: fragment.$1,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _fragment(
+    BuildContext context, {
+    required bool providesLaunch,
+    required String text,
+  }) {
+    if (!providesLaunch) {
+      return Text(
+        text,
+        style: TextStyle(fontWeight: note.dismissed ? FontWeight.w200 : null),
+      );
+    }
+    return Material(
+      borderRadius: BorderRadius.circular(5),
+      elevation: .2,
+      child: InkWell(
+        onTap: () {
+          _launchInBrowser(context, text);
+        },
+        borderRadius: BorderRadius.circular(5),
+
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            text,
+            style: TextStyle(
+              color: labelColor(context, Label.noteLink),
+              fontWeight: note.dismissed ? FontWeight.w400 : null,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

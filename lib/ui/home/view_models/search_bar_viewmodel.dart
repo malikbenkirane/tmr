@@ -87,10 +87,9 @@ class SearchBarViewmodel extends ChangeNotifier {
             notes.add((routine, note));
           }
         });
-        final results = fz.extractTop(
+        final results = fz.extractAllSorted(
           query: text,
-          limit: 5,
-          cutoff: 50,
+          cutoff: 10,
           choices: notes,
           getter: (n) => n.$2.text,
         );

@@ -109,9 +109,13 @@ class HomeViewmodel extends ChangeNotifier {
 
   SignalRatio? _signalRatio;
   SignalRatio? get signalRatio => _signalRatio;
+  DateTime? _updateLock;
 
   Future<Result<SignalRatio?>> _updateSignalNoiseRatio(DateTime at) async {
-    // final trace = DateTime.now();
+    final trace = DateTime.now();
+    if (_updateLock != null && trace.isBefore(_updateLock!)) {
+      return Result.error(Exception('too soon'));
+    }
     try {
       {
         final result = await _signalRatioRepository.signalRatioAt(at);
@@ -175,9 +179,12 @@ class HomeViewmodel extends ChangeNotifier {
       _signalRatio = snr;
       return Result.ok(snr);
     } finally {
-      // debugPrint(
-      //   '[trace]: homeViewmodel: _updateSignalNoiseRatio: ${DateTime.now().difference(trace)}',
-      // );
+      final now = DateTime.now();
+      final time = now.difference(trace);
+      if (time > const Duration(milliseconds: 200)) {
+        _updateLock = now.add(time * 2);
+        debugPrint('[trace]: homeViewmodel: _updateSignalNoiseRatio: $time');
+      }
       notifyListeners();
     }
   }

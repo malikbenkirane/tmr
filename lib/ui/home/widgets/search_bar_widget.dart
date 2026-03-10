@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -28,7 +30,14 @@ class SearchBarWidget extends StatefulWidget {
 }
 
 class _SearchBarText extends State<SearchBarWidget> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _searchTextController = TextEditingController();
+  Timer? _searchDebouncer;
+
+  @override
+  dispose() {
+    _searchDebouncer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +59,19 @@ class _SearchBarText extends State<SearchBarWidget> {
                   prefixIcon: Icon(Symbols.manage_search_sharp),
                 ),
                 onChanged: (text) {
-                  widget.searchBarViewmodel.searchRoutine.execute(text);
+                  _searchDebouncer?.cancel();
+                  _searchDebouncer = Timer(
+                    const Duration(milliseconds: 500),
+                    () async {
+                      await widget.searchBarViewmodel.searchRoutine.execute(
+                        text,
+                      );
+                      setState(() {});
+                    },
+                  );
                   widget.onQueryChange(text);
-                  setState(() {});
                 },
-                controller: _controller,
+                controller: _searchTextController,
               ),
             ),
           ],
@@ -89,9 +106,12 @@ class _SearchBarText extends State<SearchBarWidget> {
   }
 
   List<Widget> _results(List<SearchResult> results) {
-    if (_controller.text.isEmpty || results.isEmpty) {
+    if (_searchTextController.text.isEmpty || results.isEmpty) {
       return [];
     }
+    final resultWidgetsIterable = results.map(
+      (routine) => _ResultWidget(routine),
+    );
     return [
       Expanded(
         child: Animate(
@@ -108,13 +128,10 @@ class _SearchBarText extends State<SearchBarWidget> {
             borderRadius: BorderRadius.circular(15),
             child: Padding(
               padding: EdgeInsets.all(10),
-              child: SingleChildScrollView(
-                child: Column(
-                  spacing: 6,
-                  children: [
-                    ...results.map((routine) => _ResultWidget(routine)),
-                  ],
-                ),
+              child: ListView.separated(
+                itemCount: resultWidgetsIterable.length,
+                itemBuilder: (context, i) => resultWidgetsIterable.elementAt(i),
+                separatorBuilder: (context, i) => const SizedBox(height: 6),
               ),
             ),
           ),
@@ -169,6 +186,89 @@ class _ResultWidgetState extends State<_ResultWidget> {
     return r < minHeight ? minHeight : r;
   }
 
+  Widget _wrap({
+    required ResultItem itemKind,
+    required Widget resultWidget,
+    required Widget chipWidget,
+    required Color barColor,
+  }) {
+    switch (itemKind) {
+      case ResultItem.note:
+        return Padding(
+          padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
+          child: Row(
+            spacing: 20,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Row(
+                  spacing: 10,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(width: 2, height: _barHeight(), color: barColor),
+                    Expanded(child: resultWidget),
+                  ],
+                ),
+              ),
+              Material(
+                elevation: 1,
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: EdgeInsetsGeometry.symmetric(
+                    horizontal: 10,
+                    vertical: 2,
+                  ),
+                  child: chipWidget,
+                ),
+              ),
+            ],
+          ),
+        );
+      case ResultItem.routine:
+        return InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () =>
+              context.go('${Routes.notes}/${widget.result.routine!.id}'),
+          child: Padding(
+            padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
+            child: Row(
+              spacing: 20,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(
+                  child: Row(
+                    spacing: 10,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 2,
+                        height: _barHeight(),
+                        color: barColor,
+                      ),
+                      Expanded(child: resultWidget),
+                    ],
+                  ),
+                ),
+                Material(
+                  elevation: 1,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: EdgeInsetsGeometry.symmetric(
+                      horizontal: 10,
+                      vertical: 2,
+                    ),
+                    child: chipWidget,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+    }
+  }
+
   @override
   build(BuildContext context) {
     final chipTextStyle = TextStyle(
@@ -216,46 +316,11 @@ class _ResultWidgetState extends State<_ResultWidget> {
     return Material(
       color: labelColor(context, Label.searchResultBackground),
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () {
-          switch (widget.result.item) {
-            case ResultItem.routine:
-              context.go('/notes/${widget.result.routine!.id}');
-            default:
-          }
-        },
-        child: Padding(
-          padding: EdgeInsets.only(left: 18, right: 10, top: 10, bottom: 13),
-          child: Row(
-            spacing: 20,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(
-                child: Row(
-                  spacing: 10,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(width: 2, height: _barHeight(), color: barColor),
-                    Expanded(child: resultWidget),
-                  ],
-                ),
-              ),
-              Material(
-                elevation: 1,
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: EdgeInsetsGeometry.symmetric(
-                    horizontal: 10,
-                    vertical: 2,
-                  ),
-                  child: chipWidget,
-                ),
-              ),
-            ],
-          ),
-        ),
+      child: _wrap(
+        itemKind: widget.result.item,
+        resultWidget: resultWidget,
+        chipWidget: chipWidget,
+        barColor: barColor,
       ),
     );
   }

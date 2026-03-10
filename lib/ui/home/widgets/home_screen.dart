@@ -46,7 +46,7 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   RoutineSummary? tappedRoutine;
-  bool isPopup = false;
+  bool _isPopup = false;
 
   late final AppLifecycleListener _listener;
   late final Timer t;
@@ -78,7 +78,10 @@ class HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _updateSNR() async {
+  bool _searchMode = false;
+
+  void _updateSNR({bool? force}) async {
+    if (force ?? _searchMode) return;
     final now = DateTime.now();
     await widget.homeModel.updateSignalNoiseRatio.execute(now);
     {
@@ -94,7 +97,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _initSNR() {
-    _updateSNR();
+    _updateSNR(force: true);
     t = Timer.periodic(const Duration(seconds: 1), (_) async {
       _updateSNR();
     });
@@ -289,7 +292,7 @@ class HomeScreenState extends State<HomeScreen> {
     return TapRegion(
       onTapOutside: (_) {
         Navigator.pop(context);
-        setState(() => isPopup = false);
+        setState(() => _isPopup = false);
       },
       child: Animate(
         effects: [
@@ -370,7 +373,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 }
                                 if (!context.mounted) return;
                                 Navigator.pop(context);
-                                setState(() => isPopup = false);
+                                setState(() => _isPopup = false);
                               },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -397,7 +400,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _bar() {
-    if (isPopup) {
+    if (_isPopup) {
       return SizedBox.shrink();
     }
     return LayoutBuilder(
@@ -415,7 +418,7 @@ class HomeScreenState extends State<HomeScreen> {
                   );
                 },
               );
-              setState(() => isPopup = true);
+              setState(() => _isPopup = true);
             },
             child: ListenableBuilder(
               listenable: widget.homeModel.load,
@@ -480,7 +483,7 @@ class HomeScreenState extends State<HomeScreen> {
       }
     } finally {
       Navigator.pop(context);
-      setState(() => isPopup = false);
+      setState(() => _isPopup = false);
     }
   }
 
@@ -512,22 +515,25 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          ListenableBuilder(
-            listenable: widget.searchModel,
-            builder: (context, _) {
-              if (widget.searchModel.results.isEmpty) {
-                return SizedBox.shrink();
-              }
-              return Animate(
-                effects: [FadeEffect()],
-                child: Container(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerLowest.withValues(alpha: .8),
-                ),
-              );
-            },
-          ),
+          _searchMode
+              ? ListenableBuilder(
+                  listenable: widget.searchModel,
+                  builder: (context, _) {
+                    if (widget.searchModel.results.isEmpty) {
+                      return SizedBox.shrink();
+                    }
+                    return Animate(
+                      effects: [FadeEffect()],
+                      child: Container(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLowest
+                            .withValues(alpha: .8),
+                      ),
+                    );
+                  },
+                )
+              : SizedBox.shrink(),
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 9, horizontal: 30),
@@ -535,10 +541,16 @@ class HomeScreenState extends State<HomeScreen> {
                 searchBarViewmodel: widget.searchModel,
                 onQueryChange: (text) {
                   if (text.isNotEmpty) {
-                    setState(() => isPopup = true);
+                    setState(() {
+                      _isPopup = true;
+                      _searchMode = true;
+                    });
                     return;
                   }
-                  setState(() => isPopup = false);
+                  setState(() {
+                    _isPopup = false;
+                    _searchMode = false;
+                  });
                 },
               ),
             ),
@@ -554,11 +566,11 @@ class HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    isPopup
+                    _isPopup
                         ? SizedBox.shrink()
                         : FloatingAction(
                             onPressed: () {
-                              setState(() => isPopup = true);
+                              setState(() => _isPopup = true);
                               showDialog(
                                 context: context,
                                 builder: (context) {
@@ -574,7 +586,7 @@ class HomeScreenState extends State<HomeScreen> {
                                               _addRoutine(context, name),
                                           onCancel: () {
                                             Navigator.pop(context);
-                                            setState(() => isPopup = false);
+                                            setState(() => _isPopup = false);
                                           },
                                         ),
                                       ),
@@ -590,7 +602,7 @@ class HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                     Expanded(child: _bar()),
-                    isPopup
+                    _isPopup
                         ? SizedBox.shrink()
                         : FloatingAction(
                             icon: Icon(Icons.menu),
