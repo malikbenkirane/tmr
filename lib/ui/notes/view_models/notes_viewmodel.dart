@@ -147,6 +147,7 @@ class NotesViewmodel extends ChangeNotifier {
   }();
 
   Future<Result<void>> _updatePomoEta(DateTime at) async {
+    final trace = DateTime.now();
     try {
       if (routine == null) {
         _eta = null;
@@ -215,6 +216,9 @@ class NotesViewmodel extends ChangeNotifier {
       }
       return Result.ok(null);
     } finally {
+      debugPrint(
+        '[trace] NotesViewmodel: _updatePomoEta: ${DateTime.now().difference(trace)}',
+      );
       notifyListeners();
     }
   }
