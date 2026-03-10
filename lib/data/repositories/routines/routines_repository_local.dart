@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
@@ -107,59 +108,69 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
 
   @override
   Future<Result<List<RoutineSummary>>> getRoutinesList(RoutineBin bin) async {
-    final resultGet = await _databaseClient.getRoutines(
-      archived: bin == RoutineBin.backlog,
-      binned: bin == RoutineBin.archives,
-    );
-    switch (resultGet) {
-      case Error<List<RoutineSummary>>():
-        _log.warning('db client get routines: ${resultGet.error}');
-        return resultGet;
-      case Ok<List<RoutineSummary>>():
-    }
+    final trace = DateTime.now();
+    try {
+      final resultGet = await _databaseClient.getRoutines(
+        archived: bin == RoutineBin.backlog,
+        binned: bin == RoutineBin.archives,
+      );
+      switch (resultGet) {
+        case Error<List<RoutineSummary>>():
+          _log.warning('db client get routines: ${resultGet.error}');
+          return resultGet;
+        case Ok<List<RoutineSummary>>():
+      }
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
 
-    final resultCurrentSpecialSession = await _databaseClient
-        .getCurrentSpecialGoalSession();
-    switch (resultCurrentSpecialSession) {
-      case Error<SpecialGoalSession?>():
-        _log.warning(
-          '_dailyCheck: getCurrentSpecialGoalSession: ${resultCurrentSpecialSession.error}',
-        );
-        return Result.error(resultCurrentSpecialSession.error);
-      case Ok<SpecialGoalSession?>():
-    }
-
-    if (resultCurrentSpecialSession.value != null &&
-        resultCurrentSpecialSession.value!.startedAt.isBefore(today)) {
-      final result = await _databaseClient.stopSpecialGoalSession(today);
-      switch (result) {
+      final resultCurrentSpecialSession = await _databaseClient
+          .getCurrentSpecialGoalSession();
+      switch (resultCurrentSpecialSession) {
         case Error<SpecialGoalSession?>():
-          _log.warning('_dailyCheck: stopSpecialGoalSession: ${result.error}');
-          return Result.error(result.error);
-        case Ok<SpecialGoalSession?>():
-          _log.fine('_dailyCheck: stopSpecialGoalSession: ${result.value}');
-      }
-    }
-
-    List<RoutineSummary> routines = [];
-    for (final routine in resultGet.value) {
-      // _log.fine('_dailyCheck ${routine.id}');
-      final resultCheck = await _dailyCheck(routine.id, now, today);
-      switch (resultCheck) {
-        case Error<RoutineSummary>():
           _log.warning(
-            '_dailyCheck failed on routine ${routine.id}: ${resultCheck.error}',
+            '_dailyCheck: getCurrentSpecialGoalSession: ${resultCurrentSpecialSession.error}',
           );
-          return Result.error(resultCheck.error);
-        case Ok<RoutineSummary>():
-          routines.add(resultCheck.value);
+          return Result.error(resultCurrentSpecialSession.error);
+        case Ok<SpecialGoalSession?>():
+      }
+
+      if (resultCurrentSpecialSession.value != null &&
+          resultCurrentSpecialSession.value!.startedAt.isBefore(today)) {
+        final result = await _databaseClient.stopSpecialGoalSession(today);
+        switch (result) {
+          case Error<SpecialGoalSession?>():
+            _log.warning(
+              '_dailyCheck: stopSpecialGoalSession: ${result.error}',
+            );
+            return Result.error(result.error);
+          case Ok<SpecialGoalSession?>():
+            _log.fine('_dailyCheck: stopSpecialGoalSession: ${result.value}');
+        }
+      }
+
+      List<RoutineSummary> routines = [];
+      for (final routine in resultGet.value) {
+        // _log.fine('_dailyCheck ${routine.id}');
+        final resultCheck = await _dailyCheck(routine.id, now, today);
+        switch (resultCheck) {
+          case Error<RoutineSummary>():
+            _log.warning(
+              '_dailyCheck failed on routine ${routine.id}: ${resultCheck.error}',
+            );
+            return Result.error(resultCheck.error);
+          case Ok<RoutineSummary>():
+            routines.add(resultCheck.value);
+        }
+      }
+
+      return Result.ok(routines);
+    } finally {
+      final time = DateTime.now().difference(trace);
+      if (time > const Duration(milliseconds: 250)) {
+        debugPrint('[trace] getRoutinesList($bin): $time');
       }
     }
-
-    return Result.ok(routines);
   }
 
   Future<Result<RoutineSummary>> _dailyCheck(
