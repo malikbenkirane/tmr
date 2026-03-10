@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -104,7 +105,10 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30),
+              padding: EdgeInsets.symmetric(
+                vertical: Platform.isIOS || Platform.isAndroid ? 0 : 20,
+                horizontal: 30,
+              ),
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Row(

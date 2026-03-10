@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -93,7 +94,10 @@ class _ArchivesScreenState extends State<BinScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30),
+              padding: EdgeInsets.symmetric(
+                vertical: Platform.isIOS || Platform.isAndroid ? 0 : 20,
+                horizontal: 30,
+              ),
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Row(

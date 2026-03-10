@@ -534,7 +534,10 @@ class HomeScreenState extends State<HomeScreen> {
           ),
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 30),
+              padding: EdgeInsets.symmetric(
+                vertical: Platform.isIOS || Platform.isAndroid ? 0 : 20,
+                horizontal: 30,
+              ),
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Row(

@@ -246,10 +246,18 @@ class _NotesScreenState extends State<NotesScreen> {
                 children: [
                   ShaderMask(
                     shaderCallback: (bounds) {
+                      final screenHeight = MediaQuery.of(context).size.height;
+                      final double safe;
+                      const safeBottomMargin = 80 * 3;
+                      {
+                        var s = screenHeight - safeBottomMargin;
+                        s = s >= 0 ? s : 0.1;
+                        safe = s;
+                      }
                       return LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: [0, .8, 1],
+                        stops: [0, safe / screenHeight, 1],
                         colors: [
                           Colors.black,
                           Colors.black,
@@ -298,7 +306,12 @@ class _NotesScreenState extends State<NotesScreen> {
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(
+                      vertical: Platform.isIOS || Platform.isAndroid ? 0 : 20,
+                      horizontal: Platform.isIOS || Platform.isAndroid
+                          ? 40
+                          : 20,
+                    ),
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: Row(
@@ -371,70 +384,64 @@ class _NotesScreenState extends State<NotesScreen> {
   List<Widget> _actionButtons(BuildContext context) {
     return showActionButtons
         ? [
-            Padding(
-              padding: EdgeInsets.only(left: 20),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 10,
-                children: [
-                  FloatingAction(
-                    onPressed: _notePopup,
-                    icon: Icon(Icons.add),
-                    colorComposition: colorCompositionFromAction(
-                      context,
-                      ApplicationAction.addNote,
-                    ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 10,
+              children: [
+                FloatingAction(
+                  onPressed: _notePopup,
+                  icon: Icon(Icons.add),
+                  colorComposition: colorCompositionFromAction(
+                    context,
+                    ApplicationAction.addNote,
                   ),
-                  ListenableBuilder(
-                    listenable: widget.homeViewmodel,
-                    builder: (context, _) {
-                      final RoutineSummary routine;
-                      {
-                        final r = widget.notesViewmodel.routine;
-                        if (r == null) {
-                          return SizedBox.shrink();
-                        }
-                        final u = _getRoutine(r.id);
-                        if (u == null) {
-                          return SizedBox.shrink();
-                        }
-                        routine = u;
-                      }
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FloatingAction(
-                            onPressed: _startOrStopRoutine,
-                            icon: Icon(
-                              routine.running
-                                  ? Symbols.pause
-                                  : Symbols.play_arrow,
-                              fill: 1,
-                            ),
-                            colorComposition: colorCompositionFromAction(
-                              context,
-                              routine.running
-                                  ? ApplicationAction.stopRoutine
-                                  : ApplicationAction.startRoutine,
-                            ),
-                          ),
-                          _etaWidget(),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(right: 20),
-              child: FloatingAction(
-                onPressed: () => context.go(Routes.home),
-                icon: Icon(Icons.home),
-                colorComposition: colorCompositionFromAction(
-                  context,
-                  ApplicationAction.toHome,
                 ),
+                ListenableBuilder(
+                  listenable: widget.homeViewmodel,
+                  builder: (context, _) {
+                    final RoutineSummary routine;
+                    {
+                      final r = widget.notesViewmodel.routine;
+                      if (r == null) {
+                        return SizedBox.shrink();
+                      }
+                      final u = _getRoutine(r.id);
+                      if (u == null) {
+                        return SizedBox.shrink();
+                      }
+                      routine = u;
+                    }
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FloatingAction(
+                          onPressed: _startOrStopRoutine,
+                          icon: Icon(
+                            routine.running
+                                ? Symbols.pause
+                                : Symbols.play_arrow,
+                            fill: 1,
+                          ),
+                          colorComposition: colorCompositionFromAction(
+                            context,
+                            routine.running
+                                ? ApplicationAction.stopRoutine
+                                : ApplicationAction.startRoutine,
+                          ),
+                        ),
+                        _etaWidget(),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+            FloatingAction(
+              onPressed: () => context.go(Routes.home),
+              icon: Icon(Icons.home),
+              colorComposition: colorCompositionFromAction(
+                context,
+                ApplicationAction.toHome,
               ),
             ),
           ]
