@@ -33,6 +33,7 @@ class NotesViewmodel extends ChangeNotifier {
   List<NoteSummary> get notes => _notes;
 
   Future<Result> _load() async {
+    final trace = DateTime.now();
     try {
       _notes = [];
       if (_routineId == null) {
@@ -73,6 +74,9 @@ class NotesViewmodel extends ChangeNotifier {
       await _updatePomoEta(DateTime.now());
       return resultRoutineSummary;
     } finally {
+      debugPrint(
+        '[trace] NotesViewmodel: _load: ${DateTime.now().difference(trace)} ',
+      );
       notifyListeners();
     }
   }
