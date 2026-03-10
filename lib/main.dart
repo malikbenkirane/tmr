@@ -164,7 +164,9 @@ void onStart(ServiceInstance service) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeService();
+  if (Platform.isIOS || Platform.isAndroid) {
+    await initializeService();
+  }
 
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
