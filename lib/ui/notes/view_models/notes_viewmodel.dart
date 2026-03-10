@@ -15,16 +15,18 @@ class NotesViewmodel extends ChangeNotifier {
     addNote = Command1(_addNote);
     dismissNote = Command1(_dismissNote);
     updatePomoEta = Command1(_updatePomoEta);
+    scheduleRoutine = Command0(_scheduleRoutine);
   }
 
   final RoutinesRepository _repo;
   final int? _routineId;
   final _log = Logger('NotesViewmodel');
 
-  late Command0 load;
+  late Command0<void> load;
   late Command1<void, NoteSummary> addNote;
   late Command1<void, int> dismissNote;
   late Command1<void, DateTime> updatePomoEta;
+  late Command0<void> scheduleRoutine;
 
   RoutineSummary? _routine;
   List<NoteSummary> _notes = [];
@@ -241,5 +243,18 @@ class NotesViewmodel extends ChangeNotifier {
       return start.add(left);
     }
     return start.add(pomo);
+  }
+
+  Future<Result<void>> _scheduleRoutine() async {
+    if (routine == null) {
+      return Result.error(Exception('scheduling null routine'));
+    }
+    final result = await _repo.scheduleRoutine(routine!.id);
+    switch (result) {
+      case Error<void>():
+        return Result.error(result.error);
+      case Ok<void>():
+    }
+    return Result.ok(null);
   }
 }

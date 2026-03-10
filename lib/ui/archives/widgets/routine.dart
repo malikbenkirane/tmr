@@ -25,7 +25,7 @@ class Routine extends StatelessWidget {
     final (foreground, background) = alternateColors(context, index);
     final dismissReschedule = comp.Colors(
       context,
-      ApplicationAction.rescheduleRoutine,
+      ApplicationAction.scheduleRoutine,
     );
     final dismissArchive = comp.Colors(context, ApplicationAction.toArchive);
     return Dismissible(

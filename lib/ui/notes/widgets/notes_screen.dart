@@ -115,7 +115,7 @@ class _NotesScreenState extends State<NotesScreen> {
       child: ListenableBuilder(
         listenable: widget.homeViewmodel,
         builder: (context, _) {
-          final routineUpdate = _getRoutine(routine.id);
+          final routineUpdate = _getHomeViewmodelRoutine(routine.id);
           var dayGoal = Duration.zero;
           for (final routine in widget.homeViewmodel.routines) {
             dayGoal += routine.$1.goal;
@@ -168,7 +168,7 @@ class _NotesScreenState extends State<NotesScreen> {
       builder: (context, _) {
         final r = widget.notesViewmodel.routine;
         if (r == null) return SizedBox.shrink();
-        final u = _getRoutine(r.id);
+        final u = _getHomeViewmodelRoutine(r.id);
         if (u == null) return SizedBox.shrink();
         if (!u.running) {
           return Text(
@@ -329,7 +329,7 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  RoutineSummary? _getRoutine(int id) {
+  RoutineSummary? _getHomeViewmodelRoutine(int id) {
     final routineId = id;
     RoutineSummary? routineUpdate;
     for (final routineCandidate in widget.homeViewmodel.routines) {
@@ -405,9 +405,30 @@ class _NotesScreenState extends State<NotesScreen> {
                       if (r == null) {
                         return SizedBox.shrink();
                       }
-                      final u = _getRoutine(r.id);
+                      final u = _getHomeViewmodelRoutine(r.id);
                       if (u == null) {
-                        return SizedBox.shrink();
+                        return FloatingAction(
+                          icon: Icon(Symbols.skip_next),
+                          onPressed: () async {
+                            await widget.notesViewmodel.scheduleRoutine
+                                .execute();
+                            if (widget.notesViewmodel.scheduleRoutine.error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'unable to schedule routine',
+                                  ),
+                                ),
+                              );
+                            }
+                            widget.homeViewmodel.load.execute();
+                          },
+                          colorComposition: colorCompositionFromAction(
+                            context,
+                            ApplicationAction.scheduleRoutine,
+                          ),
+                        );
                       }
                       routine = u;
                     }

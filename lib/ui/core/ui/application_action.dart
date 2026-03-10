@@ -48,7 +48,7 @@ ColorComposition colorCompositionFromAction(
           ? colorScheme.surfaceContainerLow
           : colorScheme.inverseSurface;
       break;
-    case ApplicationAction.rescheduleRoutine:
+    case ApplicationAction.scheduleRoutine:
     case ApplicationAction.restoreRoutine:
       foreground = colorScheme.primary;
       background = colorScheme.surface;
@@ -109,7 +109,7 @@ enum ApplicationAction {
   stopRoutine(1),
   backlogRoutine(2),
   archiveRoutine(3),
-  rescheduleRoutine(4),
+  scheduleRoutine(4),
   restoreRoutine(5),
   addRoutine(6),
   toHome(7),

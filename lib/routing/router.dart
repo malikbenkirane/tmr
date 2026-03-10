@@ -52,7 +52,8 @@ Future<Result<(DatabaseClient, Duration)>> prepareDatabaseClient() async {
 
 GoRouter router() => GoRouter(
   restorationScopeId: 'router',
-  initialLocation: Routes.home,
+  // initialLocation: Routes.home,
+  initialLocation: '/notes/164',
   debugLogDiagnostics: true,
   routes: [
     GoRoute(
