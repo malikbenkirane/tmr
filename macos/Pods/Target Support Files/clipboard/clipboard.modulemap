@@ -1,6 +1,0 @@
-framework module clipboard {
-  umbrella header "clipboard-umbrella.h"
-
-  export *
-  module * { export * }
-}
