@@ -17,12 +17,12 @@ import 'package:timeago/timeago.dart' as timeago;
 @immutable
 class SearchBarWidget extends StatefulWidget {
   final SearchBarViewmodel searchBarViewmodel;
-  final Function(String) onQueryChange;
+  final Function(bool) onFocus;
 
   const SearchBarWidget({
     super.key,
     required this.searchBarViewmodel,
-    required this.onQueryChange,
+    required this.onFocus,
   });
 
   @override
@@ -60,11 +60,17 @@ class _SearchBarText extends State<SearchBarWidget> {
                   suffixIcon: IconButton(
                     onPressed: () {
                       _searchTextController.text = '';
-                      widget.onQueryChange('');
+                      widget.onFocus(false);
+                      FocusScope.of(context).unfocus();
                     },
                     icon: Icon(Symbols.cancel_rounded),
                   ),
                 ),
+                onTap: () => widget.onFocus(true),
+                onTapOutside: (_) {
+                  widget.onFocus(false);
+                  FocusScope.of(context).unfocus();
+                },
                 onChanged: (text) {
                   _searchDebouncer?.cancel();
                   _searchDebouncer = Timer(
@@ -77,7 +83,6 @@ class _SearchBarText extends State<SearchBarWidget> {
                       setState(() {});
                     },
                   );
-                  widget.onQueryChange(text);
                 },
                 controller: _searchTextController,
               ),

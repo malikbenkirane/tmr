@@ -516,22 +516,13 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ),
           _searchMode
-              ? ListenableBuilder(
-                  listenable: widget.searchModel,
-                  builder: (context, _) {
-                    if (widget.searchModel.results.isEmpty) {
-                      return SizedBox.shrink();
-                    }
-                    return Animate(
-                      effects: [FadeEffect()],
-                      child: Container(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerLowest
-                            .withValues(alpha: .8),
-                      ),
-                    );
-                  },
+              ? Animate(
+                  effects: [FadeEffect()],
+                  child: Container(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerLowest.withValues(alpha: .8),
+                  ),
                 )
               : SizedBox.shrink(),
           SafeArea(
@@ -539,17 +530,10 @@ class HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.symmetric(vertical: 9, horizontal: 30),
               child: SearchBarWidget(
                 searchBarViewmodel: widget.searchModel,
-                onQueryChange: (text) {
-                  if (text.isNotEmpty) {
-                    setState(() {
-                      _isPopup = true;
-                      _searchMode = true;
-                    });
-                    return;
-                  }
+                onFocus: (focus) {
                   setState(() {
-                    _isPopup = false;
-                    _searchMode = false;
+                    _isPopup = focus;
+                    _searchMode = focus;
                   });
                 },
               ),
