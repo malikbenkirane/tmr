@@ -71,89 +71,173 @@ Future<void> _backgroundPomoCheck() async {
         conn = result.value.$1;
     }
   }
-  final RoutineSummary? running;
-  {
-    final result = await conn.getRunningRoutine();
-    switch (result) {
-      case Error<RoutineSummary?>():
+  try {
+    conn.log(
+      level: 'DEBUG',
+      message: 'background pomo check started',
+      time: DateTime.now(),
+      logger: '_backgroundPomoCheck',
+    );
+  } catch (_) {}
+  try {
+    final RoutineSummary? running;
+    {
+      final result = await conn.getRunningRoutine();
+      switch (result) {
+        case Error<RoutineSummary?>():
+          try {
+            conn.log(
+              level: 'DEBUG',
+              message: 'getRunningRoutine: ${result.error}',
+              time: DateTime.now(),
+              logger: '_backgroundPomoCheck',
+            );
+          } catch (_) {}
+          return;
+        case Ok<RoutineSummary?>():
+          running = result.value;
+      }
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final int? id;
+    final String? name;
+    if (running == null) {
+      id = prefs.getInt(Preferences.lastRunningId);
+      name = prefs.getString(Preferences.lastRunningName);
+    } else {
+      id = running.id;
+      name = running.name;
+    }
+
+    if (id == null || name == null) {
+      try {
+        conn.log(
+          level: 'DEBUG',
+          message: 'id == null || name == null',
+          time: DateTime.now(),
+          logger: '_backgroundPomoCheck',
+        );
+      } catch (_) {}
+      return;
+    }
+
+    String? message;
+    if (running == null) {
+      final DateTime? lastStopAt;
+      {
+        final result = await conn.lastLog(id, RoutineState.stopped);
+        switch (result) {
+          case Error<DateTime?>():
+            try {
+              conn.log(
+                level: 'DEBUG',
+                message: 'lastStopAt: lastLog: ${result.error}',
+                time: DateTime.now(),
+                logger: '_backgroundPomoCheck',
+              );
+            } catch (_) {}
+            return;
+          case Ok<DateTime?>():
+            lastStopAt = result.value;
+        }
+      }
+      if (lastStopAt == null) {
+        try {
+          conn.log(
+            level: 'DEBUG',
+            message: 'lastStop == null',
+            time: DateTime.now(),
+            logger: '_backgroundPomoCheck',
+          );
+        } catch (_) {}
         return;
-      case Ok<RoutineSummary?>():
-        running = result.value;
-    }
-  }
-
-  final prefs = await SharedPreferences.getInstance();
-  final int? id;
-  final String? name;
-  if (running == null) {
-    id = prefs.getInt(Preferences.lastRunningId);
-    name = prefs.getString(Preferences.lastRunningName);
-  } else {
-    id = running.id;
-    name = running.name;
-  }
-
-  if (id == null || name == null) return;
-
-  String? message;
-  if (running == null) {
-    final DateTime? lastStopAt;
-    {
-      final result = await conn.lastLog(id, RoutineState.stopped);
-      switch (result) {
-        case Error<DateTime?>():
-          return;
-        case Ok<DateTime?>():
-          lastStopAt = result.value;
+      }
+      {
+        final now = DateTime.now();
+        const pomo = Duration(minutes: 5);
+        final session = now.difference(lastStopAt);
+        if (DateTime.now().difference(lastStopAt) >
+            const Duration(minutes: 5)) {
+          final t = timeago.format(now.subtract(session - pomo));
+          message = 'Your break should have ended $t';
+        }
+      }
+    } else {
+      final DateTime? lastStartAt;
+      {
+        final result = await conn.lastLog(id, RoutineState.started);
+        switch (result) {
+          case Error<DateTime?>():
+            try {
+              conn.log(
+                level: 'DEBUG',
+                message: 'lastStartAt: lastLog: ${result.error}',
+                time: DateTime.now(),
+                logger: '_backgroundPomoCheck',
+              );
+            } catch (_) {}
+            return;
+          case Ok<DateTime?>():
+            lastStartAt = result.value;
+        }
+      }
+      if (lastStartAt == null) {
+        try {
+          conn.log(
+            level: 'DEBUG',
+            message: 'lastStartAt == null',
+            time: DateTime.now(),
+            logger: '_backgroundPomoCheck',
+          );
+        } catch (_) {}
+        return;
+      }
+      {
+        const pomo = Duration(minutes: 20);
+        final now = DateTime.now();
+        final session = now.difference(lastStartAt);
+        if (session > pomo) {
+          final t = timeago.format(now.subtract(session - pomo));
+          message = 'A break was supposed to start $t';
+        }
       }
     }
-    if (lastStopAt == null) return;
-    {
-      final now = DateTime.now();
-      const pomo = Duration(minutes: 5);
-      final session = now.difference(lastStopAt);
-      if (DateTime.now().difference(lastStopAt) > const Duration(minutes: 5)) {
-        final t = timeago.format(now.subtract(session - pomo));
-        message = 'Your break should have ended $t';
-      }
-    }
-  } else {
-    final DateTime? lastStartAt;
-    {
-      final result = await conn.lastLog(id, RoutineState.started);
-      switch (result) {
-        case Error<DateTime?>():
-          return;
-        case Ok<DateTime?>():
-          lastStartAt = result.value;
-      }
-    }
-    if (lastStartAt == null) return;
-    {
-      const pomo = Duration(minutes: 20);
-      final now = DateTime.now();
-      final session = now.difference(lastStartAt);
-      if (session > pomo) {
-        final t = timeago.format(now.subtract(session - pomo));
-        message = 'A break was supposed to start $t';
-      }
-    }
-  }
 
-  if (message == null) return;
+    if (message == null) {
+      try {
+        conn.log(
+          level: 'DEBUG',
+          message: 'message == null',
+          time: DateTime.now(),
+          logger: '_backgroundPomoCheck',
+        );
+      } catch (_) {}
+      return;
+    }
 
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  flutterLocalNotificationsPlugin.show(
-    0,
-    name,
-    message,
-    NotificationDetails(
-      iOS: DarwinNotificationDetails(
-        sound: 'spacial.aif',
-        interruptionLevel: InterruptionLevel.timeSensitive,
+    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    flutterLocalNotificationsPlugin.show(
+      0,
+      name,
+      message,
+      NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          sound: 'spacial.aif',
+          interruptionLevel: InterruptionLevel.timeSensitive,
+        ),
       ),
-    ),
-  );
+    );
+  } catch (e) {
+    try {
+      conn.log(
+        level: 'DEBUG',
+        message: 'main try block: $e',
+        time: DateTime.now(),
+        logger: '_backgroundPomoCheck',
+      );
+    } catch (_) {}
+  }
 }
 
 void main() async {
