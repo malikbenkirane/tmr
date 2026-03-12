@@ -11,8 +11,17 @@ import 'package:too_many_tabs/routing/router.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
 import 'package:too_many_tabs/utils/result.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:workmanager/workmanager.dart';
 
 Future<void> initializeService() async {
+  Workmanager().initialize(callbackDispatcher);
+
+  Workmanager().registerPeriodicTask(
+    "pomo_reminder",
+    "pomo_reminder",
+    frequency: const Duration(minutes: 15),
+  );
+
   const channel = AndroidNotificationChannel(
     'android_foreground',
     'Android Foreground Service',
@@ -34,7 +43,21 @@ Future<void> initializeService() async {
       ?.createNotificationChannel(channel);
 }
 
-void _backgroundPomoCheck() async {
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    switch (task) {
+      case "pomo_reminder":
+        await _backgroundPomoCheck();
+      default:
+        break;
+    }
+
+    return Future.value(true);
+  });
+}
+
+Future<void> _backgroundPomoCheck() async {
   final DatabaseClient conn;
   {
     final result = await prepareDatabaseClient();
