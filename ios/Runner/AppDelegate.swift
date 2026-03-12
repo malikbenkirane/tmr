@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import flutter_local_notifications
+import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -8,6 +9,11 @@ import flutter_local_notifications
             _ application: UIApplication,
             didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
             ) -> Bool {
+
+        WorkmanagerPlugin.registerPeriodicTask(
+          withIdentifier: "blog.internetWorks.tooManyRoutines.pomo_reminder",
+          frequency: NSNumber(value: 15 * 60) // 15 minutes (minimum)
+        )
 
         // This is required to make any communication available in the action isolate.
         FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
