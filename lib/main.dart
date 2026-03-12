@@ -15,6 +15,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:workmanager/workmanager.dart';
 
 Future<void> initializeService() async {
+  await FlutterLocalNotificationsPlugin().cancelAllPendingNotifications();
+
   Workmanager().initialize(callbackDispatcher);
 
   Workmanager().registerPeriodicTask(
