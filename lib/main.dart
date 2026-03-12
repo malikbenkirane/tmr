@@ -52,28 +52,23 @@ Future<void> initializeService() async {
   );
 }
 
-@pragma('vm:entry-point')
-Future<bool> onIosBackground(ServiceInstance service) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
-
+void _backgroundPomoCheck() async {
   final DatabaseClient conn;
   {
     final result = await prepareDatabaseClient();
     switch (result) {
       case Error<(DatabaseClient, Duration)>():
-        return true;
+        return;
       case Ok<(DatabaseClient, Duration)>():
         conn = result.value.$1;
     }
   }
-
   final RoutineSummary? running;
   {
     final result = await conn.getRunningRoutine();
     switch (result) {
       case Error<RoutineSummary?>():
-        return true;
+        return;
       case Ok<RoutineSummary?>():
         running = result.value;
     }
@@ -92,7 +87,7 @@ Future<bool> onIosBackground(ServiceInstance service) async {
     prefs.setString('lastRunningName', name);
   }
 
-  if (id == null || name == null) return true;
+  if (id == null || name == null) return;
 
   String? message;
   if (running == null) {
@@ -101,12 +96,12 @@ Future<bool> onIosBackground(ServiceInstance service) async {
       final result = await conn.lastLog(id, RoutineState.stopped);
       switch (result) {
         case Error<DateTime?>():
-          return true;
+          return;
         case Ok<DateTime?>():
           lastStopAt = result.value;
       }
     }
-    if (lastStopAt == null) return true;
+    if (lastStopAt == null) return;
     {
       final now = DateTime.now();
       const pomo = Duration(minutes: 5);
@@ -122,12 +117,12 @@ Future<bool> onIosBackground(ServiceInstance service) async {
       final result = await conn.lastLog(id, RoutineState.started);
       switch (result) {
         case Error<DateTime?>():
-          return true;
+          return;
         case Ok<DateTime?>():
           lastStartAt = result.value;
       }
     }
-    if (lastStartAt == null) return true;
+    if (lastStartAt == null) return;
     {
       const pomo = Duration(minutes: 20);
       final now = DateTime.now();
@@ -139,7 +134,7 @@ Future<bool> onIosBackground(ServiceInstance service) async {
     }
   }
 
-  if (message == null) return true;
+  if (message == null) return;
 
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   flutterLocalNotificationsPlugin.show(
@@ -153,7 +148,13 @@ Future<bool> onIosBackground(ServiceInstance service) async {
       ),
     ),
   );
+}
 
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+  _backgroundPomoCheck();
   return true;
 }
 
