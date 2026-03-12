@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +13,6 @@ import 'package:too_many_tabs/utils/result.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 Future<void> initializeService() async {
-  final service = FlutterBackgroundService();
   const channel = AndroidNotificationChannel(
     'android_foreground',
     'Android Foreground Service',
@@ -35,21 +32,6 @@ Future<void> initializeService() async {
         AndroidFlutterLocalNotificationsPlugin
       >()
       ?.createNotificationChannel(channel);
-
-  await service.configure(
-    iosConfiguration: IosConfiguration(
-      autoStart: true,
-      onForeground: onStart,
-      onBackground: onIosBackground,
-    ),
-    androidConfiguration: AndroidConfiguration(
-      autoStart: true,
-      isForegroundMode: true,
-      onStart: onStart,
-      notificationChannelId: 'android_foreground',
-      foregroundServiceNotificationId: 888,
-    ),
-  );
 }
 
 void _backgroundPomoCheck() async {
@@ -148,19 +130,6 @@ void _backgroundPomoCheck() async {
       ),
     ),
   );
-}
-
-@pragma('vm:entry-point')
-Future<bool> onIosBackground(ServiceInstance service) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
-  _backgroundPomoCheck();
-  return true;
-}
-
-@pragma('vm:entry-point')
-void onStart(ServiceInstance service) async {
-  DartPluginRegistrant.ensureInitialized();
 }
 
 void main() async {
