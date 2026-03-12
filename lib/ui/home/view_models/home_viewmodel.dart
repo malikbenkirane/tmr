@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/data/repositories/settings/settings_repository.dart';
@@ -16,6 +17,7 @@ import 'package:too_many_tabs/ui/home/view_models/goal_update.dart';
 import 'package:too_many_tabs/ui/home/view_models/routine_state.dart';
 import 'package:too_many_tabs/ui/home/view_models/signal_noise_ratio.dart';
 import 'package:too_many_tabs/utils/command.dart';
+import 'package:too_many_tabs/utils/preferences.dart';
 import 'package:too_many_tabs/utils/result.dart';
 
 class HomeViewmodel extends ChangeNotifier {
@@ -443,6 +445,10 @@ class HomeViewmodel extends ChangeNotifier {
       if (!started) {
         _lastPinnedRoutine = routine;
       }
+
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setInt(Preferences.lastRunningId, routine.id);
+      prefs.setString(Preferences.lastRunningId, routine.name);
 
       await _updateSpecialSessionStatus(now);
       await _updateSignalNoiseRatio(now);

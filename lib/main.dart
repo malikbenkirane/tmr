@@ -9,6 +9,7 @@ import 'package:too_many_tabs/data/services/database/database_client.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
 import 'package:too_many_tabs/routing/router.dart';
 import 'package:too_many_tabs/ui/core/ui/scroll_behavior.dart';
+import 'package:too_many_tabs/utils/preferences.dart';
 import 'package:too_many_tabs/utils/result.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:workmanager/workmanager.dart';
@@ -83,13 +84,11 @@ Future<void> _backgroundPomoCheck() async {
   final int? id;
   final String? name;
   if (running == null) {
-    id = prefs.getInt('lastRunningId');
-    name = prefs.getString('lastRunningName');
+    id = prefs.getInt(Preferences.lastRunningId);
+    name = prefs.getString(Preferences.lastRunningName);
   } else {
     id = running.id;
-    prefs.setInt('lastRunningId', id);
     name = running.name;
-    prefs.setString('lastRunningName', name);
   }
 
   if (id == null || name == null) return;
