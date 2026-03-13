@@ -40,7 +40,7 @@ Future<Result<(DatabaseClient, Duration)>> prepareDatabaseClient() async {
 
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
-    if (record.level >= Level.INFO) {
+    if (record.level > Level.INFO) {
       client.log(
         level: record.level.name,
         time: record.time,
