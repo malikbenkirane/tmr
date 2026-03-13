@@ -77,40 +77,70 @@ class SearchBarViewmodel extends ChangeNotifier {
           getter: (routine) => routine.name,
         );
         for (final result in results) {
-          _results.add(SearchResult(routineResult: result.choice));
+          _results.add(
+            SearchResult(routineResult: result.choice, score: result.score),
+          );
         }
-        final now = DateTime.now();
-        _results.sort((resultA, resultB) {
-          final a = resultA.routine!.lastStarted;
-          final b = resultB.routine!.lastStarted;
-          if (a == null && b == null) {
-            return 0;
-          }
-          if (a == null) {
-            return b!.compareTo(now);
-          }
-          if (b == null) {
-            return now.compareTo(a);
-          }
-          return b.compareTo(a);
-        });
+        _results.sort();
+        for (final result in _results) {
+          debugPrint('${result.routine!.name} ${result.routine!.lastStarted}');
+        }
       }
       {
-        final List<(RoutineSummary, NoteSummary)> notes = [];
+        List<(RoutineSummary, NoteSummary)> notes = [];
         _notes.forEach((routine, routineNotes) {
           for (final note in routineNotes) {
             notes.add((routine, note));
           }
         });
-        final results = fz.extractAllSorted(
-          query: text,
-          cutoff: 10,
-          choices: notes,
-          getter: (n) => n.$2.text,
-        );
-        for (final result in results) {
-          _results.add(SearchResult(noteResult: result.choice));
+
+        final List<SearchResult> noteSearchResults = [];
+
+        List<(String, RoutineSummary, NoteSummary, int)> choices = [];
+
+        for (final note in notes) {
+          for (final word in note.$2.text.split(RegExp(r'\s+'))) {
+            choices.add((word, note.$1, note.$2, 0));
+          }
         }
+        debugPrint('$text: ${choices.length} choices, ${notes.length} notes');
+
+        final expr = text.split(RegExp(r'\s+'));
+
+        for (final text in expr) {
+          final results = fz.extractAllSorted(
+            query: text,
+            cutoff: 80,
+            choices: choices,
+            getter: (choice) => choice.$1,
+          );
+
+          choices = [];
+          for (final result in results) {
+            for (final word in result.choice.$3.text.split(RegExp(r'\s+'))) {
+              final routine = result.choice.$2,
+                  note = result.choice.$3,
+                  score = result.choice.$4;
+              choices.add((word, routine, note, score));
+            }
+          }
+          debugPrint(
+            '$text: ${choices.length} choices, ${results.length} results',
+          );
+        }
+
+        for (final choice in choices) {
+          noteSearchResults.add(
+            SearchResult.noteResult(
+              score: choice.$4,
+              note: choice.$3,
+              routine: choice.$2,
+            ),
+          );
+        }
+
+        noteSearchResults.sort();
+        _results.addAll(noteSearchResults);
       }
       // debugPrint(
       //   '_searchRoutine: text=$text results=${results.length} routines=${_routines.length}',

@@ -22,6 +22,14 @@ class SearchResult implements Comparable<SearchResult> {
     return ResultItem.routine;
   }();
 
+  SearchResult inc(int s) {
+    return SearchResult(
+      routineResult: routine,
+      noteResult: note,
+      score: score + s,
+    );
+  }
+
   static SearchResult noteResult({
     required int score,
     required NoteSummary note,
