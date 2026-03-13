@@ -105,7 +105,7 @@ class SearchBarViewmodel extends ChangeNotifier {
         }
         debugPrint('$text: ${choices.length} choices, ${notes.length} notes');
 
-        final expr = text.split(RegExp(r'\s+'));
+        final expr = text.trim().split(RegExp(r'\s+'));
 
         for (final text in expr) {
           final results = fz.extractAllSorted(
