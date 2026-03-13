@@ -79,6 +79,21 @@ class SearchBarViewmodel extends ChangeNotifier {
         for (final result in results) {
           _results.add(SearchResult(routineResult: result.choice));
         }
+        final now = DateTime.now();
+        _results.sort((resultA, resultB) {
+          final a = resultA.routine!.lastStarted;
+          final b = resultB.routine!.lastStarted;
+          if (a == null && b == null) {
+            return 0;
+          }
+          if (a == null) {
+            return b!.compareTo(now);
+          }
+          if (b == null) {
+            return now.compareTo(a);
+          }
+          return b.compareTo(a);
+        });
       }
       {
         final List<(RoutineSummary, NoteSummary)> notes = [];
