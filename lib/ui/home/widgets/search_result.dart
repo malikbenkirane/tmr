@@ -7,10 +7,12 @@ import 'package:too_many_tabs/ui/home/widgets/result_item.dart';
 class SearchResult {
   final RoutineSummary? routine;
   final (RoutineSummary, NoteSummary)? note;
+  final int score;
 
   const SearchResult({
     RoutineSummary? routineResult,
     (RoutineSummary, NoteSummary)? noteResult,
+    required this.score,
   }) : routine = routineResult,
        note = noteResult;
 
