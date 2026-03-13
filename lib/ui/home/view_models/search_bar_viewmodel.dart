@@ -71,8 +71,8 @@ class SearchBarViewmodel extends ChangeNotifier {
       {
         final results = fz.extractTop(
           query: text,
-          limit: 4,
-          cutoff: 50,
+          limit: 3,
+          cutoff: 80,
           choices: _routines,
           getter: (routine) => routine.name,
         );
