@@ -108,12 +108,16 @@ class SearchBarViewmodel extends ChangeNotifier {
         final expr = text.trim().split(RegExp(r'\s+'));
 
         for (final text in expr) {
+          debugPrint('$text: ${choices.length} choices');
+
           final results = fz.extractAllSorted(
             query: text,
             cutoff: 80,
             choices: choices,
             getter: (choice) => choice.$1,
           );
+
+          debugPrint('$text: ${results.length} results');
 
           choices = [];
           for (final result in results) {
@@ -124,27 +128,32 @@ class SearchBarViewmodel extends ChangeNotifier {
               choices.add((word, routine, note, score));
             }
           }
-          debugPrint(
-            '$text: ${choices.length} choices, ${results.length} results',
-          );
         }
 
+        final Map<int, SearchResult> scores = {};
         for (final choice in choices) {
-          noteSearchResults.add(
-            SearchResult.noteResult(
-              score: choice.$4,
-              note: choice.$3,
-              routine: choice.$2,
-            ),
+          final note = choice.$3, routine = choice.$2, score = choice.$4;
+          final id = note.id!;
+          scores.putIfAbsent(
+            id,
+            () =>
+                SearchResult.noteResult(score: 0, note: note, routine: routine),
           );
+          scores[id] = scores[id]!.inc(score);
         }
+
+        scores.forEach((_, result) {
+          noteSearchResults.add(result);
+        });
 
         noteSearchResults.sort();
         _results.addAll(noteSearchResults);
       }
+
       // debugPrint(
       //   '_searchRoutine: text=$text results=${results.length} routines=${_routines.length}',
       // );
+
       return Result.ok(null);
     } finally {
       notifyListeners();
