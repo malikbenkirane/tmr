@@ -96,50 +96,67 @@ class SearchBarViewmodel extends ChangeNotifier {
 
         final List<SearchResult> noteSearchResults = [];
 
-        List<(String, RoutineSummary, NoteSummary, int)> choices = [];
+        final Map<
+          SearchResultWord,
+          List<(String, RoutineSummary, NoteSummary, int)>
+        >
+        choices = {};
+        choices[SearchResultWord.text] = [];
+        choices[SearchResultWord.hyperlink] = [];
 
         for (final note in notes) {
-          for (final word in note.$2.text.split(RegExp(r'\s+'))) {
-            choices.add((word, note.$1, note.$2, 0));
+          for (final fragment in note.$2.fragments) {
+            final isHyperlink = fragment.$2, word = fragment.$1;
+            final srw = isHyperlink
+                ? SearchResultWord.hyperlink
+                : SearchResultWord.text;
+            choices[srw]!.add((word, note.$1, note.$2, 0));
           }
         }
-        debugPrint('$text: ${choices.length} choices, ${notes.length} notes');
+        // debugPrint('$text: ${choices.length} choices, ${notes.length} notes');
 
         final expr = text.trim().split(RegExp(r'\s+'));
 
         for (final text in expr) {
-          debugPrint('$text: ${choices.length} choices');
+          for (final srw in SearchResultWord.values) {
+            debugPrint('$text: ${choices.length} $srw choices');
 
-          final results = fz.extractAllSorted(
-            query: text,
-            cutoff: 80,
-            choices: choices,
-            getter: (choice) => choice.$1,
-          );
+            final results = fz.extractAllSorted(
+              query: text,
+              cutoff: srw == SearchResultWord.hyperlink ? 60 : 80,
+              choices: choices[srw]!,
+              getter: (choice) => choice.$1,
+            );
 
-          debugPrint('$text: ${results.length} results');
+            debugPrint('$text: ${results.length} $srw results');
 
-          choices = [];
-          for (final result in results) {
-            for (final word in result.choice.$3.text.split(RegExp(r'\s+'))) {
-              final routine = result.choice.$2,
-                  note = result.choice.$3,
-                  score = result.choice.$4;
-              choices.add((word, routine, note, score));
+            choices[srw] = [];
+            for (final result in results) {
+              for (final word in result.choice.$3.text.split(RegExp(r'\s+'))) {
+                final routine = result.choice.$2,
+                    note = result.choice.$3,
+                    score = result.choice.$4;
+                choices[srw]!.add((word, routine, note, score));
+              }
             }
           }
         }
 
         final Map<int, SearchResult> scores = {};
-        for (final choice in choices) {
-          final note = choice.$3, routine = choice.$2, score = choice.$4;
-          final id = note.id!;
-          scores.putIfAbsent(
-            id,
-            () =>
-                SearchResult.noteResult(score: 0, note: note, routine: routine),
-          );
-          scores[id] = scores[id]!.inc(score);
+        for (final srw in SearchResultWord.values) {
+          for (final choice in choices[srw]!) {
+            final note = choice.$3, routine = choice.$2, score = choice.$4;
+            final id = note.id!;
+            scores.putIfAbsent(
+              id,
+              () => SearchResult.noteResult(
+                score: 0,
+                note: note,
+                routine: routine,
+              ),
+            );
+            scores[id] = scores[id]!.inc(score);
+          }
         }
 
         scores.forEach((_, result) {

@@ -71,3 +71,5 @@ class SearchResult implements Comparable<SearchResult> {
 }
 
 enum SearchResultKind { note, routine }
+
+enum SearchResultWord { hyperlink, text }
