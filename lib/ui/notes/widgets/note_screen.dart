@@ -1,17 +1,21 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/routing/routes.dart';
 import 'package:too_many_tabs/ui/core/loader.dart';
 import 'package:too_many_tabs/ui/core/ui/application_action.dart';
+import 'package:too_many_tabs/ui/home/widgets/add_note_popup.dart';
 import 'package:too_many_tabs/ui/notes/view_models/note_viewmodel.dart';
 import 'package:too_many_tabs/ui/core/ui/floating_action.dart';
 import 'package:too_many_tabs/ui/notes/widgets/note_widget.dart';
 
 class NoteScreen extends StatelessWidget {
-  final NoteViewmodel viewModel;
+  final NoteViewmodel noteViewmodel;
 
-  const NoteScreen({super.key, required this.viewModel});
+  const NoteScreen({super.key, required this.noteViewmodel});
 
   @override
   build(BuildContext context) {
@@ -22,21 +26,119 @@ class NoteScreen extends StatelessWidget {
             Padding(
               padding: EdgeInsets.all(40),
               child: ListenableBuilder(
-                listenable: viewModel.load,
+                listenable: noteViewmodel.load,
                 builder: (context, child) {
                   return Loader(
-                    error: viewModel.load.error,
-                    running: viewModel.load.running,
-                    onError: viewModel.load.execute,
+                    error: noteViewmodel.load.error,
+                    running: noteViewmodel.load.running,
+                    onError: noteViewmodel.load.execute,
                     child: child!,
                   );
                 },
                 child: ListenableBuilder(
-                  listenable: viewModel,
+                  listenable: noteViewmodel,
                   builder: (context, _) {
-                    final note = viewModel.note;
+                    final note = noteViewmodel.note;
                     if (note == null) return SizedBox.shrink();
-                    return (NoteWidget(note: note));
+                    return Column(
+                      spacing: 20,
+                      children: [
+                        _ParentWidget(
+                          note: NoteSummary.textOnly(
+                            note: 'lorem ipsum amet sit',
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            spacing: 13,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surfaceContainerLow,
+                                      ),
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 20,
+                                          horizontal: 13,
+                                        ),
+                                        child: NoteWidget(note: note),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 26),
+                                  child: ListView.separated(
+                                    itemCount: noteViewmodel.comments.length,
+                                    separatorBuilder: (context, _) {
+                                      return Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 116,
+                                            height: 1,
+                                            child: Container(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHigh,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                    itemBuilder: (context, index) {
+                                      final note =
+                                          noteViewmodel.comments[index];
+                                      return Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12,
+                                          horizontal: 2,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Material(
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    context.push(
+                                                      '${Routes.note}/${note.id}',
+                                                    );
+                                                  },
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                  child: Padding(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: 9,
+                                                          horizontal: 14,
+                                                        ),
+                                                    child: NoteWidget(
+                                                      note: note,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                    // return (NoteWidget(note: note));
                   },
                 ),
               ),
@@ -51,25 +153,56 @@ class NoteScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    FloatingAction(
+                      onPressed: () => _notePopup(context),
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.addNote,
+                      ),
+                      icon: Icon(Symbols.add),
+                    ),
                     Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          final note = viewModel.note;
-                          if (note == null) return;
-                        },
-                        child: ListenableBuilder(
-                          listenable: viewModel,
-                          builder: (context, _) {
-                            final routine = viewModel.routine;
-                            final note = viewModel.note;
-                            if (routine == null || note == null) {
-                              return SizedBox.shrink();
-                            }
-                            return Text(routine.name);
-                          },
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Material(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadiusGeometry.circular(18),
+                          elevation: 1,
+                          child: InkWell(
+                            onTap: () {
+                              final note = noteViewmodel.note;
+                              if (note == null) return;
                               context.push('${Routes.notes}/${note.routineId}');
+                            },
+                            child: ListenableBuilder(
+                              listenable: noteViewmodel,
+                              builder: (context, _) {
+                                final routine = noteViewmodel.routine;
+                                final note = noteViewmodel.note;
+                                if (routine == null || note == null) {
+                                  return SizedBox.shrink();
+                                }
+                                return SizedBox(
+                                  height: 41,
+                                  child: Center(child: Text(routine.name)),
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
+                    ),
+                    FloatingAction(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      colorComposition: colorCompositionFromAction(
+                        context,
+                        ApplicationAction.navPop,
+                      ),
+                      icon: Icon(Symbols.arrow_back),
                     ),
                     FloatingAction(
                       onPressed: () => context.push(Routes.home),
@@ -85,6 +218,102 @@ class NoteScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _notePopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: AddNotePopup(
+                onCancel: () {
+                  Navigator.pop(context);
+                },
+                onAdd: (note) {
+                  noteViewmodel.addComment.execute(note);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ParentWidget extends StatefulWidget {
+  final NoteSummary note;
+
+  const _ParentWidget({required this.note});
+
+  @override
+  State<StatefulWidget> createState() => _ParentWidgetState();
+}
+
+class _ParentWidgetState extends State<_ParentWidget> {
+  GlobalKey _rowKey = GlobalKey();
+  Size? _rowSize;
+
+  void _updateRowSize() {
+    final renderBox = _rowKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    setState(() {
+      _rowSize = renderBox.size;
+      _rowKey = GlobalKey();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance.addPersistentFrameCallback(
+      (_) => _updateRowSize(),
+    );
+  }
+
+  @override
+  build(BuildContext context) {
+    final sideVerticalBar = _sideVerticalBarWidget();
+    return Row(
+      key: _rowKey,
+      spacing: 2,
+      children: [
+        sideVerticalBar,
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Theme.of(context).colorScheme.surfaceContainer,
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 13),
+              child: NoteWidget(note: widget.note),
+            ),
+          ),
+        ),
+        sideVerticalBar,
+      ],
+    );
+  }
+
+  Widget _sideVerticalBarWidget() {
+    final size = _rowSize;
+    if (size == null) {
+      return SizedBox.shrink();
+    }
+    final height = size.height < 4 ? 0.0 : size.height - 4;
+    return SizedBox(
+      height: height,
+      width: 7,
+      child: Container(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
     );
   }

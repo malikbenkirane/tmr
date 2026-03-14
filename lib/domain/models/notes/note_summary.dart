@@ -43,6 +43,14 @@ class NoteSummary {
     return result;
   }
 
+  /// Creates a text-only `NoteSummary`. Intended for testing purposes only.
+  NoteSummary.textOnly({required String note, bool? dismissed, int? routineId})
+    : _createdAt = DateTime.now(),
+      _dismissed = dismissed ?? false,
+      _note = note,
+      _id = null,
+      _routineId = routineId ?? 0;
+
   @override
   String toString() {
     return [

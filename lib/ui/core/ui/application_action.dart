@@ -22,6 +22,7 @@ ColorComposition colorCompositionFromAction(
   switch (action) {
     case ApplicationAction.startRoutine:
     case ApplicationAction.toHome:
+    case ApplicationAction.navPop:
     case ApplicationAction.addNote:
     case ApplicationAction.setGoal:
       foreground = darkMode ? colorScheme.primary : colorScheme.onPrimary;
@@ -112,6 +113,7 @@ enum ApplicationAction {
   scheduleRoutine(4),
   restoreRoutine(5),
   addRoutine(6),
+  navPop(16),
   toHome(7),
   toBacklog(8),
   toArchive(9),

@@ -91,9 +91,9 @@ class NotesViewmodel extends ChangeNotifier {
         routineId: note.routineId,
       );
       switch (result) {
-        case Ok<void>():
+        case Ok<int>():
           _log.fine('_addNote: $note');
-        case Error<void>():
+        case Error<int>():
           _log.warning('_addNote $note: ${result.error}');
       }
       return result;

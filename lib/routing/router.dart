@@ -129,7 +129,7 @@ GoRouter router() => GoRouter(
             routinesRespository: routinesRepository,
             noteId: noteId,
           );
-          return NoteScreen(viewModel: noteViewmodel);
+          return NoteScreen(noteViewmodel: noteViewmodel);
         },
       ),
     ),

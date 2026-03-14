@@ -56,11 +56,21 @@ class _PaddedNote extends StatelessWidget {
 
   @override
   build(BuildContext context) {
-    return Padding(
-      padding: top
-          ? EdgeInsets.only(top: 20, bottom: 5, left: 30, right: 30)
-          : EdgeInsets.symmetric(vertical: 5, horizontal: 30),
-      child: NoteWidget(note: note),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 13),
+        child: NoteWidget(note: note),
+      ),
     );
+    // return Padding(
+    //   padding: top
+    //       ? EdgeInsets.only(top: 20, bottom: 5, left: 30, right: 30)
+    //       : EdgeInsets.symmetric(vertical: 5, horizontal: 30),
+    //   child: NoteWidget(note: note),
+    // );
   }
 }
