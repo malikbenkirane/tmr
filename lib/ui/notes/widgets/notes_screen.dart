@@ -269,17 +269,21 @@ class _NotesScreenState extends State<NotesScreen> {
                     child: ScrollablePositionedList.separated(
                       itemCount: count,
                       separatorBuilder: (context, i) {
-                        return Container(
-                          color: Theme.of(context).colorScheme.primary,
-                          height: .2,
-                        );
+                        return SizedBox(height: 12);
                       },
-                      padding: EdgeInsets.only(bottom: 140),
+                      padding: EdgeInsets.only(
+                        bottom: 100,
+                        top: 22,
+                        left: 27,
+                        right: 27,
+                      ),
                       itemBuilder: (_, index) {
                         final note = widget.notesViewmodel.notes[index];
                         return InkWell(
                           onTap: (Platform.isIOS || Platform.isAndroid)
-                              ? null
+                              ? () {
+                                  context.push('${Routes.note}/${note.id!}');
+                                }
                               : () async {
                                   await FlutterClipboard.copy(note.text);
                                   if (!context.mounted) return;
