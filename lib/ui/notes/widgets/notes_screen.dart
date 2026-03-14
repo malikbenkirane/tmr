@@ -285,14 +285,8 @@ class _NotesScreenState extends State<NotesScreen> {
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Row(
-                                        spacing: 2,
-                                        children: [
-                                          Icon(Symbols.assignment),
-                                          const Text(
-                                            'Your note’s now on the clipboard',
-                                          ),
-                                        ],
+                                      content: const Text(
+                                        'Your note’s now on the clipboard',
                                       ),
                                     ),
                                   );

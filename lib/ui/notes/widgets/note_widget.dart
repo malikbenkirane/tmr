@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/ui/core/ui/label.dart';
@@ -42,8 +44,16 @@ class NoteWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         elevation: .2,
         child: InkWell(
-          onTap: () {
-            _launchInBrowser(context, text);
+          onTap: () async {
+            if (Platform.isAndroid || Platform.isIOS) {
+              _launchInBrowser(context, text);
+              return;
+            }
+            await FlutterClipboard.copy(text);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: const Text('url copied to clipboard')),
+            );
           },
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 2, horizontal: 4),
