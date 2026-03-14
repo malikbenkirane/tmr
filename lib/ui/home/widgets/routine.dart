@@ -64,7 +64,7 @@ class Routine extends StatelessWidget {
               splashColor: colorScheme.primaryContainer,
               onLongPress: toggle,
               onTap: () {
-                context.go('${Routes.notes}/${routine.id}');
+                context.push('${Routes.notes}/${routine.id}');
               },
               child: Padding(
                 padding: EdgeInsets.only(

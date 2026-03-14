@@ -56,7 +56,6 @@ class NoteScreen extends StatelessWidget {
                         onTap: () {
                           final note = viewModel.note;
                           if (note == null) return;
-                          context.go('${Routes.notes}/${note.routineId}');
                         },
                         child: ListenableBuilder(
                           listenable: viewModel,
@@ -68,11 +67,12 @@ class NoteScreen extends StatelessWidget {
                             }
                             return Text(routine.name);
                           },
+                              context.push('${Routes.notes}/${note.routineId}');
                         ),
                       ),
                     ),
                     FloatingAction(
-                      onPressed: () => context.go(Routes.home),
+                      onPressed: () => context.push(Routes.home),
                       colorComposition: colorCompositionFromAction(
                         context,
                         ApplicationAction.toHome,

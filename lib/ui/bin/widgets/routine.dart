@@ -43,7 +43,7 @@ class Routine extends StatelessWidget {
         color: background,
         child: InkWell(
           onTap: () {
-            context.go('${Routes.notes}/${routine.id}');
+            context.push('${Routes.notes}/${routine.id}');
           },
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),

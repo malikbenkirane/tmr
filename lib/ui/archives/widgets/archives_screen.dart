@@ -116,7 +116,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                   children: [
                     FloatingAction(
                       onPressed: () {
-                        context.go(Routes.bin);
+                        context.push(Routes.bin);
                       },
                       icon: Icon(Icons.archive),
                       colorComposition: colorCompositionFromAction(
@@ -125,7 +125,7 @@ class _ArchivesScreenState extends State<ArchivesScreen> {
                       ),
                     ),
                     FloatingAction(
-                      onPressed: () => context.go(Routes.home),
+                      onPressed: () => context.push(Routes.home),
                       icon: Icon(Icons.home),
                       colorComposition: colorCompositionFromAction(
                         context,

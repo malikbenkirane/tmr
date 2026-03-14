@@ -210,9 +210,9 @@ class _ResultWidgetState extends State<_ResultWidget> {
       onTap: () {
         switch (itemKind) {
           case ResultItem.routine:
-            context.go('${Routes.notes}/${widget.result.routine!.id}');
+            context.push('${Routes.notes}/${widget.result.routine!.id}');
           case ResultItem.note:
-            context.go('${Routes.note}/${widget.result.note!.$2.id}');
+            context.push('${Routes.note}/${widget.result.note!.$2.id}');
         }
       },
       child: Padding(
@@ -284,7 +284,7 @@ class _ResultWidgetState extends State<_ResultWidget> {
         final routine = widget.result.note!.$1;
         chipWidget = GestureDetector(
           onTap: () {
-            context.go('${Routes.notes}/${routine.id}');
+            context.push('${Routes.notes}/${routine.id}');
           },
           child: Text(routine.name, style: chipTextStyle),
         );

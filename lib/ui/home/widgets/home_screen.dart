@@ -591,7 +591,7 @@ class HomeScreenState extends State<HomeScreen> {
                         : FloatingAction(
                             icon: Icon(Icons.menu),
                             onPressed: () {
-                              context.go(Routes.archives);
+                              context.push(Routes.archives);
                             },
                             colorComposition: colorCompositionFromAction(
                               context,

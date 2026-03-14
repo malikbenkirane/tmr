@@ -64,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () => context.go(Routes.home),
+            onPressed: () => context.push(Routes.home),
             icon: Icon(
               Icons.home,
               color: labelColor(context, Label.appBarForeground),

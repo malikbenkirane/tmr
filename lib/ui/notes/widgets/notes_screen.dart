@@ -458,7 +458,7 @@ class _NotesScreenState extends State<NotesScreen> {
               ],
             ),
             FloatingAction(
-              onPressed: () => context.go(Routes.home),
+              onPressed: () => context.push(Routes.home),
               icon: Icon(Icons.home),
               colorComposition: colorCompositionFromAction(
                 context,

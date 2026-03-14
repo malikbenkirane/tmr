@@ -59,7 +59,7 @@ class RoutineMenu extends StatelessWidget {
             icon: Icons.notes,
             label: "Notes",
             onTap: () {
-              context.go('${Routes.notes}/${routine.id}');
+              context.push('${Routes.notes}/${routine.id}');
             },
           ),
         ],

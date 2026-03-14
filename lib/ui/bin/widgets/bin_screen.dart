@@ -104,7 +104,7 @@ class _ArchivesScreenState extends State<BinScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     FloatingAction(
-                      onPressed: () => context.go(Routes.archives),
+                      onPressed: () => context.push(Routes.archives),
                       icon: Icon(Icons.menu),
                       colorComposition: colorCompositionFromAction(
                         context,
@@ -112,7 +112,7 @@ class _ArchivesScreenState extends State<BinScreen> {
                       ),
                     ),
                     FloatingAction(
-                      onPressed: () => context.go(Routes.home),
+                      onPressed: () => context.push(Routes.home),
                       icon: Icon(Icons.home),
                       colorComposition: colorCompositionFromAction(
                         context,
