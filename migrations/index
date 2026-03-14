@@ -14,3 +14,4 @@
 20260107171304.sql add routine graph model 
 20260223103111.sql add signal/noise ratio setting
 20260307120905.sql add overtime ratio to SNR ratio log table
+20260314213608.sql add note graph model

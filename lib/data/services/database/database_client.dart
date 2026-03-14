@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
+import 'package:too_many_tabs/domain/models/notes/note_comment.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
@@ -510,14 +511,14 @@ class DatabaseClient {
     }
   }
 
-  Future<Result<void>> addNote(NoteSummary note) async {
+  Future<Result<int>> addNote(NoteSummary note) async {
     try {
-      await _database.insert('notes', {
+      final id = await _database.insert('notes', {
         'routine_id': note.routineId,
         'created_at': note.createdAt.toIso8601String(),
         'note': note.text,
       });
-      return Result.ok(null);
+      return Result.ok(id);
     } on Exception catch (e) {
       return Result.error(e);
     }
@@ -738,6 +739,48 @@ class DatabaseClient {
         'overtimeNoiseRatio': or as int,
       } = rows[0];
       return Result.ok(SignalRatio.fromIntegerRatios(signal: sr, overtime: or));
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<List<NoteComment>>> listNoteComments(int id) async {
+    try {
+      final rows = await _database.query(
+        'note_graph',
+        where: 'note_a = ?',
+        whereArgs: [id],
+        orderBy: 'created_at DESC',
+      );
+      final List<NoteComment> notes = [];
+      for (final {'note_b': commentId as int, 'created_at': createdAt as String}
+          in rows) {
+        notes.add(
+          NoteComment(
+            on: id,
+            comment: commentId,
+            createdAt: DateTime.parse(createdAt),
+          ),
+        );
+      }
+      return Result.ok(notes);
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
+  Future<Result<void>> linkNotes({
+    required int parent,
+    required int child,
+    required DateTime at,
+  }) async {
+    try {
+      await _database.insert('note_graph', {
+        'note_a': parent,
+        'note_b': child,
+        'created_at': at.toIso8601String(),
+      });
+      return Result.ok(null);
     } on Exception catch (e) {
       return Result.error(e);
     }

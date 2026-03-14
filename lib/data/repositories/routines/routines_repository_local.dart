@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:too_many_tabs/data/repositories/routines/routines_repository.dart';
 import 'package:too_many_tabs/data/repositories/routines/special_session_duration.dart';
 import 'package:too_many_tabs/data/services/database/database_client.dart';
+import 'package:too_many_tabs/domain/models/notes/note_comment.dart';
 import 'package:too_many_tabs/domain/models/notes/note_summary.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_bin.dart';
 import 'package:too_many_tabs/domain/models/routines/routine_summary.dart';
@@ -410,7 +411,7 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   }
 
   @override
-  Future<Result<void>> addNote({
+  Future<Result<int>> addNote({
     required String note,
     required DateTime createdAt,
     required int routineId,
@@ -520,5 +521,64 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
   @override
   Future<Result<(int, DateTime)?>> endOfLastSession() {
     return _databaseClient.lastStop();
+  }
+
+  @override
+  Future<Result<int>> commentNote({
+    required NoteSummary note,
+    required String comment,
+    required DateTime at,
+  }) async {
+    if (note.id == null) {
+      return Result.error(Exception('commented note id missing'));
+    }
+    final int commentId;
+    {
+      final result = await addNote(
+        note: comment.trim(),
+        routineId: note.routineId,
+        createdAt: at,
+      );
+      switch (result) {
+        case Error<int>():
+          return Result.error(result.error);
+        case Ok<int>():
+          commentId = result.value;
+      }
+    }
+    final result = await _databaseClient.linkNotes(
+      parent: note.id!,
+      child: commentId,
+      at: at,
+    );
+    switch (result) {
+      case Error<void>():
+        return Result.error(result.error);
+      case Ok<void>():
+    }
+    return Result.ok(commentId);
+  }
+
+  @override
+  Future<Result<List<NoteSummary>>> listNoteComments({
+    required int noteId,
+  }) async {
+    final List<NoteSummary> notes = [];
+    final result = await _databaseClient.listNoteComments(noteId);
+    switch (result) {
+      case Error<List<NoteComment>>():
+        return Result.error(result.error);
+      case Ok<List<NoteComment>>():
+        for (final link in result.value) {
+          final result = await getNote(link.commentId);
+          switch (result) {
+            case Error<NoteSummary>():
+              return Result.error(result.error);
+            case Ok<NoteSummary>():
+              notes.add(result.value);
+          }
+        }
+    }
+    return Result.ok(notes);
   }
 }
