@@ -20,6 +20,9 @@ class NoteViewmodel extends ChangeNotifier {
   NoteSummary? _note;
   NoteSummary? get note => _note;
 
+  NoteSummary? _parentNote;
+  NoteSummary? get parentNote => _parentNote;
+
   List<NoteSummary> _comments = [];
   List<NoteSummary> get comments => _comments;
 
@@ -58,6 +61,15 @@ class NoteViewmodel extends ChangeNotifier {
             return Result.error(result.error);
           case Ok<List<NoteSummary>>():
             _comments.addAll(result.value);
+        }
+      }
+      {
+        final result = await routinesRespository.parentNote(noteId: noteId);
+        switch (result) {
+          case Error<NoteSummary?>():
+            return Result.error(result.error);
+          case Ok<NoteSummary?>():
+            _parentNote = result.value;
         }
       }
       return Result.ok(null);

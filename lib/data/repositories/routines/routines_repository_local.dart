@@ -581,4 +581,9 @@ class RoutinesRepositoryLocal implements RoutinesRepository {
     }
     return Result.ok(notes);
   }
+
+  @override
+  Future<Result<NoteSummary?>> parentNote({required int noteId}) {
+    return _databaseClient.getNoteParent(noteId);
+  }
 }

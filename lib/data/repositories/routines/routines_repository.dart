@@ -33,6 +33,7 @@ abstract class RoutinesRepository {
     required String comment,
     required DateTime at,
   });
+  Future<Result<NoteSummary?>> parentNote({required int noteId});
   Future<Result<List<NoteSummary>>> listNoteComments({required int noteId});
   Future<Result<void>> dismissNote(int noteId);
   Future<Result<(SpecialGoalSession?, SpecialGoalSession?)>>

@@ -744,6 +744,29 @@ class DatabaseClient {
     }
   }
 
+  Future<Result<NoteSummary?>> getNoteParent(int id) async {
+    try {
+      final rows = await _database.query(
+        'note_graph',
+        where: 'note_b = ?',
+        whereArgs: [id],
+      );
+      if (rows.isEmpty) {
+        return Result.ok(null);
+      }
+      final {'note_a': parentId as int} = rows[0];
+      final result = await getNote(parentId);
+      switch (result) {
+        case Error<NoteSummary>():
+          return Result.error(result.error);
+        case Ok<NoteSummary>():
+          return Result.ok(result.value);
+      }
+    } on Exception catch (e) {
+      return Result.error(e);
+    }
+  }
+
   Future<Result<List<NoteComment>>> listNoteComments(int id) async {
     try {
       final rows = await _database.query(

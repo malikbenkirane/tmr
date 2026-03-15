@@ -17,6 +17,80 @@ class NoteScreen extends StatelessWidget {
 
   const NoteScreen({super.key, required this.noteViewmodel});
 
+  Widget _notes(BuildContext context, NoteSummary note) {
+    return Column(
+      spacing: 13,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 13),
+                  child: NoteWidget(note: note),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: 26),
+            child: ListView.separated(
+              itemCount: noteViewmodel.comments.length,
+              separatorBuilder: (context, _) {
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 116,
+                      height: 1,
+                      child: Container(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
+                      ),
+                    ),
+                  ],
+                );
+              },
+              itemBuilder: (context, index) {
+                final note = noteViewmodel.comments[index];
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Material(
+                          child: InkWell(
+                            onTap: () {
+                              context.push('${Routes.note}/${note.id}');
+                            },
+                            borderRadius: BorderRadius.circular(15),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 9,
+                                horizontal: 14,
+                              ),
+                              child: NoteWidget(note: note),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   build(BuildContext context) {
     return Scaffold(
@@ -40,105 +114,15 @@ class NoteScreen extends StatelessWidget {
                   builder: (context, _) {
                     final note = noteViewmodel.note;
                     if (note == null) return SizedBox.shrink();
-                    return Column(
-                      spacing: 20,
-                      children: [
-                        _ParentWidget(
-                          note: NoteSummary.textOnly(
-                            note: 'lorem ipsum amet sit',
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            spacing: 13,
+                    return noteViewmodel.parentNote == null
+                        ? _notes(context, note)
+                        : Column(
+                            spacing: 20,
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.surfaceContainerLow,
-                                      ),
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 20,
-                                          horizontal: 13,
-                                        ),
-                                        child: NoteWidget(note: note),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(left: 26),
-                                  child: ListView.separated(
-                                    itemCount: noteViewmodel.comments.length,
-                                    separatorBuilder: (context, _) {
-                                      return Row(
-                                        children: [
-                                          SizedBox(
-                                            width: 116,
-                                            height: 1,
-                                            child: Container(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .surfaceContainerHigh,
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                    itemBuilder: (context, index) {
-                                      final note =
-                                          noteViewmodel.comments[index];
-                                      return Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 12,
-                                          horizontal: 2,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Material(
-                                                child: InkWell(
-                                                  onTap: () {
-                                                    context.push(
-                                                      '${Routes.note}/${note.id}',
-                                                    );
-                                                  },
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                  child: Padding(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical: 9,
-                                                          horizontal: 14,
-                                                        ),
-                                                    child: NoteWidget(
-                                                      note: note,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
+                              _ParentWidget(note: noteViewmodel.parentNote!),
+                              Expanded(child: _notes(context, note)),
                             ],
-                          ),
-                        ),
-                      ],
-                    );
-                    // return (NoteWidget(note: note));
+                          );
                   },
                 ),
               ),
@@ -273,9 +257,7 @@ class _ParentWidgetState extends State<_ParentWidget> {
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance.addPersistentFrameCallback(
-      (_) => _updateRowSize(),
-    );
+    SchedulerBinding.instance.addPostFrameCallback((_) => _updateRowSize());
   }
 
   @override
@@ -287,16 +269,26 @@ class _ParentWidgetState extends State<_ParentWidget> {
       children: [
         sideVerticalBar,
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(
+          child: Material(
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(5),
+            child: InkWell(
               borderRadius: BorderRadius.circular(5),
-              color: Theme.of(context).colorScheme.surfaceContainer,
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 13),
-              child: NoteWidget(note: widget.note),
+              onTap: () {
+                context.push('${Routes.note}/${widget.note.id}');
+              },
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 13),
+                child: NoteWidget(note: widget.note),
+              ),
             ),
           ),
+          // child: Container(
+          //   decoration: BoxDecoration(
+          //     borderRadius: BorderRadius.circular(5),
+          //     color: Theme.of(context).colorScheme.surfaceContainer,
+          //   ),
+          // ),
         ),
         sideVerticalBar,
       ],
