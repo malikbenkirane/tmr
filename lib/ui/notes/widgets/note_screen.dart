@@ -305,7 +305,10 @@ class _ParentWidgetState extends State<_ParentWidget> {
       height: height,
       width: 7,
       child: Container(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(2),
+        ),
       ),
     );
   }
