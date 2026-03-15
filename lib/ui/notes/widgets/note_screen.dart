@@ -24,11 +24,10 @@ class NoteScreen extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                ),
+              child: Material(
+                borderRadius: BorderRadius.circular(15),
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                elevation: 4,
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 20, horizontal: 13),
                   child: NoteWidget(note: note),
@@ -283,12 +282,6 @@ class _ParentWidgetState extends State<_ParentWidget> {
               ),
             ),
           ),
-          // child: Container(
-          //   decoration: BoxDecoration(
-          //     borderRadius: BorderRadius.circular(5),
-          //     color: Theme.of(context).colorScheme.surfaceContainer,
-          //   ),
-          // ),
         ),
         sideVerticalBar,
       ],
@@ -300,7 +293,7 @@ class _ParentWidgetState extends State<_ParentWidget> {
     if (size == null) {
       return SizedBox.shrink();
     }
-    final height = size.height < 4 ? 0.0 : size.height - 4;
+    final height = size.height < 8 ? 0.0 : size.height - 8;
     return SizedBox(
       height: height,
       width: 7,
